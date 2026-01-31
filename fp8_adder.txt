@@ -1,0 +1,38 @@
+function fp8_e5m2_add(A, B, funct):
+    // 1. Unpack
+    sign_A, exp_A, mant_A = unpack(A)
+    sign_B, exp_B, mant_B = unpack(B)
+    
+    // 2. Handle special values
+    if isNaN(A) or isNaN(B): return NaN
+    if isInf(A) or isInf(B): return handleInfinity(...)
+    if isZero(A): return (funct ? -B : B)
+    if isZero(B): return A
+    
+    // 3. Add hidden bit / handle subnormals
+    full_A = getFullMantissa(exp_A, mant_A)
+    full_B = getFullMantissa(exp_B, mant_B)
+    eff_exp_A = (exp_A == 0) ? 1 : exp_A
+    eff_exp_B = (exp_B == 0) ? 1 : exp_B
+    
+    // 4. Adjust sign for subtraction
+    sign_B = sign_B XOR funct
+    
+    // 5. Align mantissas
+    exp_diff = eff_exp_A - eff_exp_B
+    larger, smaller, shift = selectAndAlign(...)
+    
+    // 6. Add/subtract mantissas
+    result_mant, result_sign = addSubtractMantissas(...)
+    result_exp = larger_exp
+    
+    // 7. Normalize
+    result_mant, result_exp = normalize(result_mant, result_exp)
+    
+    // 8. Handle overflow/underflow
+    if (result_exp >= 31): return Infinity
+    if (result_exp <= 0): return handleSubnormal(...)
+    
+    // 9. Round and pack
+    final_mant = round(result_mant)
+    return pack(result_sign, result_exp, final_mant)
