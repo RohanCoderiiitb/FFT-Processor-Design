@@ -1,0 +1,7 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/fftacc/FFT-Hardware/FFT-Processor-Design/src/multiplier.v" into library work
+INFO: [VRFC 10-311] analyzing module fp4_mul
+INFO: [VRFC 10-311] analyzing module fp4_cmul
+INFO: [VRFC 10-311] analyzing module fp8_mul
+INFO: [VRFC 10-311] analyzing module fp8_cmul
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/fftacc/FFT-Hardware/FFT-Processor-Design/src/twiddle_rom.v" into library work
+INFO: [VRFC 10-311] analyzing module twiddle_factor_unified
