@@ -68,22 +68,3 @@ module fp4_butterfly_generation_unit(
     );
 
 endmodule
-
-// Wrapper module to choose the precision
-module butterfly_wrapper #(
-    parameter PRECISION = 0 // 0 for FP4, 1 for FP8
-)(
-    input [15:0] A, B, W, 
-    output [15:0] X, Y
-);
-    generate
-        if (PRECISION == 0) begin : USE_FP4
-            wire [7:0] x_8bit, y_8bit;
-            fp4_butterfly_generation_unit fp4_butterfly_inst(.A(A[7:0]), .B(B[7:0]), .W(W[7:0]), .X(x_8bit), .Y(y_8bit));
-            assign Y = {8'b0, y_8bit};
-            assign X = {8'b0, x_8bit};
-        end else begin : USE_FP8
-            fp8_butterfly_generation_unit fp8_butterfly_inst(.A(A), .B(B), .W(W), .X(X), .Y(Y));
-        end
-    endgenerate
-endmodule
