@@ -161,3 +161,6 @@ module fp8_cmul (
     assign out_real = res_real;
     assign out_imag = res_imag;
 endmodule
+
+
+// Wrapper function for choosing the precision
