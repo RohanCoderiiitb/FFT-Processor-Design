@@ -3,11 +3,11 @@
 //note that each FP4 number is represented as an 8-bit value, with the real part in the upper 4 bits and the imaginary part in the lower 4 bits
 module twiddle_factor_unified #(
     parameter MAX_N = 32,
-    parameter ADDR_WIDTH = $clog2(MAX_N)
+    parameter ADDR_WIDTH = $clog2(MAX_N),
+    parameter PRECISION = 0 // DEFAULT 0 for FP4 and 1 for FP8
 )(
     input [ADDR_WIDTH-1:0] k, //index to select the twiddle factor
     input [ADDR_WIDTH:0] n,     //total number of points in the DFT
-    input data_format_mode,   //Flag for selecting FP8 and FP4 - 1 for FP8 and 0 for FP4
     output reg [15:0] twiddle_out // Output twiddle factor - In case of FP4 format, the 8 bit compex number is padded with 0s - {8'b0, FP4_representation}
 );
     // compute normalized angle: theta = 2*pi*k/N
@@ -63,22 +63,22 @@ module twiddle_factor_unified #(
         // Values for angles 16 to 31 are obtained by taking conjugate of values for angles 31 down to 16
         case(table_index) 
             // Base twiddle factors (angles 0-15)
-            5'd0: begin twiddle_out = (data_format_mode) ? {8'h38, 8'h00} : {8'b0, 8'b00100000}; end 
-            5'd1: begin twiddle_out = (data_format_mode) ? {8'h38, 8'hA4} : {8'b0, 8'b00100000}; end 
-            5'd2: begin twiddle_out = (data_format_mode) ? {8'h37, 8'hAC} : {8'b0, 8'b00101001}; end 
-            5'd3: begin twiddle_out = (data_format_mode) ? {8'h35, 8'hB1} : {8'b0, 8'b00101001}; end 
-            5'd4: begin twiddle_out = (data_format_mode) ? {8'h33, 8'hB3} : {8'b0, 8'b00011001}; end 
-            5'd5: begin twiddle_out = (data_format_mode) ? {8'h31, 8'hB5} : {8'b0, 8'b00011010}; end 
-            5'd6: begin twiddle_out = (data_format_mode) ? {8'h2C, 8'hB7} : {8'b0, 8'b00011010}; end 
-            5'd7: begin twiddle_out = (data_format_mode) ? {8'h24, 8'hB8} : {8'b0, 8'b00001010}; end 
-            5'd8: begin twiddle_out = (data_format_mode) ? {8'h00, 8'hB8} : {8'b0, 8'b00000010}; end 
-            5'd9: begin twiddle_out = (data_format_mode) ? {8'hA4, 8'hB8} : {8'b0, 8'b00001010}; end
-            5'd10: begin twiddle_out = (data_format_mode) ? {8'hAC, 8'hB7} : {8'b0, 8'b00011010}; end 
-            5'd11: begin twiddle_out = (data_format_mode) ? {8'hB1, 8'hB5} : {8'b0, 8'b00011010}; end 
-            5'd12: begin twiddle_out = (data_format_mode) ? {8'hB3, 8'hB3} : {8'b0, 8'b00011001}; end  
-            5'd13: begin twiddle_out = (data_format_mode) ? {8'hB5, 8'hB1} : {8'b0, 8'b00101001}; end 
-            5'd14: begin twiddle_out = (data_format_mode) ? {8'hB7, 8'hAC} : {8'b0, 8'b00101001}; end 
-            5'd15: begin twiddle_out = (data_format_mode) ? {8'hB8, 8'hA4} : {8'b0, 8'b00100000}; end
+            5'd0: begin twiddle_out = (PRECISION) ? {8'h38, 8'h00} : {8'b0, 8'b00100000}; end 
+            5'd1: begin twiddle_out = (PRECISION) ? {8'h38, 8'hA4} : {8'b0, 8'b00100000}; end 
+            5'd2: begin twiddle_out = (PRECISION) ? {8'h37, 8'hAC} : {8'b0, 8'b00101001}; end 
+            5'd3: begin twiddle_out = (PRECISION) ? {8'h35, 8'hB1} : {8'b0, 8'b00101001}; end 
+            5'd4: begin twiddle_out = (PRECISION) ? {8'h33, 8'hB3} : {8'b0, 8'b00011001}; end 
+            5'd5: begin twiddle_out = (PRECISION) ? {8'h31, 8'hB5} : {8'b0, 8'b00011010}; end 
+            5'd6: begin twiddle_out = (PRECISION) ? {8'h2C, 8'hB7} : {8'b0, 8'b00011010}; end 
+            5'd7: begin twiddle_out = (PRECISION) ? {8'h24, 8'hB8} : {8'b0, 8'b00001010}; end 
+            5'd8: begin twiddle_out = (PRECISION) ? {8'h00, 8'hB8} : {8'b0, 8'b00000010}; end 
+            5'd9: begin twiddle_out = (PRECISION) ? {8'hA4, 8'hB8} : {8'b0, 8'b00001010}; end
+            5'd10: begin twiddle_out = (PRECISION) ? {8'hAC, 8'hB7} : {8'b0, 8'b00011010}; end 
+            5'd11: begin twiddle_out = (PRECISION) ? {8'hB1, 8'hB5} : {8'b0, 8'b00011010}; end 
+            5'd12: begin twiddle_out = (PRECISION) ? {8'hB3, 8'hB3} : {8'b0, 8'b00011001}; end  
+            5'd13: begin twiddle_out = (PRECISION) ? {8'hB5, 8'hB1} : {8'b0, 8'b00101001}; end 
+            5'd14: begin twiddle_out = (PRECISION) ? {8'hB7, 8'hAC} : {8'b0, 8'b00101001}; end 
+            5'd15: begin twiddle_out = (PRECISION) ? {8'hB8, 8'hA4} : {8'b0, 8'b00100000}; end
             default: begin twiddle_out = 16'h0000; end //default case
         endcase
         
@@ -88,7 +88,7 @@ module twiddle_factor_unified #(
             // In our 16-bit format: [15:8] = real, [7:0] = imaginary
             // In our 8-bit format: [7:4] = real, [3:0] = imaginary
             // Flip sign by: if imag != 0, change the sign bit (MSB of the 8-bit/4-bit imaginary part)
-            if(data_format_mode == 1'b1) begin
+            if(PRECISION == 1'b1) begin
                 if(twiddle_out[7:0] != 8'h00) begin
                     twiddle_out[7:0] = {~twiddle_out[7], twiddle_out[6:0]};
                 end
