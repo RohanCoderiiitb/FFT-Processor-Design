@@ -3,8 +3,8 @@
 //bank_sel controls which bank to READ from
 //writes always go to the OPPOSITE bank (~bank_sel)
 module fp4_fft_memory_reg #(
-    parameter N = 1024,
-    parameter ADDR_WIDTH = $clog2(N)
+    parameter n = 1024,
+    parameter ADDR_WIDTH = $clog2(n)
 )(
     input wire clk,
     input wire rst,
@@ -20,8 +20,8 @@ module fp4_fft_memory_reg #(
     input wire [7:0] wr_data_1
 );
 
-    reg [7:0] bank0_mem [0:N-1];
-    reg [7:0] bank1_mem [0:N-1];
+    reg [7:0] bank0_mem [0:n-1];
+    reg [7:0] bank1_mem [0:n-1];
 
     integer i;
     
@@ -30,7 +30,7 @@ module fp4_fft_memory_reg #(
     //when bank_sel=1: we read from bank1, so write to bank0
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
-            for (i = 0; i < N; i = i + 1) begin
+            for (i = 0; i < n; i = i + 1) begin
                 bank0_mem[i] <= 8'b0;
                 bank1_mem[i] <= 8'b0;
             end
@@ -69,8 +69,8 @@ endmodule
 //bank_sel controls which bank to READ from
 //writes always go to the OPPOSITE bank (~bank_sel)
 module fp8_fft_memory_reg #(
-    parameter N = 1024,
-    parameter ADDR_WIDTH = $clog2(N)
+    parameter n = 1024,
+    parameter ADDR_WIDTH = $clog2(n)
 )(
     input wire clk,
     input wire rst,
@@ -86,8 +86,8 @@ module fp8_fft_memory_reg #(
     input wire [15:0] wr_data_1
 );
 
-    reg [15:0] bank0_mem [0:N-1];
-    reg [15:0] bank1_mem [0:N-1];
+    reg [15:0] bank0_mem [0:n-1];
+    reg [15:0] bank1_mem [0:n-1];
 
     integer i;
     
@@ -96,7 +96,7 @@ module fp8_fft_memory_reg #(
     //when bank_sel=1: we read from bank1, so write to bank0
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
-            for (i = 0; i < N; i = i + 1) begin
+            for (i = 0; i < n; i = i + 1) begin
                 bank0_mem[i] <= 16'b0;
                 bank1_mem[i] <= 16'b0;
             end
@@ -134,8 +134,8 @@ endmodule
 //format_mode: 0 = fp4 mode, 1 = fp8 mode
 
 module mixed_memory_reg #(
-    parameter N = 1024,
-    parameter ADDR_WIDTH = $clog2(N)
+    parameter n = 1024,
+    parameter ADDR_WIDTH = $clog2(n)
 )(
     input wire clk,
     input wire rst,
@@ -153,12 +153,12 @@ module mixed_memory_reg #(
     input wire [15:0] wr_data_1
 );
 
-    reg [15:0] bank0_mem [0:N-1];
-    reg [15:0] bank1_mem [0:N-1];
+    reg [15:0] bank0_mem [0:n-1];
+    reg [15:0] bank1_mem [0:n-1];
     
     //format tracking arrays: 0 = fp4, 1 = fp8
-    reg bank0_format [0:N-1];
-    reg bank1_format [0:N-1];
+    reg bank0_format [0:n-1];
+    reg bank1_format [0:n-1];
 
     integer i;
     
@@ -167,7 +167,7 @@ module mixed_memory_reg #(
     //when bank_sel=1: we read from bank1, so write to bank0
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
-            for (i = 0; i < N; i = i + 1) begin
+            for (i = 0; i < n; i = i + 1) begin
                 bank0_mem[i] <= 16'b0;
                 bank1_mem[i] <= 16'b0;
                 bank0_format[i] <= 1'b0;  //default to fp4

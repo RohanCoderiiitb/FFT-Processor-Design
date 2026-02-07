@@ -2,7 +2,7 @@
 //note that each FP8 number is represented as an 16-bit value, with the real part in the upper 8 bits and the imaginary part in the lower 8 bits
 //note that each FP4 number is represented as an 8-bit value, with the real part in the upper 4 bits and the imaginary part in the lower 4 bits
 module twiddle_factor_unified #(
-    parameter MAX_N = 32,
+    parameter MAX_N = 1024,
     parameter ADDR_WIDTH = $clog2(MAX_N),
     parameter PRECISION = 0 // DEFAULT 0 for FP4 and 1 for FP8
 )(

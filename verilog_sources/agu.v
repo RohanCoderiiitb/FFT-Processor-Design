@@ -1,5 +1,5 @@
 module dit_fft_agu_variable #(
-    parameter MAX_N = 32,
+    parameter MAX_N = 1024,
     parameter ADDR_WIDTH = $clog2(MAX_N)
 )(
     input clk,
