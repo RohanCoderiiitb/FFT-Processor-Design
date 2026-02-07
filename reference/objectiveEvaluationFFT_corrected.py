@@ -12,7 +12,7 @@ from pymoo.core.problem import Problem
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from globalVariablesMixedFFT_corrected import *
-from fft_template_generator_corrected import FFTTemplateGeneratorPerButterfly
+from fft_template_generator_corrected import FFTTemplateGeneratorFinal
 from performance_evaluator import PerformanceEvaluator
 
 
@@ -35,7 +35,7 @@ class MixedPrecisionFFTProblem(Problem):
         self.fft_size = fft_size
         
         # Initialize generators
-        self.template_gen = FFTTemplateGeneratorPerButterfly(fft_size)
+        self.template_gen = FFTTemplateGeneratorFinal(fft_size)
         self.perf_eval = PerformanceEvaluator(fft_size)
         
         # Get chromosome length from template generator
