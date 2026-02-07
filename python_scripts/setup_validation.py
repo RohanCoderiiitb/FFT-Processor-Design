@@ -20,7 +20,7 @@ class SetupValidator:
     
     def check_python_version(self):
         """Check Python version"""
-        print("Checking Python version...", end=" ")
+        print("Checking Python version...")
         version = sys.version_info
         if version.major >= 3 and version.minor >= 8:
             print(f"✓ Python {version.major}.{version.minor}.{version.micro}")
