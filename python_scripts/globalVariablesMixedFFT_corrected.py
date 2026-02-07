@@ -68,10 +68,10 @@ for size in [8, 16, 32, 64, 128, 256, 512, 1024]:
     print(f"  FFT-{size:<4}: {total_bf:>4} butterflies × 2 = {chrom_size:>5} genes")
 
 # ======================= Vivado Configuration =======================
-VIVADO_PATH = '/tools/Xilinx/Vivado/2023.2/bin/vivado'
+VIVADO_PATH = '/tools/Xilinx/Vivado/2021.1'
 VIVADO_BATCH_MODE = True
 CLOCK_PERIOD = 10.0          # ns (100 MHz target)
-FPGA_DEVICE = 'xc7z020clg484-1'
+FPGA_DEVICE = 'xc7a35tcpg236-1'
 
 # ======================= File Paths =======================
 VERILOG_SOURCES_DIR = './verilog_sources'
