@@ -7,7 +7,7 @@ import math
 import numpy as np
 
 
-class FFTTemplateGeneratorFinal:
+class FFTTemplateGenerator:
     def __init__(self, fft_size):
         """
         Initialize FFT template generator with user's twiddle ROM

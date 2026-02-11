@@ -110,7 +110,7 @@ def generate_smart_initial_population(fft_size, pop_size):
     4. Alternating precision
     5. Random variations
     """
-    from fft_template_generator_corrected import FFTTemplateGeneratorPerButterfly
+    from fft_template_generator import FFTTemplateGeneratorPerButterfly
     
     gen = FFTTemplateGeneratorPerButterfly(fft_size)
     chrom_length = gen.get_chromosome_length()
