@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Setup and Validation Script for Mixed-Precision FFT Optimization
-Checks dependencies, creates directories, and validates configuration
+Checks dependencies, creates directories, and populates Verilog sources
 """
 
 import os
@@ -9,7 +9,6 @@ import sys
 import subprocess
 import shutil
 from pathlib import Path
-
 
 class SetupValidator:
     def __init__(self):
@@ -23,11 +22,11 @@ class SetupValidator:
         print("Checking Python version...")
         version = sys.version_info
         if version.major >= 3 and version.minor >= 8:
-            print(f"✓ Python {version.major}.{version.minor}.{version.micro}")
+            print(f"  ✓ Python {version.major}.{version.minor}.{version.micro}")
             self.checks_passed += 1
             return True
         else:
-            print(f"✗ Python {version.major}.{version.minor}.{version.micro}")
+            print(f"  ✗ Python {version.major}.{version.minor}.{version.micro}")
             self.errors.append(
                 f"Python 3.8+ required, found {version.major}.{version.minor}"
             )
@@ -65,6 +64,13 @@ class SetupValidator:
         
         # Import config to get Vivado path
         try:
+            # Check if file exists before importing to prevent crash
+            if not os.path.exists('globalVariablesMixedFFT.py'):
+                 print("  ✗ globalVariablesMixedFFT.py not found")
+                 self.errors.append("Configuration file missing")
+                 self.checks_failed += 1
+                 return False
+
             from globalVariablesMixedFFT import VIVADO_PATH
             
             if os.path.exists(VIVADO_PATH):
@@ -100,7 +106,7 @@ class SetupValidator:
                 return False
         except ImportError:
             print("  ✗ Could not import configuration")
-            self.errors.append("Configuration file missing")
+            self.errors.append("Configuration file import error")
             self.checks_failed += 1
             return False
     
@@ -111,7 +117,7 @@ class SetupValidator:
         # Check for Icarus Verilog
         try:
             result = subprocess.run(
-                ['iverilog', '-v'],
+                ['iverilog', '-V'],
                 capture_output=True,
                 text=True,
                 timeout=5
@@ -149,8 +155,12 @@ class SetupValidator:
         return False
     
     def check_verilog_sources(self):
-        """Check Verilog source files"""
-        print("\nChecking Verilog source files:")
+        """
+        Check Verilog source files.
+        If directory exists, checks files. 
+        If files missing locally, copies them from uploads directory.
+        """
+        print("\nChecking and Populating Verilog source files:")
         
         required_files = [
             'adder.v',
@@ -161,34 +171,60 @@ class SetupValidator:
             'butterfly.v'
         ]
         
-        # Check in uploads directory
+        # Define paths
         upload_dir = Path('/mnt/user-data/uploads')
+        dest_dir = Path('./verilog_sources')
+
+        # 1. Create Directory if it doesn't exist
+        if not dest_dir.exists():
+            print(f"  ℹ Creating directory: {dest_dir}")
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            self.checks_passed += 1
+        
         all_present = True
         
+        # 2. Check and Copy files
         for fname in required_files:
-            fpath = upload_dir / fname
-            if fpath.exists():
-                print(f"  ✓ {fname}")
+            dest_file = dest_dir / fname
+            src_file = upload_dir / fname
+            
+            # Check if file exists in destination
+            if dest_file.exists():
+                print(f"  ✓ {fname} (found locally)")
                 self.checks_passed += 1
+            
+            # If not in destination, try to copy from uploads
+            elif src_file.exists():
+                try:
+                    shutil.copy2(src_file, dest_file)
+                    print(f"  ✓ {fname} (copied from uploads)")
+                    self.checks_passed += 1
+                except Exception as e:
+                    print(f"  ✗ {fname} - Failed to copy: {e}")
+                    self.errors.append(f"Failed to copy {fname}")
+                    all_present = False
+                    self.checks_failed += 1
+            
+            # File missing in both locations
             else:
-                print(f"  ✗ {fname} - NOT FOUND")
-                self.warnings.append(f"Verilog file not found: {fname}")
+                print(f"  ✗ {fname} - NOT FOUND in {dest_dir} or {upload_dir}")
+                self.errors.append(f"Missing Verilog file: {fname}")
                 all_present = False
                 self.checks_failed += 1
         
         return all_present
     
     def create_directories(self):
-        """Create necessary directories"""
+        """Create other necessary directories"""
         print("\nCreating directory structure:")
         
         directories = [
-            './verilog_sources',
             './generated_designs',
             './vivado_projects',
             './reports',
             './sim',
             './results'
+            # Note: ./verilog_sources is now handled in check_verilog_sources
         ]
         
         for directory in directories:
@@ -203,6 +239,9 @@ class SetupValidator:
         print("\nValidating configuration:")
         
         try:
+            if not os.path.exists('globalVariablesMixedFFT.py'):
+                 return False
+
             from globalVariablesMixedFFT import (
                 POPULATION, GENERATIONS, FFT_SIZES,
                 CLOCK_PERIOD, FPGA_DEVICE
@@ -246,8 +285,6 @@ class SetupValidator:
         self.check_python_packages()
         self.check_vivado()
         self.check_simulator()
-        self.check_verilog_sources()
-        self.create_directories()
         self.validate_configuration()
         
         # Summary
@@ -278,7 +315,6 @@ class SetupValidator:
             print("\nPlease fix the errors above before running optimization.")
             return False
 
-
 def install_missing_packages():
     """Attempt to install missing Python packages"""
     print("\nAttempting to install missing packages...")
@@ -293,7 +329,6 @@ def install_missing_packages():
             subprocess.check_call([
                 sys.executable, '-m', 'pip', 'install', package
             ])
-
 
 def main():
     """Main setup function"""
@@ -317,7 +352,6 @@ def main():
     success = validator.run_all_checks()
     
     sys.exit(0 if success else 1)
-
 
 if __name__ == "__main__":
     main()

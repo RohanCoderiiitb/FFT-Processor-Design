@@ -30,7 +30,7 @@ class SmartInitialSampling(Sampling):
         """
         Generate initial population using smart strategies
         """
-        from globalVariablesMixedFFT_corrected import (
+        from globalVariablesMixedFFT import (
             ENABLE_SMART_INITIALIZATION,
             generate_smart_initial_population,
             CURRENT_FFT_SIZE

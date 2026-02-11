@@ -11,9 +11,9 @@ from pymoo.operators.sampling.rnd import IntegerRandomSampling
 from pymoo.termination import get_termination
 from pymoo.optimize import minimize
 
-from globalVariablesMixedFFT_corrected import *
-from objectiveEvaluationFFT_corrected import MixedPrecisionFFTProblem
-from optimizationUtils_corrected import (
+from globalVariablesMixedFFT import *
+from objectiveEvaluationFFT import MixedPrecisionFFTProblem
+from optimizationUtils import (
     MyCallback,
     SmartInitialSampling,
     BlockwiseMutation,

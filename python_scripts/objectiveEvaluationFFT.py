@@ -10,9 +10,8 @@ import csv
 import hashlib
 from pymoo.core.problem import Problem
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-from globalVariablesMixedFFT_corrected import *
-from fft_template_generator_corrected import FFTTemplateGeneratorFinal
+from globalVariablesMixedFFT import *
+from fft_template_generator import FFTTemplateGeneratorFinal
 from performance_evaluator import PerformanceEvaluator
 
 
