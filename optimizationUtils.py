@@ -62,7 +62,7 @@ class BlockwiseMutation(Mutation):
         self.genes_per_butterfly = 2  # mult_prec, add_prec
     
     def _do(self, problem, X, **kwargs):
-        from globalVariablesMixedFFT_corrected import MUTATION_RATE, CURRENT_GEN, GENERATIONS
+        from globalVariablesMixedFFT import MUTATION_RATE, CURRENT_GEN, GENERATIONS
         
         # Adaptive mutation rate (decreases over time)
         adaptive_rate = MUTATION_RATE * (1.0 - CURRENT_GEN / GENERATIONS)
@@ -112,7 +112,7 @@ class StagewiseMutation(Mutation):
         self.genes_per_stage = self.butterflies_per_stage * 2
     
     def _do(self, problem, X, **kwargs):
-        from globalVariablesMixedFFT_corrected import MUTATION_RATE
+        from globalVariablesMixedFFT import MUTATION_RATE
         
         Xp = np.copy(X)
         
@@ -159,7 +159,7 @@ class TwoPointCrossover(Crossover):
         self.genes_per_butterfly = 2
     
     def _do(self, problem, X, **kwargs):
-        from globalVariablesMixedFFT_corrected import CROSSOVER_RATE
+        from globalVariablesMixedFFT import CROSSOVER_RATE
         
         _, n_matings, n_var = X.shape
         Y = np.full_like(X, 0)
@@ -213,7 +213,7 @@ class StagewiseCrossover(Crossover):
         self.genes_per_stage = self.butterflies_per_stage * 2
     
     def _do(self, problem, X, **kwargs):
-        from globalVariablesMixedFFT_corrected import CROSSOVER_RATE
+        from globalVariablesMixedFFT import CROSSOVER_RATE
         
         _, n_matings, n_var = X.shape
         Y = np.full_like(X, 0)
