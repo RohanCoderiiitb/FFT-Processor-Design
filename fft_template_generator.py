@@ -174,42 +174,24 @@ module mixed_fft_{fft_size} (
                 code += f"        .twiddle_out(twiddle_s{stage}_bf{butterfly_idx})\n"
                 code += f"    );\n\n"
                 
-                # Wire declarations for precision selection
-                code += f"    // Precision-selected data for butterfly {butterfly_idx}\n"
-                code += f"    wire [15:0] bf_s{stage}_b{butterfly_idx}_A;\n"
-                code += f"    wire [15:0] bf_s{stage}_b{butterfly_idx}_B;\n"
-                code += f"    wire [15:0] bf_s{stage}_b{butterfly_idx}_X;\n"
-                code += f"    wire [15:0] bf_s{stage}_b{butterfly_idx}_Y;\n\n"
+                # Generate butterfly instance
+                code += f"    wire [23:0] bf_s{stage}_b{butterfly_idx}_X;\n"
+                code += f"    wire [23:0] bf_s{stage}_b{butterfly_idx}_Y;\n\n"
                 
-                # Input precision extraction
-                code += f"    // Extract input data based on multiplier precision\n"
-                code += f"    assign bf_s{stage}_b{butterfly_idx}_A = ({mult_prec} == 1) ? \n"
-                code += f"        stage{stage}[{idx_a}][23:8] :  // FP8\n"
-                code += f"        {{8'h00, stage{stage}[{idx_a}][7:0]}};  // FP4\n"
-                code += f"    assign bf_s{stage}_b{butterfly_idx}_B = ({mult_prec} == 1) ? \n"
-                code += f"        stage{stage}[{idx_b}][23:8] :  // FP8\n"
-                code += f"        {{8'h00, stage{stage}[{idx_b}][7:0]}};  // FP4\n\n"
-                
-                # Generate butterfly with specific precision
                 code += f"    butterfly_wrapper #(\n"
                 code += f"        .MULT_PRECISION({mult_prec}),\n"
                 code += f"        .ADD_PRECISION({add_prec})\n"
                 code += f"    ) bf_s{stage}_g{group}_b{bf} (\n"
-                code += f"        .A(bf_s{stage}_b{butterfly_idx}_A),\n"
-                code += f"        .B(bf_s{stage}_b{butterfly_idx}_B),\n"
+                code += f"        .A(stage{stage}[{idx_a}]),\n"
+                code += f"        .B(stage{stage}[{idx_b}]),\n"
                 code += f"        .W(twiddle_s{stage}_bf{butterfly_idx}),\n"
                 code += f"        .X(bf_s{stage}_b{butterfly_idx}_X),\n"
                 code += f"        .Y(bf_s{stage}_b{butterfly_idx}_Y)\n"
                 code += f"    );\n\n"
                 
-                # Output precision packing
-                code += f"    // Pack output data based on add precision\n"
-                code += f"    assign stage{stage+1}[{idx_a}] = ({add_prec} == 1) ? \n"
-                code += f"        {{bf_s{stage}_b{butterfly_idx}_X, 8'h00}} :  // FP8 result in upper bits\n"
-                code += f"        {{16'h0000, bf_s{stage}_b{butterfly_idx}_X[7:0]}};  // FP4 result in lower bits\n"
-                code += f"    assign stage{stage+1}[{idx_b}] = ({add_prec} == 1) ? \n"
-                code += f"        {{bf_s{stage}_b{butterfly_idx}_Y, 8'h00}} :  // FP8 result in upper bits\n"
-                code += f"        {{16'h0000, bf_s{stage}_b{butterfly_idx}_Y[7:0]}};  // FP4 result in lower bits\n\n"
+                # Connect outputs to next stage
+                code += f"    assign stage{stage+1}[{idx_a}] = bf_s{stage}_b{butterfly_idx}_X;\n"
+                code += f"    assign stage{stage+1}[{idx_b}] = bf_s{stage}_b{butterfly_idx}_Y;\n\n"
                 
                 butterfly_idx += 1
         

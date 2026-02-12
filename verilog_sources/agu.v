@@ -14,7 +14,7 @@ module dit_fft_agu_variable #(
     output reg done_fft, //goes high when fft is done (all stages)
     output reg [2:0] curr_stage, //current stage (0 to 4 for N=32)
 
-    output [7:0] twiddle_output //output for twiddle ROM
+    output [15:0] twiddle_output //output for twiddle ROM
 );
 
     //calculate number of stages based on N

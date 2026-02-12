@@ -18,7 +18,7 @@ module twiddle_factor_unified #(
 
     initial begin
         // Read the binary file containing unified 24-bit format
-        $readmemb("twiddles_1024_unified.txt", rom);
+        $readmemb("twiddles_1024.txt", rom);
     end
 
     // --------------------------------------------------------

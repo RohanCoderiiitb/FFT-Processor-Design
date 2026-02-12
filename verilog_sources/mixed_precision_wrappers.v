@@ -1,23 +1,22 @@
 // Wrapper modules to choose the precision
 
 module butterfly_wrapper #(
-    parameter[1:0] PRECISION = 0 // 0 for FP4, 1 for FP8
+    parameter MULT_PRECISION = 0, // 0 for FP4, 1 for FP8
+    parameter ADD_PRECISION = 0   // 0 for FP4, 1 for FP8
 )(
-    input [15:0] A, B, W, 
-    output [15:0] X, Y
+    input [23:0] A, B,  // 24-bit unified format inputs
+    input [23:0] W,     // twiddle factor (16-bit for FP8, only [7:0] used for FP4)
+    output [23:0] X, Y  // 24-bit unified format outputs
 );
     generate
-        if (PRECISION == 2'b00) begin : USE_PURE_FP4
-            wire [7:0] x_8bit, y_8bit;
-            fp4_butterfly_generation_unit fp4_butterfly_inst(.A(A[7:0]), .B(B[7:0]), .W(W[7:0]), .X(x_8bit), .Y(y_8bit));
-            assign Y = {8'b0, y_8bit};
-            assign X = {8'b0, x_8bit};
-        end else if (PRECISION == 2'b01) begin : USE_PURE_FP8
-            fp8_butterfly_generation_unit fp8_butterfly_inst(.A(A), .B(B), .W(W), .X(X), .Y(Y));
-        end else if (PRECISION == 2'b10) begin: USE_FP8add_FP4mul
-            fp4_butterfly_generation_unit_8add_4mul fp8_butterfly_inst(.A(A), .B(B), .W(W), .X(X), .Y(Y));
-        end else if (PRECISION == 2'b11) begin: USE_FP8mul_FP4add
-            fp4_butterfly_generation_unit_4add_8mul fp8_butterfly_inst(.A(A), .B(B), .W(W), .X(X), .Y(Y));
+        if (MULT_PRECISION == 0 && ADD_PRECISION == 0) begin : USE_PURE_FP4
+            fp4_butterfly_generation_unit fp4_butterfly_inst(.A(A), .B(B), .W(W[7:0]), .X(X), .Y(Y));
+        end else if (MULT_PRECISION == 1 && ADD_PRECISION == 1) begin : USE_PURE_FP8
+            fp8_butterfly_generation_unit fp8_butterfly_inst(.A(A), .B(B), .W(W[23:8]), .X(X), .Y(Y));
+        end else if (MULT_PRECISION == 0 && ADD_PRECISION == 1) begin: USE_FP8add_FP4mul
+            butterfly_generation_unit_4add_8mul fp4mul_fp8add_inst(.A(A), .B(B), .W(W[23:8]), .X(X), .Y(Y));
+        end else if (MULT_PRECISION == 1 && ADD_PRECISION == 0) begin: USE_FP8mul_FP4add
+            butterfly_generation_unit_8add_4mul fp8mul_fp4add_inst(.A(A), .B(B), .W(W[7:0]), .X(X), .Y(Y));
         end
     endgenerate
 endmodule
