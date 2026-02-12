@@ -195,7 +195,7 @@ module mixed_fft_{fft_size} (
                 code += f"    );\n\n"
                 
                 # Generate butterfly with specific precision
-                code += f"    mixed_butterfly #(\n"
+                code += f"    butterfly_wrapper #(\n"
                 code += f"        .MULT_PRECISION({mult_prec}),\n"
                 code += f"        .ADD_PRECISION({add_prec})\n"
                 code += f"    ) bf_s{stage}_g{group}_b{bf} (\n"
@@ -281,7 +281,7 @@ def test_generator_with_unified_twiddle():
     print("Testing FFT Template Generator with Unified Twiddle ROM\n")
     
     # Test with 8-point FFT
-    gen = FFTTemplateGeneratorFinal(fft_size=8)
+    gen = FFTTemplateGenerator(fft_size=8)
     
     # Test all FP8 strategy
     all_fp8 = [1] * gen.get_chromosome_length()

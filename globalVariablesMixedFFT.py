@@ -68,7 +68,7 @@ for size in [8, 16, 32, 64, 128, 256, 512, 1024]:
     print(f"  FFT-{size:<4}: {total_bf:>4} butterflies × 2 = {chrom_size:>5} genes")
 
 # ======================= Vivado Configuration =======================
-VIVADO_PATH = '/tools/Xilinx/Vivado/2021.1'
+VIVADO_PATH = '/tools/Xilinx/Vivado/2021.1/bin/vivado'
 VIVADO_BATCH_MODE = True
 CLOCK_PERIOD = 10.0          # ns (100 MHz target)
 FPGA_DEVICE = 'xc7a35tcpg236-1'
@@ -110,9 +110,9 @@ def generate_smart_initial_population(fft_size, pop_size):
     4. Alternating precision
     5. Random variations
     """
-    from fft_template_generator import FFTTemplateGeneratorPerButterfly
+    from fft_template_generator import FFTTemplateGenerator
     
-    gen = FFTTemplateGeneratorPerButterfly(fft_size)
+    gen = FFTTemplateGenerator(fft_size)
     chrom_length = gen.get_chromosome_length()
     population = []
     

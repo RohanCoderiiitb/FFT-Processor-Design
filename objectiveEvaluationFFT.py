@@ -11,7 +11,7 @@ import hashlib
 from pymoo.core.problem import Problem
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from globalVariablesMixedFFT import *
-from fft_template_generator import FFTTemplateGeneratorFinal
+from fft_template_generator import FFTTemplateGenerator
 from performance_evaluator import PerformanceEvaluator
 
 
@@ -34,7 +34,7 @@ class MixedPrecisionFFTProblem(Problem):
         self.fft_size = fft_size
         
         # Initialize generators
-        self.template_gen = FFTTemplateGeneratorFinal(fft_size)
+        self.template_gen = FFTTemplateGenerator(fft_size)
         self.perf_eval = PerformanceEvaluator(fft_size)
         
         # Get chromosome length from template generator

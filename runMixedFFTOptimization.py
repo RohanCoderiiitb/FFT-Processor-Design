@@ -29,16 +29,16 @@ def setup_verilog_sources():
     
     # Source files to copy
     source_files = [
-        'adder.v',
-        'multiplier.v',
-        'mixed_precision_wrappers.v',
-        'twiddle_rom.v',
-        'agu.v',
-        'memory.v'
+        '../verilog_sources/adder.v',
+        '../verilog_sources/multiplier.v',
+        '../verilog_sources/mixed_precision_wrappers.v',
+        '../verilog_sources/twiddle_rom.v',
+        '../verilog_sources/agu.v',
+        '../verilog_sources/memory.v'
     ]
     
     # Copy from upload directory
-    upload_dir = '/mnt/user-data/uploads'
+    """upload_dir = '/mnt/user-data/uploads'
     for fname in source_files:
         src = os.path.join(upload_dir, fname)
         dst = os.path.join(VERILOG_SOURCES_DIR, fname)
@@ -47,10 +47,10 @@ def setup_verilog_sources():
             shutil.copy(src, dst)
             log_message(f"Copied {fname}")
         else:
-            log_message(f"Warning: {fname} not found in uploads", level='WARN')
+            log_message(f"Warning: {fname} not found in uploads", level='WARN')"""
     
     # Copy wrapper file from current directory
-    wrapper_src = './mixed_precision_wrappers.v'
+    wrapper_src = '../verilog_sources/mixed_precision_wrappers.v'
     wrapper_dst = os.path.join(VERILOG_SOURCES_DIR, 'mixed_precision_wrappers.v')
     if os.path.exists(wrapper_src):
         shutil.copy(wrapper_src, wrapper_dst)
