@@ -1,0 +1,25 @@
+FFT Size: 8
+Generation: 1
+Solution ID: 3
+Total Butterflies: 12
+Chromosome Length: 24
+Chromosome: [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Results:
+  Power: 6.000000 W
+  Area: 20000 LUTs
+  SQNR: -100.00 dB
+  MAE: 1000000.000000
+
+Overall Precision Distribution:
+  FP4 Multipliers: 8 (66.7%)
+  FP8 Multipliers: 4 (33.3%)
+  FP4 Adders: 8 (66.7%)
+  FP8 Adders: 4 (33.3%)
+
+Per-Stage Breakdown:
+Stage    FP4 Mult     FP8 Mult     FP4 Add      FP8 Add     
+------------------------------------------------------------
+0        0            4            0            4           
+1        4            0            4            0           
+2        4            0            4            0           

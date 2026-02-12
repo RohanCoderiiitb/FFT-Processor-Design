@@ -1,0 +1,8 @@
+Mixed-Precision FFT Optimization Results
+============================================================
+
+FFT Size: 8
+Population: 6
+Generations: 3
+Objectives: 3
+
