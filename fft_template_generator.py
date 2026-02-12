@@ -1,5 +1,6 @@
 """
-FFT Template Generator
+FFT Template Generator - Updated for 24-bit Unified Memory Format
+Format: [23:16] FP8 Real, [15:8] FP8 Imag, [7:4] FP4 Real, [3:0] FP4 Imag
 """
 
 import os
@@ -10,7 +11,7 @@ import numpy as np
 class FFTTemplateGenerator:
     def __init__(self, fft_size):
         """
-        Initialize FFT template generator with user's twiddle ROM
+        Initialize FFT template generator with unified 24-bit twiddle ROM
         Args:
             fft_size: FFT size (must be power of 2, range: 2 to 1024)
         """
@@ -24,6 +25,7 @@ class FFTTemplateGenerator:
         print(f"  Butterflies/stage: {self.butterflies_per_stage}")
         print(f"  Total butterflies: {self.total_butterflies}")
         print(f"  Chromosome length: {2 * self.total_butterflies}")
+        print(f"  Memory format: 24-bit unified (FP8 + FP4)")
     
     def get_chromosome_length(self):
         """Return the required chromosome length"""
@@ -78,12 +80,13 @@ class FFTTemplateGenerator:
         return output_path
     
     def _generate_fft_top(self, config):
-        """Generate top-level FFT module using unified twiddle ROM"""
+        """Generate top-level FFT module using unified 24-bit twiddle ROM"""
         fft_size = config['fft_size']
         num_stages = config['num_stages']
         
         code = f"""// Auto-generated Mixed-Precision FFT
 // FFT Size: {fft_size}
+// Memory Format: 24-bit unified ([23:16] FP8 Real, [15:8] FP8 Imag, [7:4] FP4 Real, [3:0] FP4 Imag)
 // Uses unified twiddle ROM with runtime precision selection
 // Total Butterflies: {config['total_butterflies']}
 
@@ -91,45 +94,23 @@ module mixed_fft_{fft_size} (
     input clk,
     input rst,
     input start,
-    input [15:0] data_in_real [{fft_size-1}:0],
-    input [15:0] data_in_imag [{fft_size-1}:0],
-    output reg [15:0] data_out_real [{fft_size-1}:0],
-    output reg [15:0] data_out_imag [{fft_size-1}:0],
+    input [23:0] data_in [{fft_size-1}:0],  // 24-bit unified format input
+    output reg [23:0] data_out [{fft_size-1}:0],  // 24-bit unified format output
     output reg done
 );
 
-    // Stage interconnects
+    // Stage interconnects (24-bit unified format)
 """
         # Generate stage interconnects
         for stage in range(num_stages + 1):
-            code += f"    wire [15:0] stage{stage}_real [{fft_size-1}:0];\n"
-            code += f"    wire [15:0] stage{stage}_imag [{fft_size-1}:0];\n"
+            code += f"    wire [23:0] stage{stage} [{fft_size-1}:0];\n"
         
-        code += "\n    // Twiddle factor wires\n"
-        code += f"    wire [15:0] twiddle [{fft_size-1}:0];\n\n"
-        
-        # Generate twiddle ROM instances (one per unique twiddle index)
-        code += "    // Twiddle ROM instances (unified, runtime precision-selectable)\n"
-        twiddle_indices = set()
-        for stage_idx, stage in enumerate(config['stages']):
-            group_size = 2 ** (stage_idx + 1)
-            num_groups = fft_size // group_size
-            butterflies_per_group = group_size // 2
-            
-            for group in range(num_groups):
-                for bf in range(butterflies_per_group):
-                    twiddle_idx = (bf * num_groups) % fft_size
-                    twiddle_indices.add(twiddle_idx)
-        
-        # Note: We'll use per-butterfly precision for twiddle ROM
-        # For simplicity, use multiplier precision for twiddle selection
-        code += f"    // Note: Twiddle precision matches multiplier precision per butterfly\n\n"
+        code += "\n"
         
         # Input assignment
         code += "    // Input assignment\n"
         for i in range(fft_size):
-            code += f"    assign stage0_real[{i}] = data_in_real[{i}];\n"
-            code += f"    assign stage0_imag[{i}] = data_in_imag[{i}];\n"
+            code += f"    assign stage0[{i}] = data_in[{i}];\n"
         code += "\n"
         
         # Generate each stage with butterflies
@@ -142,12 +123,10 @@ module mixed_fft_{fft_size} (
         code += "        if (rst) begin\n"
         code += "            done <= 0;\n"
         for i in range(fft_size):
-            code += f"            data_out_real[{i}] <= 16'h0;\n"
-            code += f"            data_out_imag[{i}] <= 16'h0;\n"
+            code += f"            data_out[{i}] <= 24'h0;\n"
         code += "        end else if (start) begin\n"
         for i in range(fft_size):
-            code += f"            data_out_real[{i}] <= stage{num_stages}_real[{i}];\n"
-            code += f"            data_out_imag[{i}] <= stage{num_stages}_imag[{i}];\n"
+            code += f"            data_out[{i}] <= stage{num_stages}[{i}];\n"
         code += "            done <= 1;\n"
         code += "        end\n"
         code += "    end\n\n"
@@ -157,11 +136,12 @@ module mixed_fft_{fft_size} (
         return code
     
     def _generate_stage_with_unified_twiddle(self, stage_config, fft_size, stage_num):
-        """Generate a stage using unified twiddle ROM"""
+        """Generate a stage using unified 24-bit twiddle ROM"""
         stage = stage_config['stage_num']
         
         code = f"    // ===== Stage {stage} =====\n"
-        code += f"    // {len(stage_config['butterflies'])} butterflies in parallel\n\n"
+        code += f"    // {len(stage_config['butterflies'])} butterflies in parallel\n"
+        code += f"    // Using 24-bit unified memory format\n\n"
         
         # Calculate butterfly indices for Radix-2 DIT FFT
         group_size = 2 ** (stage + 1)
@@ -194,17 +174,42 @@ module mixed_fft_{fft_size} (
                 code += f"        .twiddle_out(twiddle_s{stage}_bf{butterfly_idx})\n"
                 code += f"    );\n\n"
                 
+                # Wire declarations for precision selection
+                code += f"    // Precision-selected data for butterfly {butterfly_idx}\n"
+                code += f"    wire [15:0] bf_s{stage}_b{butterfly_idx}_A;\n"
+                code += f"    wire [15:0] bf_s{stage}_b{butterfly_idx}_B;\n"
+                code += f"    wire [15:0] bf_s{stage}_b{butterfly_idx}_X;\n"
+                code += f"    wire [15:0] bf_s{stage}_b{butterfly_idx}_Y;\n\n"
+                
+                # Input precision extraction
+                code += f"    // Extract input data based on multiplier precision\n"
+                code += f"    assign bf_s{stage}_b{butterfly_idx}_A = ({mult_prec} == 1) ? \n"
+                code += f"        stage{stage}[{idx_a}][23:8] :  // FP8\n"
+                code += f"        {{8'h00, stage{stage}[{idx_a}][7:0]}};  // FP4\n"
+                code += f"    assign bf_s{stage}_b{butterfly_idx}_B = ({mult_prec} == 1) ? \n"
+                code += f"        stage{stage}[{idx_b}][23:8] :  // FP8\n"
+                code += f"        {{8'h00, stage{stage}[{idx_b}][7:0]}};  // FP4\n\n"
+                
                 # Generate butterfly with specific precision
                 code += f"    butterfly_wrapper #(\n"
                 code += f"        .MULT_PRECISION({mult_prec}),\n"
                 code += f"        .ADD_PRECISION({add_prec})\n"
                 code += f"    ) bf_s{stage}_g{group}_b{bf} (\n"
-                code += f"        .A({{stage{stage}_real[{idx_a}], stage{stage}_imag[{idx_a}]}}),\n"
-                code += f"        .B({{stage{stage}_real[{idx_b}], stage{stage}_imag[{idx_b}]}}),\n"
+                code += f"        .A(bf_s{stage}_b{butterfly_idx}_A),\n"
+                code += f"        .B(bf_s{stage}_b{butterfly_idx}_B),\n"
                 code += f"        .W(twiddle_s{stage}_bf{butterfly_idx}),\n"
-                code += f"        .X({{stage{stage+1}_real[{idx_a}], stage{stage+1}_imag[{idx_a}]}}),\n"
-                code += f"        .Y({{stage{stage+1}_real[{idx_b}], stage{stage+1}_imag[{idx_b}]}})\n"
+                code += f"        .X(bf_s{stage}_b{butterfly_idx}_X),\n"
+                code += f"        .Y(bf_s{stage}_b{butterfly_idx}_Y)\n"
                 code += f"    );\n\n"
+                
+                # Output precision packing
+                code += f"    // Pack output data based on add precision\n"
+                code += f"    assign stage{stage+1}[{idx_a}] = ({add_prec} == 1) ? \n"
+                code += f"        {{bf_s{stage}_b{butterfly_idx}_X, 8'h00}} :  // FP8 result in upper bits\n"
+                code += f"        {{16'h0000, bf_s{stage}_b{butterfly_idx}_X[7:0]}};  // FP4 result in lower bits\n"
+                code += f"    assign stage{stage+1}[{idx_b}] = ({add_prec} == 1) ? \n"
+                code += f"        {{bf_s{stage}_b{butterfly_idx}_Y, 8'h00}} :  // FP8 result in upper bits\n"
+                code += f"        {{16'h0000, bf_s{stage}_b{butterfly_idx}_Y[7:0]}};  // FP4 result in lower bits\n\n"
                 
                 butterfly_idx += 1
         
@@ -276,9 +281,9 @@ module mixed_fft_{fft_size} (
                   f"{stage_stat['fp8_add']:<12}")
 
 
-def test_generator_with_unified_twiddle():
-    """Test the FFT template generator with unified twiddle ROM"""
-    print("Testing FFT Template Generator with Unified Twiddle ROM\n")
+def test_generator_with_unified_24bit():
+    """Test the FFT template generator with unified 24-bit ROM"""
+    print("Testing FFT Template Generator with Unified 24-bit Memory Format\n")
     
     # Test with 8-point FFT
     gen = FFTTemplateGenerator(fft_size=8)
@@ -288,11 +293,24 @@ def test_generator_with_unified_twiddle():
     print("\n--- All FP8 Strategy ---")
     gen.print_chromosome_analysis(all_fp8)
     
-    output_file = "test_fft_8_unified_twiddle.v"
+    output_file = "test_fft_8_unified_24bit.v"
     gen.generate_verilog(all_fp8, output_file)
     print(f"\n✓ Generated Verilog: {output_file}")
-    print("\nCheck the file - it should use twiddle_factor_unified module!")
+    print("\nFeatures:")
+    print("  - 24-bit unified memory format")
+    print("  - Runtime precision selection")
+    print("  - FP8 in bits [23:8], FP4 in bits [7:0]")
+    
+    # Test mixed precision strategy
+    print("\n" + "="*60)
+    mixed = [0, 1] * (gen.get_chromosome_length() // 2)
+    print("\n--- Mixed Precision Strategy (alternating FP4/FP8) ---")
+    gen.print_chromosome_analysis(mixed)
+    
+    output_file_mixed = "test_fft_8_mixed_24bit.v"
+    gen.generate_verilog(mixed, output_file_mixed)
+    print(f"\n✓ Generated Verilog: {output_file_mixed}")
 
 
 if __name__ == "__main__":
-    test_generator_with_unified_twiddle()
+    test_generator_with_unified_24bit()

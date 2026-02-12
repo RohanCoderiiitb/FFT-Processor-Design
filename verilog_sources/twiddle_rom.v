@@ -1,3 +1,5 @@
+// Unified Twiddle ROM with 24-bit format
+// Format: [23:16] FP8 Real, [15:8] FP8 Imag, [7:4] FP4 Real, [3:0] FP4 Imag
 module twiddle_factor_unified #(
     parameter MAX_N = 1024,
     parameter ADDR_WIDTH = 10, // $clog2(1024)
@@ -9,22 +11,15 @@ module twiddle_factor_unified #(
 );
 
     // --------------------------------------------------------
-    // 1. ROM Declaration (1024 entries)
+    // 1. ROM Declaration (512 entries, 24-bit each)
     // --------------------------------------------------------
-    // The file contains 1024 lines:
-    // Lines 0-511:    FP8 Twiddle Factors
-    // Lines 512-1023: FP4 Twiddle Factors
-    reg [15:0] rom [0:1023];
+    // Format: [23:16] FP8 Real, [15:8] FP8 Imag, [7:4] FP4 Real, [3:0] FP4 Imag
+    reg [23:0] rom [0:511];
 
     initial begin
-        // Read the binary file containing both precision formats
-        $readmemb("twiddles_1024.txt", rom);
+        // Read the binary file containing unified 24-bit format
+        $readmemb("twiddles_1024_unified.txt", rom);
     end
-
-    // Define the offset based on PRECISION parameter
-    // If FP8 (1), start at 0. If FP4 (0), start at 512.
-    wire [9:0] base_offset;
-    assign base_offset = (PRECISION == 1) ? 10'd0 : 10'd512;
 
     // --------------------------------------------------------
     // 2. Dynamic Scaling Logic
@@ -51,7 +46,7 @@ module twiddle_factor_unified #(
     // 3. Symmetry Logic & Fetch
     // --------------------------------------------------------
     reg use_conjugate;
-    reg [9:0] rom_addr_base; // Address within the 0-511 block
+    reg [9:0] rom_addr; // Address within the 0-511 block
     reg is_midpoint;
 
     always @(*) begin
@@ -60,40 +55,49 @@ module twiddle_factor_unified #(
         if (scaled_k == 512) begin
             // 180 degrees (Index 512) is a boundary case
             is_midpoint = 1'b1;
-            rom_addr_base = 0; 
+            rom_addr = 0; 
             use_conjugate = 1'b0;
         end 
         else if (scaled_k > 511) begin
             // Second half (180 < angle < 360) -> Symmetry
-            rom_addr_base = 1024 - scaled_k;
+            rom_addr = 1024 - scaled_k;
             use_conjugate = 1'b1;
         end 
         else begin
             // First half (0 <= angle < 180)
-            rom_addr_base = scaled_k;
+            rom_addr = scaled_k;
             use_conjugate = 1'b0;
         end
     end
 
     // --------------------------------------------------------
-    // 4. Output Generation
+    // 4. Output Generation with Precision Selection
     // --------------------------------------------------------
-    reg [15:0] raw_data;
+    reg [23:0] raw_data;
+    reg [15:0] selected_data;
 
     always @(*) begin
         if (is_midpoint) begin
             // Hardcoded -1.0 value
             if (PRECISION == 1) 
-                raw_data = 16'hB800; // FP8 (-1.0)
+                selected_data = 16'hB800; // FP8 (-1.0, real=-1, imag=0)
             else 
-                raw_data = 16'h00A0; // FP4 (-1.0 approx)
+                selected_data = 16'h00A0; // FP4 (-1.0, real=-1, imag=0)
         end else begin
-            // Read from ROM with offset applied
-            // FP8 reads from [0 + index], FP4 reads from [512 + index]
-            raw_data = rom[base_offset + rom_addr_base];
+            // Read from ROM
+            raw_data = rom[rom_addr];
+            
+            // Select FP8 or FP4 based on PRECISION parameter
+            if (PRECISION == 1) begin
+                // FP8: Extract bits [23:8]
+                selected_data = raw_data[23:8];
+            end else begin
+                // FP4: Extract bits [7:0] and extend to 16 bits
+                selected_data = {8'h00, raw_data[7:0]};
+            end
         end
 
-        twiddle_out = raw_data;
+        twiddle_out = selected_data;
 
         // Apply Conjugate (Flip sign of imaginary part)
         if (use_conjugate) begin
