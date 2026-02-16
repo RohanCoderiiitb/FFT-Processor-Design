@@ -98,6 +98,21 @@ module mixed_fft_{fft_size} (
     output reg [23:0] data_out [{fft_size-1}:0],  // 24-bit unified format output
     output reg done
 );
+    // Bit reversal for DIT FFT
+    wire [23:0] data_reversed [{fft_size-1}:0];
+    wire bit_rev_done;
+    
+    bit_reversal #(.n({fft_size})) input_bit_reversal (
+        .clk(clk),
+        .rst(rst),
+        .start(start),
+        .data_in(data_in),
+        .data_out(data_reversed),
+        .done(bit_rev_done)
+    );  // FFT stages...
+    assign stage0 = data_reversed;  // Use bit-reversed input
+    
+    // ... rest of FFT stages ...
 
     // Stage interconnects (24-bit unified format)
 """
