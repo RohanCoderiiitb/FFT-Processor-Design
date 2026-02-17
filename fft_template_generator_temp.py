@@ -349,7 +349,57 @@ module mixed_fft_{n}_core #(
     //stage completion detection
     reg prev_done_stage;
     wire stage_complete = agu_done_stage && !prev_done_stage;
-    
+
+    wire [15:0] X_bf_fp8;
+    wire [15:0] Y_bf_fp8;
+    reg [15:0] X_bf_fp8_reg;
+    reg [15:0] Y_bf_fp8_reg;
+
+    fp4_to_fp8_converter fp4_to_fp8_converter_real_inst1(
+        .fp4_in(X_bf[7:4]),
+        .fp8_out(X_bf_fp8[15:8])
+    );
+
+    fp4_to_fp8_converter fp4_to_fp8_converter_imag_inst1(
+        .fp4_in(X_bf[3:0]),
+        .fp8_out(X_bf_fp8[7:0])
+    );
+
+    fp4_to_fp8_converter fp4_to_fp8_converter_real_inst2(
+        .fp4_in(Y_bf[7:4]),
+        .fp8_out(Y_bf_fp8[15:8])
+    );
+
+    fp4_to_fp8_converter fp4_to_fp8_converter_imag_inst2(
+        .fp4_in(Y_bf[3:0]),
+        .fp8_out(Y_bf_fp8[7:0])
+    );
+
+    wire [15:0] X_bf_fp4;
+    wire [15:0] Y_bf_fp4;
+    reg [15:0] X_bf_fp4_reg;
+    reg [15:0] Y_bf_fp4_reg;
+
+    fp8_to_fp4_converter fp8_to_fp4_converter_real_inst1(
+        .fp8_in(X_bf[15:8]),
+        .fp4_out(X_bf_fp4[7:4])
+    );
+
+    fp8_to_fp4_converter fp8_to_fp4_converter_imag_inst1(
+        .fp8_in(X_bf[7:0]),
+        .fp4_out(X_bf_fp4[3:0])
+    );
+
+    fp8_to_fp4_converter fp8_to_fp4_converter_real_inst2(
+        .fp8_in(Y_bf[15:8]),
+        .fp4_out(Y_bf_fp4[7:4])
+    );
+
+    fp8_to_fp4_converter fp8_to_fp4_converter_imag_inst2(
+        .fp8_in(Y_bf[7:0]),
+        .fp4_out(Y_bf_fp4[3:0])
+    );
+
     //state machine
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
@@ -417,9 +467,9 @@ module mixed_fft_{n}_core #(
                     int_wr_addr <= idx_a;
                     // int_wr_data set by combinational block above
                     if (output_was_fp8) begin
-                        int_wr_data <= {{X_reg, 8'h00}};
+                        int_wr_data <= {{X_reg, X_reg_fp4}};
                     end else begin
-                        int_wr_data <= {{16'h0000, X_reg[7:0]}};
+                        int_wr_data <= {{X_reg_fp8, X_reg[7:0]}};
                     end
                 end
                 
@@ -427,9 +477,9 @@ module mixed_fft_{n}_core #(
                     int_wr_en <= 1;
                     int_wr_addr <= idx_b;
                     if (output_was_fp8) begin
-                        int_wr_data <= {{Y_reg, 8'h00}};
+                        int_wr_data <= {{Y_reg, Y_reg_fp4}};
                     end else begin
-                        int_wr_data <= {{16'h0000, Y_reg[7:0]}};
+                        int_wr_data <= {{Y_reg_fp8, Y_reg[7:0]}};
                     end
                     agu_next_step <= 1;
                 end
