@@ -1,12 +1,12 @@
 // Unified Twiddle ROM with 24-bit format
 // Format: [23:16] FP8 Real, [15:8] FP8 Imag, [7:4] FP4 Real, [3:0] FP4 Imag
-module twiddle_factor_unified #(
+module twiddle_factor_unified#(
     parameter MAX_N = 1024,
-    parameter ADDR_WIDTH = 10, // $clog2(1024)
+    parameter ADDR_WIDTH = 10 // $clog2(1024)
 )(
     input [ADDR_WIDTH-1:0] k,   // Index k
     input [ADDR_WIDTH:0] n,     // Current FFT size N
-    input PRECISION;
+    input PRECISION,
     output reg [15:0] twiddle_out
 );
 
