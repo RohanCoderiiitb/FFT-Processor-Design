@@ -785,9 +785,9 @@ module mixed_fft_{n}_top #(
 
 # Test
 if __name__ == "__main__":
-    gen = CorrectedMixedPrecisionFFTGenerator(fft_size=8)
+    gen = FFTTemplateGenerator(fft_size=8)
     
     chromosome = [0, 0, 1, 0, 1, 1]
     
     output_file = gen.generate_complete_fft(chromosome)
-    print(f"\n✓ Complete FFT with 16-bit butterfly I/O generated!")fftacc@iiitb-OptiPlex-7080:~$ 
+    print(f"\n✓ Complete FFT with 16-bit butterfly I/O generated!")
