@@ -20,7 +20,8 @@ set top_file     [lindex $argv 4]
 set verilog_dir  [lindex $argv 5]
 
 set fft_size     [lindex [split $design_name "_"] 1]
-set top_module   "mixed_fft_${fft_size}_top"
+# Top module name matches the generated file: <design_name>_top
+set top_module   "${design_name}_top"
 
 puts "============================================================"
 puts " Vivado synthesis: $design_name"
@@ -149,4 +150,4 @@ puts "   LUTs  : $lut_count"
 puts "   Power : $total_power W"
 puts "   WNS   : $wns ns"
 puts "   CSV   : $csv_output"
-puts "------------------------------------------------------------"
+puts "------------------------------------------------------------"g
