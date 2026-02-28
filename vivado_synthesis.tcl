@@ -1,13 +1,8 @@
 # vivado_synthesis.tcl
-# Template called by Python objectiveEvaluationFFT.py
-#
-# Arguments (passed via -tclargs):
-#   1  design_name   – unique run identifier, e.g. fft_8_sol3_gen2
-#   2  csv_output    – absolute path for the metrics CSV
-#   3  clock_period  – target clock period in ns
-#   4  core_file     – absolute path to the generated per-solution core .v
-#   5  top_file      – absolute path to the shared top .v
-#   6  verilog_dir   – directory containing the base library sources (adder.v, etc.)
+# Called by objectiveEvaluationFFT.py via:
+#   vivado -mode batch -source vivado_synthesis.tcl \
+#          -tclargs <design_name> <csv_output> <clock_period> \
+#                   <core_file> <top_file> <verilog_dir>
 
 # ---------------------------------------------------------------------------
 # Parse arguments
@@ -19,112 +14,116 @@ set core_file    [lindex $argv 3]
 set top_file     [lindex $argv 4]
 set verilog_dir  [lindex $argv 5]
 
-set fft_size     [lindex [split $design_name "_"] 1]
-# Top module name matches the generated file: <design_name>_top
-set top_module   "${design_name}_top"
+set top_module "${design_name}_top"
 
-puts "============================================================"
-puts " Vivado synthesis: $design_name"
-puts "   Core file : $core_file"
-puts "   Top  file : $top_file"
-puts "   Lib  dir  : $verilog_dir"
-puts "   Top module: $top_module"
-puts "   CSV output: $csv_output"
-puts "============================================================"
+puts "INFO: design_name  = $design_name"
+puts "INFO: top_module   = $top_module"
+puts "INFO: core_file    = $core_file"
+puts "INFO: top_file     = $top_file"
+puts "INFO: verilog_dir  = $verilog_dir"
+puts "INFO: csv_output   = $csv_output"
+puts "INFO: clock_period = $clock_period ns"
 
 # ---------------------------------------------------------------------------
-# Create in-memory project (no disk project, faster)
+# Create in-memory project
 # ---------------------------------------------------------------------------
-set project_dir "./vivado_projects/${design_name}"
 create_project -in_memory -part xc7a35tcpg236-1
 
 # ---------------------------------------------------------------------------
-# Add source files
+# Add sources
 # ---------------------------------------------------------------------------
-# 1. Base library (shared arithmetic / memory / AGU / twiddle / bit-reversal)
-add_files -norecurse [glob ${verilog_dir}/*.v]
-
-# 2. Per-solution generated core (overrides any same-named file in verilog_dir)
+foreach f [glob ${verilog_dir}/*.v] {
+    add_files -norecurse $f
+}
 add_files -norecurse $core_file
-
-# 3. Shared top wrapper for this FFT size
 add_files -norecurse $top_file
 
-# Set include path in case any file uses `include
 set_property include_dirs $verilog_dir [current_fileset]
-
-# ---------------------------------------------------------------------------
-# Set elaboration top
-# ---------------------------------------------------------------------------
 set_property top $top_module [current_fileset]
 update_compile_order -fileset sources_1
 
 # ---------------------------------------------------------------------------
-# Synthesis run
+# Synthesis
 # ---------------------------------------------------------------------------
 synth_design \
-    -top        $top_module \
-    -part       xc7a35tcpg236-1 \
-    -mode       out_of_context
+    -top  $top_module \
+    -part xc7a35tcpg236-1 \
+    -mode out_of_context
 
-# ---------------------------------------------------------------------------
-# Timing constraint (for power estimation)
-# ---------------------------------------------------------------------------
 create_clock -period $clock_period -name clk [get_ports clk]
-
-# Run implementation-lite (opt + power analysis only, skip place & route)
 opt_design
 
 # ---------------------------------------------------------------------------
-# Extract metrics
+# Extract area (LUTs)  — write report to file then parse
 # ---------------------------------------------------------------------------
+set util_rpt_file "/tmp/${design_name}_util.rpt"
+report_utilization -file $util_rpt_file
 
-# --- Area ---
 set lut_count 0
-catch {
-    set util_rpt [report_utilization -return_string]
-    foreach line [split $util_rpt "\n"] {
-        if {[regexp {^\|\s*LUT\s+\|\s+(\d+)\s+\|} $line match val]} {
-            set lut_count [string trim $val]
-            break
-        }
-        # Vivado 2021+ format
-        if {[regexp {CLB LUTs\s*\|\s*(\d+)} $line match val]} {
-            set lut_count [string trim $val]
-            break
-        }
-    }
-}
-
-# --- Power ---
-set total_power 0.0
-catch {
-    report_power -file /tmp/${design_name}_power.rpt
-    set fp [open /tmp/${design_name}_power.rpt r]
-    set power_data [read $fp]
+if {[file exists $util_rpt_file]} {
+    set fp [open $util_rpt_file r]
+    set content [read $fp]
     close $fp
-    foreach line [split $power_data "\n"] {
-        if {[regexp {Total On-Chip Power \(W\)\s*\|\s*([0-9.]+)} $line match val]} {
+
+    # Try CLB LUTs or Slice LUTs first (total line)
+    foreach line [split $content "\n"] {
+        if {[regexp {^\|\s*(CLB LUTs|Slice LUTs)\s*\|\s*(\d+)\s*\|} $line -> _lbl val]} {
+            set lut_count [string trim $val]
+            break
+        }
+    }
+    # Fallback: sum LUT-as-Logic + LUT-as-Memory
+    if {$lut_count == 0} {
+        set lut_logic 0
+        set lut_mem 0
+        foreach line [split $content "\n"] {
+            if {[regexp {^\|\s*LUT as Logic\s*\|\s*(\d+)\s*\|} $line -> val]} {
+                set lut_logic [string trim $val]
+            }
+            if {[regexp {^\|\s*LUT as Memory\s*\|\s*(\d+)\s*\|} $line -> val]} {
+                set lut_mem [string trim $val]
+            }
+        }
+        set lut_count [expr {$lut_logic + $lut_mem}]
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Extract power (W)
+# ---------------------------------------------------------------------------
+set power_rpt_file "/tmp/${design_name}_power.rpt"
+report_power -file $power_rpt_file
+
+set total_power 0.0
+if {[file exists $power_rpt_file]} {
+    set fp [open $power_rpt_file r]
+    set content [read $fp]
+    close $fp
+
+    foreach line [split $content "\n"] {
+        if {[regexp {Total On-Chip Power \(W\)\s*\|\s*([0-9.]+)} $line -> val]} {
             set total_power [string trim $val]
             break
         }
-        # alternate format
-        if {[regexp {\|\s*Total\s*\|\s*([0-9.]+)\s*\|} $line match val]} {
+        if {[regexp {^\|\s*Total\s*\|\s*([0-9.]+)\s*\|} $line -> val]} {
             set total_power [string trim $val]
             break
         }
     }
 }
 
-# --- Timing (worst negative slack) ---
-set wns 0.0
-catch {
-    set timing_rpt [report_timing_summary -return_string]
-    foreach line [split $timing_rpt "\n"] {
-        if {[regexp {WNS\(ns\)\s+TNS\(ns\).*\n\s+([-0-9.]+)} $timing_rpt match val]} {
-            set wns $val
-            break
-        }
+# ---------------------------------------------------------------------------
+# Extract WNS
+# ---------------------------------------------------------------------------
+set wns_rpt_file "/tmp/${design_name}_timing.rpt"
+report_timing_summary -file $wns_rpt_file
+set wns "N/A"
+if {[file exists $wns_rpt_file]} {
+    set fp [open $wns_rpt_file r]
+    set content [read $fp]
+    close $fp
+    if {[regexp {WNS\(ns\)[^\n]*\n[^\n]*\n\s*([-0-9.]+)} $content -> val]} {
+        set wns [string trim $val]
     }
 }
 
@@ -144,10 +143,9 @@ puts $fp "wns_ns,$wns"
 puts $fp "clock_period_ns,$clock_period"
 close $fp
 
-puts "------------------------------------------------------------"
-puts " Synthesis complete for $design_name"
-puts "   LUTs  : $lut_count"
-puts "   Power : $total_power W"
-puts "   WNS   : $wns ns"
-puts "   CSV   : $csv_output"
-puts "------------------------------------------------------------"g
+# Use "puts stdout" so leading-dash strings are never misread as channel flags
+puts stdout "INFO: Synthesis complete  : $design_name"
+puts stdout "INFO:   LUTs  = $lut_count"
+puts stdout "INFO:   Power = $total_power W"
+puts stdout "INFO:   WNS   = $wns ns"
+puts stdout "INFO:   CSV   = $csv_output"
