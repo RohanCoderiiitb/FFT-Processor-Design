@@ -52,7 +52,7 @@ module dit_fft_agu_variable #(
 
     assign k = k_idx; //assign internal wire to output port
 
-    twiddle_factor #(
+    twiddle_factor_unified #(
         .MAX_N(MAX_N),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) tw_rom (
