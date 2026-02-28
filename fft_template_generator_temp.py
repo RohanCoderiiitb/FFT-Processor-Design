@@ -790,7 +790,7 @@ module mixed_fft_{n}_top #(
     end
     
     assign done = fft_done;
-
+    endmodule
 '''
 
 # Test

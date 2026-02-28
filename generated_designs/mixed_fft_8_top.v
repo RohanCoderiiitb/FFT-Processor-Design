@@ -133,7 +133,7 @@ module mixed_fft_8_top #(
                         if (!fft_start_issued) begin
                             fft_start <= 1;
                             fft_start_issued <= 1;
-                        endfftacc@iiitb-OptiPlex-7080:~$ 
+                        end
 
                     end else begin
                         wr_en <= 0;
@@ -171,5 +171,5 @@ module mixed_fft_8_top #(
         end
     end
     
-    assign done = fft_done;fftacc@iiitb-OptiPlex-7080:~$ 
-
+    assign done = fft_done;
+    endmodule
