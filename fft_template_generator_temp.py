@@ -8,16 +8,20 @@ import os
 import math
 
 
-class CorrectedMixedPrecisionFFTGenerator:
+class FFTTemplateGenerator:
     def __init__(self, fft_size):
         self.fft_size = fft_size
         self.num_stages = int(math.log2(fft_size))
-        self.addr_width = int(math.log2(fft_size))
+        self.addr_width = self.num_stages          # log2(N) bits for addresses
+        self.butterflies_per_stage = fft_size // 2
+        self.total_butterflies = self.butterflies_per_stage * self.num_stages
+        # Stage-level chromosome: 2 genes per stage
         self.chromosome_length = self.num_stages * 2
-        
-        print(f"FFT-{fft_size} Configuration:")
-        print(f"  Stages: {self.num_stages}")
-        print(f"  Chromosome length: {self.chromosome_length}")
+
+        print(f"FFTTemplateGenerator FFT-{fft_size}:")
+        print(f"  Stages            : {self.num_stages}")
+        print(f"  Butterflies/stage : {self.butterflies_per_stage}")
+        print(f"  Chromosome length : {self.chromosome_length}")
     
     def get_chromosome_length(self):
         return self.chromosome_length
@@ -29,6 +33,7 @@ class CorrectedMixedPrecisionFFTGenerator:
             'addr_width': self.addr_width,
             'stages': []
         }
+        prev_out_prec = 0
         
         for stage in range(self.num_stages):
             idx = stage * 2
@@ -40,10 +45,23 @@ class CorrectedMixedPrecisionFFTGenerator:
                 'stage_num': stage,
                 'mult_precision': mult_prec,
                 'add_precision': add_prec,
-                'output_precision': output_prec
+                'output_precision': output_prec,
+                'read_precision': prev_out_prec
             })
+            prev_out_prec = output_prec
         
         return config
+    
+    def generate_verilog(self, chromosome, output_file):
+        """Generate a single top-level Verilog file for the given chromosome."""
+        config = self._chromosome_to_config(chromosome)
+        os.makedirs(os.path.dirname(output_file) or '.', exist_ok=True)
+
+        core_code = self._generate_core(config)
+        with open(output_file, 'w') as f:
+            f.write(core_code)
+
+        return output_file
     
     def generate_complete_fft(self, chromosome, output_dir='./generated_designs'):
         config = self.chromosome_to_config(chromosome)
@@ -53,7 +71,6 @@ class CorrectedMixedPrecisionFFTGenerator:
         # Generate files
         core = self._generate_core(config)
         top = self._generate_top(config)
-        wrapper = self._generate_wrapper()
         
         base_name = f"mixed_fft_{self.fft_size}"
         
@@ -61,458 +78,529 @@ class CorrectedMixedPrecisionFFTGenerator:
             f.write(core)
         with open(f"{output_dir}/{base_name}_top.v", 'w') as f:
             f.write(top)
-        with open(f"{output_dir}/butterfly_wrapper_16bit.v", 'w') as f:
-            f.write(wrapper)
         
         print(f"✓ Generated: {base_name}_core.v")
         print(f"✓ Generated: {base_name}_top.v") 
-        print(f"✓ Generated: butterfly_wrapper_16bit.v")
         
         return f"{output_dir}/{base_name}_top.v"
+
+    def analyze_chromosome_statistics(self, chromosome):
+        """Return dict of precision distribution stats (used by objectiveEvaluationFFT)."""
+        config = self._chromosome_to_config(chromosome)
+        fp8_mult = sum(s['mult_precision'] for s in config['stages'])
+        fp8_add  = sum(s['add_precision']  for s in config['stages'])
+        fp4_mult = self.num_stages - fp8_mult
+        fp4_add  = self.num_stages - fp8_add
+
+        stage_stats = [
+            {
+                'stage'   : s['stage_num'],
+                'fp8_mult': s['mult_precision'],
+                'fp4_mult': 1 - s['mult_precision'],
+                'fp8_add' : s['add_precision'],
+                'fp4_add' : 1 - s['add_precision'],
+            }
+            for s in config['stages']
+        ]
+
+        return {
+            'fp8_mult'   : fp8_mult,
+            'fp4_mult'   : fp4_mult,
+            'fp8_add'    : fp8_add,
+            'fp4_add'    : fp4_add,
+            'stage_stats': stage_stats,
+        }
     
-    def _generate_wrapper(self):
-        """Generate butterfly wrapper with 16-bit outputs"""
-        return '''// Butterfly Wrapper with 16-bit I/O
-// Handles conversion between 24-bit memory format and butterfly I/O
+    def _stage_localparam_block(self, config):
+        """Emit one set of localparams per stage."""
+        lines = []
+        for s in config['stages']:
+            sn = s['stage_num']
+            lines += [
+                f"    localparam STAGE{sn}_MULT_PREC = {s['mult_precision']};",
+                f"    localparam STAGE{sn}_ADD_PREC  = {s['add_precision']};",
+                f"    localparam STAGE{sn}_OUT_PREC  = {s['output_precision']};",
+                f"    localparam STAGE{sn}_RD_PREC   = {s['read_precision']};",
+            ]
+        return '\n'.join(lines)
 
-module butterfly_wrapper_16bit #(
-    parameter MULT_PRECISION = 0,  // 0=FP4, 1=FP8
-    parameter ADD_PRECISION = 0    // 0=FP4, 1=FP8
-)(
-    input [23:0] A_mem, B_mem,  // 24-bit from memory
-    input [15:0] W,              // 16-bit twiddle
-    output [15:0] X, Y,          // 16-bit to memory interface
-    output output_is_fp8         // flag: 0=FP4, 1=FP8
-);
+    def _precision_mux_block(self, config):
+        """
+        Always-comb block that drives current_mult_prec, current_add_prec,
+        memory_read_prec, and memory_write_prec from curr_stage.
+        """
+        cases = []
+        ns = config['num_stages']
+        stage_bits = max(1, math.ceil(math.log2(ns + 1)))  # enough bits for stages
+        for s in config['stages']:
+            sn = s['stage_num']
+            cases.append(
+                f"            {stage_bits}'d{sn}: begin\n"
+                f"                current_mult_prec  = STAGE{sn}_MULT_PREC;\n"
+                f"                current_add_prec   = STAGE{sn}_ADD_PREC;\n"
+                f"                memory_read_prec   = STAGE{sn}_RD_PREC;\n"
+                f"                memory_write_prec  = STAGE{sn}_OUT_PREC;\n"
+                f"            end"
+            )
 
-    generate
-        if (MULT_PRECISION == 0 && ADD_PRECISION == 0) begin : USE_PURE_FP4
-            // Pure FP4: 8-bit butterfly
-            wire [7:0] X_fp4, Y_fp4;
-            
-            fp4_butterfly_generation_unit fp4_bf (
-                .A(A_mem[7:0]),
-                .B(B_mem[7:0]),
-                .W(W),
-                .X(X_fp4),
-                .Y(Y_fp4)
-            );
-            
-            // Zero-extend to 16-bit
-            assign X = {8'h00, X_fp4};
-            assign Y = {8'h00, Y_fp4};
-            assign output_is_fp8 = 0;
-            
-        end else if (MULT_PRECISION == 1 && ADD_PRECISION == 1) begin : USE_PURE_FP8
-            // Pure FP8: 16-bit butterfly
-            
-            fp8_butterfly_generation_unit fp8_bf (
-                .A(A_mem[23:8]),
-                .B(B_mem[23:8]),
-                .W(W),
-                .X(X),
-                .Y(Y)
-            );
-            
-            assign output_is_fp8 = 1;
-            
-        end else if (MULT_PRECISION == 1 && ADD_PRECISION == 0) begin : USE_FP8mul_FP4add
-            // FP8 mult, FP4 add: outputs 8-bit (FP4)
-            wire [7:0] X_fp4, Y_fp4;
-            
-            butterfly_generation_unit_8add_4mul mixed_bf (
-                .A(A_mem[23:8]),  // FP8 input
-                .B(B_mem[23:8]),  // FP8 input
-                .W(W),            // FP8 twiddle
-                .X(X_fp4),
-                .Y(Y_fp4)
-            );
-            
-            // Zero-extend to 16-bit
-            assign X = {8'h00, X_fp4};
-            assign Y = {8'h00, Y_fp4};
-            assign output_is_fp8 = 0;
-            
-        end else if (MULT_PRECISION == 0 && ADD_PRECISION == 1) begin : USE_FP4mul_FP8add
-            // FP4 mult, FP8 add: outputs 16-bit (FP8)
-            
-            butterfly_generation_unit_4add_8mul mixed_bf (
-                .A(A_mem[7:0]),   // FP4 input
-                .B(B_mem[7:0]),   // FP4 input
-                .W(W),            // FP4 twiddle
-                .X(X),
-                .Y(Y)
-            );
-            
-            assign output_is_fp8 = 1;
-        end
-    endgenerate
+        return (
+            "    always @(*) begin\n"
+            "        case (curr_stage)\n"
+            + '\n'.join(cases) + "\n"
+            "            default: begin\n"
+            "                current_mult_prec = 0;\n"
+            "                current_add_prec  = 0;\n"
+            "                memory_read_prec  = 0;\n"
+            "                memory_write_prec = 0;\n"
+            "            end\n"
+            "        endcase\n"
+            "    end"
+        )
 
-endmodule
-'''
+    def _twiddle_generate_block(self, config, n, aw):
+        """
+        Single twiddle_factor_unified instance.  precision is now a runtime
+        input port (not a parameter), so one instance covers all stages and
+        both precisions.  current_mult_prec drives it directly.
+        """
+        lines = [
+            "    // Single twiddle ROM instance — precision is a runtime input port.",
+            "    // The ROM stores all twiddle factors in both precisions in each",
+            "    // 24-bit entry; the precision input just selects the output slice.",
+            "    wire [15:0] twiddle;",
+            "",
+            "    twiddle_factor_unified #(",
+            f"        .MAX_N     ({n}),",
+            f"        .ADDR_WIDTH({aw})",
+            "    ) twiddle_inst (",
+            "        .k           (k),",
+            "        .n           (N),",
+            "        .PRECISION   (current_mult_prec),  // driven by stage mux",
+            "        .twiddle_out (twiddle)",
+            "    );",
+        ]
+        return '\n'.join(lines)
+
+    def _butterfly_generate_block(self, config, n, aw):
+        """
+        One butterfly_wrapper_16bit instance per stage, each with correct
+        MULT_PRECISION and ADD_PRECISION from the chromosome.
+        Input slicing from the 24-bit memory word also follows read_precision.
+
+        butterfly ports (from butterfly.v):
+          fp8_butterfly_generation_unit: A[15:0], B[15:0], W[15:0] → X[15:0], Y[15:0]
+          fp4_butterfly_generation_unit: A[7:0],  B[7:0],  W[15:0] → X[7:0],  Y[7:0]
+          butterfly_generation_unit_8add_4mul: A[15:0], B[7:0],  W[15:0] → X[15:0], Y[15:0]
+          butterfly_generation_unit_4add_8mul: A[7:0],  B[15:0], W[15:0] → X[7:0],  Y[7:0]
+
+        The wrapper (butterfly_wrapper_16bit, regenerated below) normalises to
+        16-bit I/O so the core only ever handles [15:0] buses.
+        """
+        lines = ["    // Per-stage butterfly instances (precision set from chromosome)"]
+
+        for s in config['stages']:
+            sn = s['stage_num']
+            mp = s['mult_precision']
+            ap = s['add_precision']
+            lines += [
+                f"    wire [15:0] X_stage{sn}, Y_stage{sn};",
+                f"    wire        fp8_out_stage{sn};",
+            ]
+
+        lines.append("")
+        lines.append("    generate")
+        for s in config['stages']:
+            sn = s['stage_num']
+            mp = s['mult_precision']
+            ap = s['add_precision']
+            lines += [
+                f"        // Stage {sn}: mult={mp} add={ap}",
+                f"        butterfly_wrapper_16bit #(",
+                f"            .MULT_PRECISION({mp}),",
+                f"            .ADD_PRECISION ({ap})",
+                f"        ) bf_stage{sn}_inst (",
+                f"            .A_mem        (A_mem_24),",
+                f"            .B_mem        (B_mem_24),",
+                f"            .W            (twiddle_stage{sn}),",
+                f"            .X            (X_stage{sn}),",
+                f"            .Y            (Y_stage{sn}),",
+                f"            .output_is_fp8(fp8_out_stage{sn})",
+                f"        );",
+                "",
+            ]
+        lines.append("    endgenerate")
+
+        # Runtime mux: pick active stage outputs
+        lines.append("")
+        lines.append("    // Select active butterfly output based on curr_stage")
+        lines.append("    reg [15:0] X_bf, Y_bf;")
+        lines.append("    reg        bf_output_is_fp8;")
+        lines.append("    always @(*) begin")
+        lines.append("        case (curr_stage)")
+        for s in config['stages']:
+            sn = s['stage_num']
+            lines += [
+                f"            {sn}: begin",
+                f"                X_bf            = X_stage{sn};",
+                f"                Y_bf            = Y_stage{sn};",
+                f"                bf_output_is_fp8 = fp8_out_stage{sn};",
+                f"            end",
+            ]
+        lines.append("            default: begin X_bf = 0; Y_bf = 0; bf_output_is_fp8 = 0; end")
+        lines.append("        endcase")
+        lines.append("    end")
+
+        return '\n'.join(lines)
+
+    def _memory_read_expansion(self):
+        """
+        memory returns 16-bit (already precision-sliced inside mixed_memory_unified).
+        Expand to 24-bit for the butterfly A_mem/B_mem bus:
+          FP8 (memory_read_prec=1): data is [15:0] = [FP8_real | FP8_imag]
+                → 24-bit = {data[15:0], 8'h00}  (upper 16 are real+imag FP8, lower 8 unused)
+          FP4 (memory_read_prec=0): data is [7:0] = [FP4_real | FP4_imag] in bits [7:0]
+                → 24-bit = {16'h0000, data[7:0]}
+        The butterfly_wrapper_16bit already extracts the right slice from A_mem[23:0].
+        """
+        return """\
+    // 16-bit memory read → 24-bit butterfly bus
+    // mixed_memory_unified already applies rd_precision_0, returning 16 bits.
+    // We re-pack into the 24-bit canonical format so butterfly_wrapper_16bit
+    // can slice consistently: [23:8]=FP8 complex, [7:0]=FP4 complex.
+    wire [15:0] mem_rd_16;   // raw 16-bit output of the memory
+    assign mem_rd_16 = int_rd_data_16;  // driven by memory instance below
+
+    // Expand to 24-bit for butterfly input
+    // FP8 path: memory returns {fp8_real[7:0], fp8_imag[7:0]} in [15:0]
+    //           → place in [23:8], pad [7:0] with 0
+    // FP4 path: memory returns {8'h00, fp4_real[3:0], fp4_imag[3:0]} in [15:0]
+    //           → only [7:0] matters; place in [7:0], pad [23:8] with 0
+    wire [23:0] mem_rd_24;
+    assign mem_rd_24 = memory_read_prec
+                       ? {mem_rd_16[15:0], 8'h00}   // FP8: pack into [23:8]
+                       : {16'h0000, mem_rd_16[7:0]}; // FP4: pack into [7:0]
+
+    // A_mem_24 / B_mem_24 are what butterfly instances see
+    reg [23:0] A_mem_24, B_mem_24;"""
     
     def _generate_core(self, config):
-        n = config['fft_size']
+        n  = config['fft_size']
         aw = config['addr_width']
-        
-        # Generate stage parameters
-        stage_params = ""
-        for stage in config['stages']:
-            s = stage['stage_num']
-            m = stage['mult_precision']
-            a = stage['add_precision']
-            o = stage['output_precision']
-            stage_params += f"    localparam STAGE{s}_MULT_PREC = {m};\n"
-            stage_params += f"    localparam STAGE{s}_ADD_PREC = {a};\n"
-            stage_params += f"    localparam STAGE{s}_OUT_PREC = {o};\n"
-        
-        # Generate stage case statements
-        stage_cases = ""
-        for stage in config['stages']:
-            s = stage['stage_num']
-            if s == 0:
-                read_prec = f"STAGE{s}_MULT_PREC"
-            else:
-                read_prec = f"STAGE{s-1}_OUT_PREC"
-            
-            stage_cases += f"""            3'd{s}: begin
-                current_mult_prec = STAGE{s}_MULT_PREC;
-                current_add_prec = STAGE{s}_ADD_PREC;
-                memory_read_prec = {read_prec};
-                memory_write_prec = STAGE{s}_OUT_PREC;
-            end
-"""
-        
-        return f'''//mixed-precision FFT core for {n}-point FFT
-//16-bit butterfly I/O with 24-bit memory
+        ns = config['num_stages']
+        stage_bits = max(1, math.ceil(math.log2(ns + 1)))
+
+        lparams       = self._stage_localparam_block(config)
+        prec_mux      = self._precision_mux_block(config)
+        twiddle_gen   = self._twiddle_generate_block(config, n, aw)
+        butterfly_gen = self._butterfly_generate_block(config, n, aw)
+        mem_expand    = self._memory_read_expansion()
+
+        return f"""\
+// Mixed-Precision FFT Core – {n}-point
+// Auto-generated by FFTTemplateGenerator
+// Memory : 24-bit unified [23:16]=FP8_real [15:8]=FP8_imag [7:4]=FP4_real [3:0]=FP4_imag
+// I/O bus: 16-bit per data point (FP8) or 8-bit (FP4) inside 16-bit zero-padded
+
+`timescale 1ns/1ps
 
 module mixed_fft_{n}_core #(
-    parameter MAX_N = {n},
+    parameter MAX_N     = {n},
     parameter ADDR_WIDTH = {aw}
 )(
-    input wire clk,
-    input wire rst,
-    input wire start,
-    input wire [ADDR_WIDTH-1:0] N,
-    output reg done,
-    output reg error,
-    
-    //external write interface
-    input wire ext_wr_en,
-    input wire [ADDR_WIDTH-1:0] ext_wr_addr,
-    input wire [23:0] ext_wr_data,
-    input wire ext_bank_sel,
-    
-    //external read interface
-    input wire [ADDR_WIDTH-1:0] ext_rd_addr,
-    input wire ext_reading,
-    output wire [23:0] rd_data_0
+    input  wire clk,
+    input  wire rst,
+    input  wire start,
+    input  wire [ADDR_WIDTH-1:0] N,
+    output reg  done,
+    output reg  error,
+
+    // External write interface (load input samples)
+    input  wire                  ext_wr_en,
+    input  wire [ADDR_WIDTH-1:0] ext_wr_addr,
+    input  wire [23:0]           ext_wr_data,
+    input  wire                  ext_bank_sel,
+
+    // External read interface (unload FFT results)
+    input  wire [ADDR_WIDTH-1:0] ext_rd_addr,
+    input  wire                  ext_reading,
+    output wire [23:0]           rd_data_0       // full 24-bit for host
 );
 
-    //state machine
-    localparam IDLE = 4'd0;
-    localparam INIT = 4'd1;
-    localparam READ_A = 4'd2;
-    localparam WAIT_A = 4'd3;
-    localparam READ_B = 4'd4;
-    localparam WAIT_B = 4'd5;
+    // ----------------------------------------------------------------
+    // State machine encoding
+    // ----------------------------------------------------------------
+    localparam IDLE    = 4'd0;
+    localparam INIT    = 4'd1;
+    localparam READ_A  = 4'd2;
+    localparam WAIT_A  = 4'd3;
+    localparam READ_B  = 4'd4;
+    localparam WAIT_B  = 4'd5;
     localparam COMPUTE = 4'd6;
     localparam WRITE_X = 4'd7;
     localparam WRITE_Y = 4'd8;
-    localparam DONE = 4'd9;
-    
+    localparam DONE    = 4'd9;
+
     reg [3:0] state, next_state;
-    
-    //stage precision configuration
-{stage_params}
-    
-    //precision control
-    reg current_mult_prec;
-    reg current_add_prec;
-    reg memory_read_prec;
-    reg memory_write_prec;
-    
-    always @(*) begin
-        case (curr_stage)
-{stage_cases}            default: begin
-                current_mult_prec = 0;
-                current_add_prec = 0;
-                memory_read_prec = 0;
-                memory_write_prec = 0;
-            end
-        endcase
-    end
-    
-    //AGU signals
+
+    // ----------------------------------------------------------------
+    // Per-stage precision localparams (from chromosome)
+    // ----------------------------------------------------------------
+{lparams}
+
+    // ----------------------------------------------------------------
+    // Runtime precision control registers (set by combinational mux)
+    // ----------------------------------------------------------------
+    reg current_mult_prec;  // 0=FP4 1=FP8 – drives butterfly select
+    reg current_add_prec;   // 0=FP4 1=FP8 – drives butterfly select
+    reg memory_read_prec;   // precision to read FROM memory this stage
+    reg memory_write_prec;  // precision that butterfly output is in
+
+    // ----------------------------------------------------------------
+    // AGU
+    // ----------------------------------------------------------------
     reg agu_next_step;
     wire [ADDR_WIDTH-1:0] idx_a, idx_b, k;
     wire agu_done_stage, agu_done_fft;
-    wire [2:0] curr_stage;
-    
-    //butterfly I/O (16-bit)
-    reg [23:0] A_mem, B_mem;  // From memory (24-bit)
-    wire [15:0] X_bf, Y_bf;   // From butterfly (16-bit)
-    wire bf_output_is_fp8;    // Which precision butterfly output
-    reg [15:0] X_reg, Y_reg;
-    reg output_was_fp8;
-    
-    //memory control
-    reg [ADDR_WIDTH-1:0] int_rd_addr;
-    wire [23:0] int_rd_data;
-    reg int_wr_en;
-    reg [ADDR_WIDTH-1:0] int_wr_addr;
-    reg [23:0] int_wr_data;
-    
-    //memory multiplexing
-    wire final_wr_en = ext_wr_en | int_wr_en;
-    wire [ADDR_WIDTH-1:0] final_wr_addr = ext_wr_en ? ext_wr_addr : int_wr_addr;
-    wire [23:0] final_wr_data = ext_wr_en ? ext_wr_data : int_wr_data;
-    wire [ADDR_WIDTH-1:0] final_rd_addr = ext_reading ? ext_rd_addr : int_rd_addr;
-    
-    //ping-pong bank control
-    reg fft_bank_sel;
-    wire active_bank_sel = ext_reading ? ext_bank_sel :
-                          (state == IDLE) ? ext_bank_sel :
-                          fft_bank_sel;
-    
-    //AGU
+    wire [{stage_bits}-1:0] curr_stage;
+
     dit_fft_agu_variable #(
-        .MAX_N(MAX_N),
+        .MAX_N     (MAX_N),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) agu_inst (
-        .clk(clk),
-        .reset(rst),
-        .N(N),
-        .next_step(agu_next_step),
-        .idx_a(idx_a),
-        .idx_b(idx_b),
-        .k(k),
-        .done_stage(agu_done_stage),
-        .done_fft(agu_done_fft),
-        .curr_stage(curr_stage),
+        .clk          (clk),
+        .reset        (rst),
+        .N            (N),
+        .next_step    (agu_next_step),
+        .idx_a        (idx_a),
+        .idx_b        (idx_b),
+        .k            (k),
+        .done_stage   (agu_done_stage),
+        .done_fft     (agu_done_fft),
+        .curr_stage   (curr_stage),
         .twiddle_output()
     );
-    
-    //twiddle ROM
-    wire [15:0] twiddle;
-    twiddle_factor_unified #(
-        .MAX_N(MAX_N),
-        .PRECISION(0)  //will be controlled by stage
-    ) twiddle_rom (
-        .k(k),
-        .n(N),
-        .twiddle_out(twiddle)
-    );
-    
-    //TODO: Add mux or generate block to select twiddle ROM precision
-    //based on current_mult_prec
-    
-    //butterfly wrapper with 16-bit I/O
-    butterfly_wrapper_16bit #(
-        .MULT_PRECISION(0),  //will be controlled by stage
-        .ADD_PRECISION(0)
-    ) butterfly_inst (
-        .A_mem(A_mem),
-        .B_mem(B_mem),
-        .W(twiddle),
-        .X(X_bf),
-        .Y(Y_bf),
-        .output_is_fp8(bf_output_is_fp8)
-    );
-    
-    //TODO: Add mux or generate block to select butterfly precision
-    //based on current_mult_prec and current_add_prec
-    
-    //unified memory
+
+    // ----------------------------------------------------------------
+    // Precision mux: set *_prec regs from curr_stage
+    // ----------------------------------------------------------------
+{prec_mux}
+
+    // ----------------------------------------------------------------
+    // Memory signals
+    // ----------------------------------------------------------------
+    reg  [ADDR_WIDTH-1:0] int_rd_addr;
+    wire [15:0]           int_rd_data_16;  // 16-bit from memory (precision-sliced)
+    wire [23:0]           int_rd_data_24;  // 24-bit full read (for external host)
+    reg  int_wr_en;
+    reg  [ADDR_WIDTH-1:0] int_wr_addr;
+    reg  [23:0]           int_wr_data;
+
+    // Arbitrate between external and internal access
+    wire final_wr_en                  = ext_wr_en | int_wr_en;
+    wire [ADDR_WIDTH-1:0] final_wr_addr = ext_wr_en ? ext_wr_addr : int_wr_addr;
+    wire [23:0]           final_wr_data = ext_wr_en ? ext_wr_data : int_wr_data;
+    wire [ADDR_WIDTH-1:0] final_rd_addr = ext_reading ? ext_rd_addr : int_rd_addr;
+
+    // Ping-pong bank control
+    reg fft_bank_sel;
+    wire active_bank_sel = ext_reading                               ? ext_bank_sel :
+                           (state == IDLE)                           ? ext_bank_sel :
+                           fft_bank_sel;
+
+    // Unified memory (stores 24-bit; returns 16-bit slice via rd_precision_0)
     mixed_memory_unified #(
-        .n(MAX_N),
+        .n         (MAX_N),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) memory_inst (
-        .clk(clk),
-        .rst(rst),
-        .bank_sel(active_bank_sel),
-        .rd_addr_0(final_rd_addr),
-        .rd_precision_0(memory_read_prec),
-        .rd_data_0(int_rd_data[15:0]),
-        .wr_en_1(final_wr_en),
-        .wr_addr_1(final_wr_addr),
-        .wr_data_1(final_wr_data)
+        .clk         (clk),
+        .rst         (rst),
+        .bank_sel    (active_bank_sel),
+        .rd_addr_0   (final_rd_addr),
+        .rd_precision_0(memory_read_prec),  // ← set by precision mux
+        .rd_data_0   (int_rd_data_16),      // 16-bit sliced output
+        .wr_en_1     (final_wr_en),
+        .wr_addr_1   (final_wr_addr),
+        .wr_data_1   (final_wr_data)        // 24-bit write (canonical format)
     );
-    
-    //convert 16-bit memory read to 24-bit for butterfly
-    assign int_rd_data[23:16] = memory_read_prec ? int_rd_data[15:8] : 8'h00;
-    assign rd_data_0 = int_rd_data;
-    
-    //convert 16-bit butterfly output to 24-bit for memory write
-    //handled in WRITE_X and WRITE_Y states directly
-    
-    //stage completion detection
+
+    // Full 24-bit read for external host (re-read without precision slicing)
+    // We expose the same 16-bit data zero-extended as 24-bit for the top module.
+    assign int_rd_data_24 = memory_read_prec
+                            ? {{int_rd_data_16, 8'h00}}
+                            : {{16'h0000, int_rd_data_16[7:0]}};
+    assign rd_data_0 = int_rd_data_24;
+
+    // ----------------------------------------------------------------
+    // Expand 16-bit memory read to 24-bit butterfly input bus
+    // ----------------------------------------------------------------
+{mem_expand}
+
+    // ----------------------------------------------------------------
+    // Per-stage twiddle ROM instances
+    // ----------------------------------------------------------------
+{twiddle_gen}
+
+    // ----------------------------------------------------------------
+    // Per-stage butterfly instances
+    // ----------------------------------------------------------------
+{butterfly_gen}
+
+    // ----------------------------------------------------------------
+    // FP4 ↔ FP8 conversion wires for write-back packing
+    // ----------------------------------------------------------------
+    // Convert the 16-bit butterfly output both ways so we can write
+    // the canonical 24-bit word regardless of output precision.
+    wire [7:0]  X_bf_fp4_real, X_bf_fp4_imag;
+    wire [7:0]  Y_bf_fp4_real, Y_bf_fp4_imag;
+    wire [15:0] X_bf_fp8_expanded, Y_bf_fp8_expanded;
+
+    // FP8→FP4 conversion (used when output is FP8, to fill FP4 field)
+    fp8_to_fp4_converter conv_x_fp8_to_fp4_real (.fp8_in(X_bf[15:8]), .fp4_out(X_bf_fp4_real[7:4]));
+    fp8_to_fp4_converter conv_x_fp8_to_fp4_imag (.fp8_in(X_bf[7:0]),  .fp4_out(X_bf_fp4_real[3:0]));
+    fp8_to_fp4_converter conv_y_fp8_to_fp4_real (.fp8_in(Y_bf[15:8]), .fp4_out(Y_bf_fp4_real[7:4]));
+    fp8_to_fp4_converter conv_y_fp8_to_fp4_imag (.fp8_in(Y_bf[7:0]),  .fp4_out(Y_bf_fp4_real[3:0]));
+
+    // FP4→FP8 conversion (used when output is FP4, to fill FP8 field)
+    fp4_to_fp8_converter conv_x_fp4_to_fp8_real (.fp4_in(X_bf[7:4]), .fp8_out(X_bf_fp8_expanded[15:8]));
+    fp4_to_fp8_converter conv_x_fp4_to_fp8_imag (.fp4_in(X_bf[3:0]), .fp8_out(X_bf_fp8_expanded[7:0]));
+    fp4_to_fp8_converter conv_y_fp4_to_fp8_real (.fp4_in(Y_bf[7:4]), .fp8_out(Y_bf_fp8_expanded[15:8]));
+    fp4_to_fp8_converter conv_y_fp4_to_fp8_imag (.fp4_in(Y_bf[3:0]), .fp8_out(Y_bf_fp8_expanded[7:0]));
+
+    // ----------------------------------------------------------------
+    // Registered butterfly results and output precision flag
+    // ----------------------------------------------------------------
+    reg [15:0] X_reg, Y_reg;
+    reg        output_was_fp8;
+
+    // ----------------------------------------------------------------
+    // Stage completion (rising-edge detect on agu_done_stage)
+    // ----------------------------------------------------------------
     reg prev_done_stage;
     wire stage_complete = agu_done_stage && !prev_done_stage;
 
-    wire [15:0] X_bf_fp8;
-    wire [15:0] Y_bf_fp8;
-    reg [15:0] X_bf_fp8_reg;
-    reg [15:0] Y_bf_fp8_reg;
-
-    fp4_to_fp8_converter fp4_to_fp8_converter_real_inst1(
-        .fp4_in(X_bf[7:4]),
-        .fp8_out(X_bf_fp8[15:8])
-    );
-
-    fp4_to_fp8_converter fp4_to_fp8_converter_imag_inst1(
-        .fp4_in(X_bf[3:0]),
-        .fp8_out(X_bf_fp8[7:0])
-    );
-
-    fp4_to_fp8_converter fp4_to_fp8_converter_real_inst2(
-        .fp4_in(Y_bf[7:4]),
-        .fp8_out(Y_bf_fp8[15:8])
-    );
-
-    fp4_to_fp8_converter fp4_to_fp8_converter_imag_inst2(
-        .fp4_in(Y_bf[3:0]),
-        .fp8_out(Y_bf_fp8[7:0])
-    );
-
-    wire [15:0] X_bf_fp4;
-    wire [15:0] Y_bf_fp4;
-    reg [15:0] X_bf_fp4_reg;
-    reg [15:0] Y_bf_fp4_reg;
-
-    fp8_to_fp4_converter fp8_to_fp4_converter_real_inst1(
-        .fp8_in(X_bf[15:8]),
-        .fp4_out(X_bf_fp4[7:4])
-    );
-
-    fp8_to_fp4_converter fp8_to_fp4_converter_imag_inst1(
-        .fp8_in(X_bf[7:0]),
-        .fp4_out(X_bf_fp4[3:0])
-    );
-
-    fp8_to_fp4_converter fp8_to_fp4_converter_real_inst2(
-        .fp8_in(Y_bf[15:8]),
-        .fp4_out(Y_bf_fp4[7:4])
-    );
-
-    fp8_to_fp4_converter fp8_to_fp4_converter_imag_inst2(
-        .fp8_in(Y_bf[7:0]),
-        .fp4_out(Y_bf_fp4[3:0])
-    );
-
-    //state machine
+    // ----------------------------------------------------------------
+    // Main state machine – sequential
+    // ----------------------------------------------------------------
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
-            state <= IDLE;
-            done <= 0;
-            error <= 0;
-            A_mem <= 0;
-            B_mem <= 0;
-            X_reg <= 0;
-            Y_reg <= 0;
+            state          <= IDLE;
+            done           <= 0;
+            error          <= 0;
+            A_mem_24       <= 0;
+            B_mem_24       <= 0;
+            X_reg          <= 0;
+            Y_reg          <= 0;
             output_was_fp8 <= 0;
-            int_rd_addr <= 0;
-            int_wr_en <= 0;
-            int_wr_addr <= 0;
-            agu_next_step <= 0;
-            fft_bank_sel <= 0;
+            int_rd_addr    <= 0;
+            int_wr_en      <= 0;
+            int_wr_addr    <= 0;
+            int_wr_data    <= 0;
+            agu_next_step  <= 0;
+            fft_bank_sel   <= 0;
             prev_done_stage <= 0;
         end else begin
-            state <= next_state;
-            int_wr_en <= 0;
-            agu_next_step <= 0;
+            state           <= next_state;
+            int_wr_en       <= 0;
+            agu_next_step   <= 0;
             prev_done_stage <= agu_done_stage;
-            
-            if (stage_complete && state != IDLE && state != DONE) begin
+
+            // Flip ping-pong bank on stage completion
+            if (stage_complete && state != IDLE && state != DONE)
                 fft_bank_sel <= ~fft_bank_sel;
-            end
-            
+
             case (state)
                 IDLE: begin
-                    done <= 0;
+                    done  <= 0;
                     error <= 0;
                     fft_bank_sel <= 0;
-                    if (start && (N != MAX_N || (N & (N-1)) != 0)) begin
+                    if (start && (N != MAX_N || (N & (N - 1)) != 0))
                         error <= 1;
-                    end
                 end
-                
+
                 INIT: begin
+                    // No operation; AGU will start from reset state
                 end
-                
+
                 READ_A: begin
                     int_rd_addr <= idx_a;
                 end
-                
+
                 WAIT_A: begin
+                    // Memory has 1-cycle read latency; data available next cycle
                 end
-                
+
                 READ_B: begin
-                    A_mem <= int_rd_data;
+                    // Latch A from memory read port, start reading B
+                    // Reconstruct 24-bit from the 16-bit memory output
+                    A_mem_24    <= mem_rd_24;
                     int_rd_addr <= idx_b;
                 end
-                
+
                 WAIT_B: begin
+                    // Waiting for B read to complete
                 end
-                
+
                 COMPUTE: begin
-                    B_mem <= int_rd_data;
-                    X_reg <= X_bf;
-                    Y_reg <= Y_bf;
-                    output_was_fp8 <= bf_output_is_fp8;
+                    // Latch B; butterfly combinationally computes X_bf, Y_bf
+                    B_mem_24        <= mem_rd_24;
+                    X_reg           <= X_bf;
+                    Y_reg           <= Y_bf;
+                    output_was_fp8  <= bf_output_is_fp8;
                 end
-                
+
                 WRITE_X: begin
-                    int_wr_en <= 1;
+                    int_wr_en   <= 1;
                     int_wr_addr <= idx_a;
-                    // int_wr_data set by combinational block above
+                    // Pack 24-bit canonical word from butterfly output
                     if (output_was_fp8) begin
-                        int_wr_data <= {{X_reg, X_reg_fp4}};
+                        // FP8 result: fill [23:8] with FP8 data, [7:0] with FP4 downcast
+                        int_wr_data <= {{X_reg,          X_bf_fp4_real[7:4], X_bf_fp4_real[3:0]}};
                     end else begin
-                        int_wr_data <= {{X_reg_fp8, X_reg[7:0]}};
+                        // FP4 result: fill [7:0] with FP4 data, [23:8] with FP8 upcast
+                        int_wr_data <= {{X_bf_fp8_expanded, X_reg[7:0]}};
                     end
                 end
-                
+
                 WRITE_Y: begin
-                    int_wr_en <= 1;
+                    int_wr_en   <= 1;
                     int_wr_addr <= idx_b;
                     if (output_was_fp8) begin
-                        int_wr_data <= {{Y_reg, Y_reg_fp4}};
+                        int_wr_data <= {{Y_reg,          Y_bf_fp4_real[7:4], Y_bf_fp4_real[3:0]}};
                     end else begin
-                        int_wr_data <= {{Y_reg_fp8, Y_reg[7:0]}};
+                        int_wr_data <= {{Y_bf_fp8_expanded, Y_reg[7:0]}};
                     end
                     agu_next_step <= 1;
                 end
-                
+
                 DONE: begin
                     done <= 1;
                 end
             endcase
         end
     end
-    
-    //next state logic
+
+    // ----------------------------------------------------------------
+    // Next-state logic
+    // ----------------------------------------------------------------
     always @(*) begin
         next_state = state;
         case (state)
-            IDLE: if (start && !error) next_state = INIT;
-            INIT: next_state = READ_A;
-            READ_A: next_state = WAIT_A;
-            WAIT_A: next_state = READ_B;
-            READ_B: next_state = WAIT_B;
-            WAIT_B: next_state = COMPUTE;
+            IDLE   : if (start && !error) next_state = INIT;
+            INIT   : next_state = READ_A;
+            READ_A : next_state = WAIT_A;
+            WAIT_A : next_state = READ_B;
+            READ_B : next_state = WAIT_B;
+            WAIT_B : next_state = COMPUTE;
             COMPUTE: next_state = WRITE_X;
             WRITE_X: next_state = WRITE_Y;
-            WRITE_Y: begin
-                if (agu_done_fft) next_state = DONE;
-                else next_state = READ_A;
-            end
-            DONE: next_state = IDLE;
+            WRITE_Y: next_state = agu_done_fft ? DONE : READ_A;
+            DONE   : next_state = IDLE;
+            default: next_state = IDLE;
         endcase
     end
 
 endmodule
-'''
+"""
     
     def _generate_top(self, config):
         n = config['fft_size']
@@ -653,7 +741,8 @@ module mixed_fft_{n}_top #(
                         if (!fft_start_issued) begin
                             fft_start <= 1;
                             fft_start_issued <= 1;
-                        end
+                        endfftacc@iiitb-OptiPlex-7080:~$ 
+
                     end else begin
                         wr_en <= 0;
                     end
@@ -690,9 +779,8 @@ module mixed_fft_{n}_top #(
         end
     end
     
-    assign done = fft_done;
+    assign done = fft_done;fftacc@iiitb-OptiPlex-7080:~$ 
 
-endmodule
 '''
 
 # Test
@@ -702,4 +790,4 @@ if __name__ == "__main__":
     chromosome = [0, 0, 1, 0, 1, 1]
     
     output_file = gen.generate_complete_fft(chromosome)
-    print(f"\n✓ Complete FFT with 16-bit butterfly I/O generated!")
+    print(f"\n✓ Complete FFT with 16-bit butterfly I/O generated!")fftacc@iiitb-OptiPlex-7080:~$ 

@@ -3,10 +3,10 @@
 module twiddle_factor_unified #(
     parameter MAX_N = 1024,
     parameter ADDR_WIDTH = 10, // $clog2(1024)
-    parameter PRECISION = 0    // 0 for FP4 and 1 for FP8
 )(
     input [ADDR_WIDTH-1:0] k,   // Index k
     input [ADDR_WIDTH:0] n,     // Current FFT size N
+    input PRECISION;
     output reg [15:0] twiddle_out
 );
 
