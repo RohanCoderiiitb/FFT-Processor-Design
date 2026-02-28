@@ -1,16 +1,20 @@
 """
 Global Variables for Mixed-Precision FFT Optimization
-CORRECTED VERSION: Per-butterfly precision control
+Stage-level precision control (Option A):
+  One mult_precision + one add_precision gene per FFT stage.
+  Hardware instantiates one butterfly_wrapper per stage, so all N/2
+  butterflies within a stage share the same precision — per-butterfly
+  encoding would be redundant.
 
 Chromosome sizes for different FFT sizes:
-- FFT-8:    12 butterflies × 2 = 24 genes
-- FFT-16:   32 butterflies × 2 = 64 genes
-- FFT-32:   80 butterflies × 2 = 160 genes
-- FFT-64:   192 butterflies × 2 = 384 genes
-- FFT-128:  448 butterflies × 2 = 896 genes
-- FFT-256:  1024 butterflies × 2 = 2048 genes
-- FFT-512:  2304 butterflies × 2 = 4608 genes
-- FFT-1024: 5120 butterflies × 2 = 10240 genes
+- FFT-8:    3 stages × 2 = 6 genes
+- FFT-16:   4 stages × 2 = 8 genes
+- FFT-32:   5 stages × 2 = 10 genes
+- FFT-64:   6 stages × 2 = 12 genes
+- FFT-128:  7 stages × 2 = 14 genes
+- FFT-256:  8 stages × 2 = 16 genes
+- FFT-512:  9 stages × 2 = 18 genes
+- FFT-1024: 10 stages × 2 = 20 genes
 """
 
 import random
@@ -42,30 +46,28 @@ CURRENT_FFT_SIZE = 8         # Start with 8-point FFT
 # ======================= Chromosome Size Calculation =======================
 def calculate_chromosome_size(fft_size):
     """
-    Calculate chromosome size for per-butterfly precision
-    
+    Calculate chromosome size for stage-level precision (Option A).
+
     For N-point FFT:
-    - Total butterflies = (N/2) × log₂(N)
-    - Chromosome length = 2 × total_butterflies
-    
+    - num_stages = log₂(N)
+    - Chromosome length = 2 × num_stages  (one mult_prec + one add_prec per stage)
+
     Args:
         fft_size: FFT size (power of 2)
-    
+
     Returns:
         Chromosome length (number of genes)
     """
     num_stages = int(math.log2(fft_size))
-    butterflies_per_stage = fft_size // 2
-    total_butterflies = butterflies_per_stage * num_stages
-    chromosome_length = 2 * total_butterflies
+    chromosome_length = 2 * num_stages
     return chromosome_length
 
 # Print chromosome sizes for reference
 print("Chromosome sizes for different FFT sizes:")
 for size in [8, 16, 32, 64, 128, 256, 512, 1024]:
     chrom_size = calculate_chromosome_size(size)
-    total_bf = (size // 2) * int(math.log2(size))
-    print(f"  FFT-{size:<4}: {total_bf:>4} butterflies × 2 = {chrom_size:>5} genes")
+    ns = int(math.log2(size))
+    print(f"  FFT-{size:<4}: {ns:>2} stages × 2 = {chrom_size:>3} genes")
 
 # ======================= Vivado Configuration =======================
 VIVADO_PATH = '/tools/Xilinx/Vivado/2021.1/bin/vivado'
@@ -100,68 +102,67 @@ RESULT_CACHE = {}
 
 def generate_smart_initial_population(fft_size, pop_size):
     """
-    Generate initial population with domain-knowledge strategies
-    instead of pure random initialization
-    
+    Generate initial population with domain-knowledge strategies.
+    Stage-level encoding: chromosome = [s0_mult, s0_add, s1_mult, s1_add, ...]
+
     Strategies:
-    1. All FP4 (minimum power)
-    2. All FP8 (maximum performance)
-    3. Progressive precision (FP4 early, FP8 later)
-    4. Alternating precision
-    5. Random variations
+    1. All FP4 (minimum power / area)
+    2. All FP8 (maximum accuracy)
+    3. Progressive: FP4 early stages, FP8 later stages (errors accumulate)
+    4. Progressive inverse: FP8 early, FP4 later
+    5. Multipliers FP8, Adders FP4
+    6. Multipliers FP4, Adders FP8
+    7. Random 70% FP4
+    8. Random 30% FP4
     """
     from fft_template_generator import FFTTemplateGenerator
-    
+
     gen = FFTTemplateGenerator(fft_size)
-    chrom_length = gen.get_chromosome_length()
+    chrom_length = gen.get_chromosome_length()  # = num_stages * 2
     population = []
-    
+
     # Strategy 1: All FP4
     population.append([0] * chrom_length)
-    
+
     # Strategy 2: All FP8
     population.append([1] * chrom_length)
-    
-    # Strategy 3: Progressive precision per stage
+
+    # Strategy 3: Progressive — FP4 for first half of stages, FP8 for second half
     progressive = []
     for stage in range(gen.num_stages):
         prec = 1 if stage >= gen.num_stages // 2 else 0
-        for bf in range(gen.butterflies_per_stage):
-            progressive.extend([prec, prec])
+        progressive.extend([prec, prec])
     population.append(progressive)
-    
-    # Strategy 4: Progressive precision inverse
+
+    # Strategy 4: Progressive inverse
     progressive_inv = []
     for stage in range(gen.num_stages):
         prec = 0 if stage >= gen.num_stages // 2 else 1
-        for bf in range(gen.butterflies_per_stage):
-            progressive_inv.extend([prec, prec])
+        progressive_inv.extend([prec, prec])
     population.append(progressive_inv)
-    
+
     # Strategy 5: Multipliers FP8, Adders FP4
     mult_fp8 = []
-    for _ in range(gen.total_butterflies):
-        mult_fp8.extend([1, 0])  # FP8 mult, FP4 add
+    for _ in range(gen.num_stages):
+        mult_fp8.extend([1, 0])
     population.append(mult_fp8)
-    
+
     # Strategy 6: Multipliers FP4, Adders FP8
     mult_fp4 = []
-    for _ in range(gen.total_butterflies):
-        mult_fp4.extend([0, 1])  # FP4 mult, FP8 add
+    for _ in range(gen.num_stages):
+        mult_fp4.extend([0, 1])
     population.append(mult_fp4)
-    
-    # Strategy 7-8: Random with 70% FP4, 30% FP8 and vice versa
+
+    # Strategy 7-8: Random with bias
     for fp4_prob in [0.7, 0.3]:
-        individual = []
-        for _ in range(chrom_length):
-            individual.append(0 if random.random() < fp4_prob else 1)
+        individual = [0 if random.random() < fp4_prob else 1
+                      for _ in range(chrom_length)]
         population.append(individual)
-    
-    # Fill rest with pure random
+
+    # Fill remainder with pure random
     while len(population) < pop_size:
-        individual = [random.randint(0, 1) for _ in range(chrom_length)]
-        population.append(individual)
-    
+        population.append([random.randint(0, 1) for _ in range(chrom_length)])
+
     return population[:pop_size]
 
 ENABLE_SMART_INITIALIZATION = True
@@ -201,28 +202,23 @@ def initialize_directories():
 
 # ======================= Chromosome Encoding Notes =======================
 """
-CHROMOSOME ENCODING (Per-Butterfly Precision):
+CHROMOSOME ENCODING (Stage-Level Precision — Option A):
 
 For an N-point FFT using Radix-2 DIT:
 - Stages: log₂(N)
-- Butterflies per stage: N/2 (operating in parallel)
-- Total butterflies: (N/2) × log₂(N)
+- Hardware: one butterfly_wrapper instance per stage
+  (all N/2 butterflies in a stage share the same precision)
 
-Chromosome format:
-[bf0_mult, bf0_add, bf1_mult, bf1_add, ..., bfₖ_mult, bfₖ_add]
+Chromosome format (length = num_stages × 2):
+  [s0_mult, s0_add, s1_mult, s1_add, ..., sₙ_mult, sₙ_add]
 
 Where:
-- bfᵢ_mult: Multiplier precision for butterfly i (0=FP4, 1=FP8)
-- bfᵢ_add: Adder precision for butterfly i (0=FP4, 1=FP8)
-- k = total_butterflies - 1
+  sᵢ_mult: Multiplier precision for stage i (0=FP4, 1=FP8)
+  sᵢ_add : Adder precision for stage i     (0=FP4, 1=FP8)
 
-Example for 8-point FFT (3 stages, 4 butterflies/stage, 12 total):
-Chromosome length = 24
-
-Layout by stage:
-Stage 0: [bf0_m, bf0_a, bf1_m, bf1_a, bf2_m, bf2_a, bf3_m, bf3_a]  (8 genes)
-Stage 1: [bf4_m, bf4_a, bf5_m, bf5_a, bf6_m, bf6_a, bf7_m, bf7_a]  (8 genes)
-Stage 2: [bf8_m, bf8_a, bf9_m, bf9_a, bf10_m, bf10_a, bf11_m, bf11_a]  (8 genes)
+Example for 8-point FFT (3 stages):
+  Chromosome length = 6
+  [s0_mult, s0_add, s1_mult, s1_add, s2_mult, s2_add]
 """
 
 # Initialize at import time
