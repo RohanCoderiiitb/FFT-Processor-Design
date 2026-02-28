@@ -18,3 +18,139 @@
 [2026-02-28 14:53:32] [INFO]   Objectives: 3
 [2026-02-28 14:53:32] [INFO]   Parallel threads: 4
 [2026-02-28 14:53:32] [INFO] Starting NSGA-II evolution...
+[2026-02-28 15:29:55] [INFO] Initialized directory structure
+[2026-02-28 15:29:55] [INFO] Running quick test with 8-point FFT
+[2026-02-28 15:29:55] [INFO] Setting up Verilog source files
+[2026-02-28 15:29:55] [INFO] 
+============================================================
+[2026-02-28 15:29:55] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 15:29:55] [INFO] ============================================================
+
+[2026-02-28 15:29:55] [INFO] Initialized FFT-8 optimization problem
+[2026-02-28 15:29:55] [INFO] Chromosome length: 6
+[2026-02-28 15:29:55] [INFO] Number of stages: 3
+[2026-02-28 15:29:55] [INFO] Total butterflies: 12
+[2026-02-28 15:29:55] [INFO] NSGA-II Configuration:
+[2026-02-28 15:29:55] [INFO]   Population size: 6
+[2026-02-28 15:29:55] [INFO]   Generations: 3
+[2026-02-28 15:29:55] [INFO]   Crossover rate: 0.9
+[2026-02-28 15:29:55] [INFO]   Mutation rate: 0.05
+[2026-02-28 15:29:55] [INFO]   Objectives: 3
+[2026-02-28 15:29:55] [INFO]   Parallel threads: 4
+[2026-02-28 15:29:55] [INFO] Starting NSGA-II evolution...
+[2026-02-28 15:29:55] [GEN] === Generation 0 ===
+[2026-02-28 15:29:55] [INFO] Evaluating solution 0: [0 0 0 0 0 0]
+[2026-02-28 15:29:55] [INFO] Generated Verilog: fft_8_sol0_gen1
+[2026-02-28 15:29:55] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-02-28 15:29:55] [INFO] Evaluating solution 1: [1 1 1 1 1 1]
+[2026-02-28 15:29:55] [INFO] Evaluating solution 2: [0 0 1 1 1 1]
+[2026-02-28 15:29:55] [INFO] Evaluating solution 3: [1 1 0 0 0 0]
+[2026-02-28 15:29:55] [INFO] Generated Verilog: fft_8_sol1_gen1
+[2026-02-28 15:29:55] [INFO] Generated Verilog: fft_8_sol2_gen1
+[2026-02-28 15:29:55] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-02-28 15:29:55] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-02-28 15:29:55] [INFO] Generated Verilog: fft_8_sol3_gen1
+[2026-02-28 15:29:55] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-02-28 15:30:02] [ERROR] Vivado synthesis failed for fft_8_sol3_gen1: 
+[2026-02-28 15:30:02] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-02-28 15:30:02] [ERROR] Vivado synthesis failed for fft_8_sol0_gen1: 
+[2026-02-28 15:30:02] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-02-28 15:30:02] [ERROR] Vivado synthesis failed for fft_8_sol2_gen1: 
+[2026-02-28 15:30:02] [ERROR] Vivado synthesis failed for fft_8_sol1_gen1: 
+[2026-02-28 15:30:02] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-02-28 15:30:02] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-02-28 15:30:02] [INFO] Evaluating solution 4: [1 0 1 0 1 0]
+[2026-02-28 15:30:02] [ERROR] Solution 2 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:02] [INFO] Evaluating solution 5: [0 1 0 1 0 1]
+[2026-02-28 15:30:02] [ERROR] Solution 3 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:02] [INFO] Generated Verilog: fft_8_sol4_gen1
+[2026-02-28 15:30:02] [INFO] Generated Verilog: fft_8_sol5_gen1
+[2026-02-28 15:30:02] [ERROR] Solution 0 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:02] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-02-28 15:30:02] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-02-28 15:30:02] [ERROR] Solution 1 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:07] [ERROR] Vivado synthesis failed for fft_8_sol5_gen1: 
+[2026-02-28 15:30:07] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-02-28 15:30:07] [ERROR] Vivado synthesis failed for fft_8_sol4_gen1: 
+[2026-02-28 15:30:07] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-02-28 15:30:07] [ERROR] Solution 5 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:07] [ERROR] Solution 4 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:07] [INFO] Generation 0 complete
+[2026-02-28 15:30:07] [GEN] === Generation 1 ===
+[2026-02-28 15:30:07] [INFO] Evaluating solution 0: [0 1 0 0 0 0]
+[2026-02-28 15:30:07] [INFO] Evaluating solution 1: [1 0 1 0 0 0]
+[2026-02-28 15:30:07] [INFO] Evaluating solution 2: [1 0 1 1 1 1]
+[2026-02-28 15:30:07] [INFO] Generated Verilog: fft_8_sol0_gen2
+[2026-02-28 15:30:07] [INFO] Evaluating solution 3: [0 0 0 1 0 1]
+[2026-02-28 15:30:07] [INFO] Generated Verilog: fft_8_sol2_gen2
+[2026-02-28 15:30:07] [INFO] Generated Verilog: fft_8_sol1_gen2
+[2026-02-28 15:30:07] [INFO] Running Vivado synthesis for fft_8_sol0_gen2
+[2026-02-28 15:30:07] [INFO] Running Vivado synthesis for fft_8_sol2_gen2
+[2026-02-28 15:30:07] [INFO] Running Vivado synthesis for fft_8_sol1_gen2
+[2026-02-28 15:30:07] [INFO] Generated Verilog: fft_8_sol3_gen2
+[2026-02-28 15:30:07] [INFO] Running Vivado synthesis for fft_8_sol3_gen2
+[2026-02-28 15:30:14] [ERROR] Vivado synthesis failed for fft_8_sol0_gen2: 
+[2026-02-28 15:30:14] [ERROR] Vivado synthesis failed for fft_8_sol2_gen2: 
+[2026-02-28 15:30:14] [ERROR] Vivado synthesis failed for fft_8_sol3_gen2: 
+[2026-02-28 15:30:14] [INFO] Running performance evaluation for fft_8_sol0_gen2
+[2026-02-28 15:30:14] [INFO] Running performance evaluation for fft_8_sol2_gen2
+[2026-02-28 15:30:14] [INFO] Running performance evaluation for fft_8_sol3_gen2
+[2026-02-28 15:30:14] [ERROR] Vivado synthesis failed for fft_8_sol1_gen2: 
+[2026-02-28 15:30:14] [INFO] Running performance evaluation for fft_8_sol1_gen2
+[2026-02-28 15:30:14] [INFO] Evaluating solution 4: [0 0 0 0 1 1]
+[2026-02-28 15:30:14] [ERROR] Solution 3 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:14] [INFO] Evaluating solution 5: [1 1 1 0 1 0]
+[2026-02-28 15:30:14] [ERROR] Solution 2 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:14] [INFO] Generated Verilog: fft_8_sol4_gen2
+[2026-02-28 15:30:14] [ERROR] Solution 0 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:14] [INFO] Running Vivado synthesis for fft_8_sol4_gen2
+[2026-02-28 15:30:14] [INFO] Generated Verilog: fft_8_sol5_gen2
+[2026-02-28 15:30:14] [INFO] Running Vivado synthesis for fft_8_sol5_gen2
+[2026-02-28 15:30:14] [ERROR] Solution 1 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:20] [ERROR] Vivado synthesis failed for fft_8_sol5_gen2: 
+[2026-02-28 15:30:20] [INFO] Running performance evaluation for fft_8_sol5_gen2
+[2026-02-28 15:30:20] [ERROR] Vivado synthesis failed for fft_8_sol4_gen2: 
+[2026-02-28 15:30:20] [INFO] Running performance evaluation for fft_8_sol4_gen2
+[2026-02-28 15:30:20] [ERROR] Solution 5 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:20] [ERROR] Solution 4 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:20] [INFO] Generation 1 complete
+[2026-02-28 15:30:20] [GEN] === Generation 2 ===
+[2026-02-28 15:30:20] [INFO] Evaluating solution 0: [1 0 0 0 1 0]
+[2026-02-28 15:30:20] [INFO] Evaluating solution 1: [1 1 0 0 1 1]
+[2026-02-28 15:30:20] [INFO] Evaluating solution 2: [0 0 1 0 0 0]
+[2026-02-28 15:30:20] [INFO] Evaluating solution 3: [1 1 1 1 0 0]
+[2026-02-28 15:30:20] [INFO] Generated Verilog: fft_8_sol0_gen3
+[2026-02-28 15:30:20] [INFO] Generated Verilog: fft_8_sol3_gen3
+[2026-02-28 15:30:20] [INFO] Running Vivado synthesis for fft_8_sol0_gen3
+[2026-02-28 15:30:20] [INFO] Generated Verilog: fft_8_sol1_gen3
+[2026-02-28 15:30:20] [INFO] Running Vivado synthesis for fft_8_sol3_gen3
+[2026-02-28 15:30:20] [INFO] Generated Verilog: fft_8_sol2_gen3
+[2026-02-28 15:30:20] [INFO] Running Vivado synthesis for fft_8_sol1_gen3
+[2026-02-28 15:30:20] [INFO] Running Vivado synthesis for fft_8_sol2_gen3
+[2026-02-28 15:30:27] [ERROR] Vivado synthesis failed for fft_8_sol2_gen3: 
+[2026-02-28 15:30:27] [ERROR] Vivado synthesis failed for fft_8_sol3_gen3: 
+[2026-02-28 15:30:27] [INFO] Running performance evaluation for fft_8_sol2_gen3
+[2026-02-28 15:30:27] [INFO] Running performance evaluation for fft_8_sol3_gen3
+[2026-02-28 15:30:27] [ERROR] Vivado synthesis failed for fft_8_sol0_gen3: 
+[2026-02-28 15:30:27] [INFO] Running performance evaluation for fft_8_sol0_gen3
+[2026-02-28 15:30:27] [ERROR] Vivado synthesis failed for fft_8_sol1_gen3: 
+[2026-02-28 15:30:27] [INFO] Running performance evaluation for fft_8_sol1_gen3
+[2026-02-28 15:30:27] [INFO] Evaluating solution 4: [0 0 0 1 0 0]
+[2026-02-28 15:30:27] [ERROR] Solution 3 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:27] [INFO] Generated Verilog: fft_8_sol4_gen3
+[2026-02-28 15:30:27] [INFO] Evaluating solution 5: [0 1 0 0 0 1]
+[2026-02-28 15:30:27] [INFO] Running Vivado synthesis for fft_8_sol4_gen3
+[2026-02-28 15:30:27] [ERROR] Solution 2 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:27] [INFO] Generated Verilog: fft_8_sol5_gen3
+[2026-02-28 15:30:27] [ERROR] Solution 0 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:27] [INFO] Running Vivado synthesis for fft_8_sol5_gen3
+[2026-02-28 15:30:27] [ERROR] Solution 1 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:33] [ERROR] Vivado synthesis failed for fft_8_sol4_gen3: 
+[2026-02-28 15:30:33] [INFO] Running performance evaluation for fft_8_sol4_gen3
+[2026-02-28 15:30:33] [ERROR] Solution 4 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:33] [ERROR] Vivado synthesis failed for fft_8_sol5_gen3: 
+[2026-02-28 15:30:33] [INFO] Running performance evaluation for fft_8_sol5_gen3
+[2026-02-28 15:30:33] [ERROR] Solution 5 failed: 'FFTTemplateGenerator' object has no attribute '_chromosome_to_config'
+[2026-02-28 15:30:33] [INFO] Generation 2 complete
+[2026-02-28 15:30:33] [INFO] Optimization complete for 8-point FFT
+[2026-02-28 15:30:33] [INFO] Saving optimization results...
