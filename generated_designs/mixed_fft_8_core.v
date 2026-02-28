@@ -34,13 +34,15 @@ module mixed_fft_8_core #(
     localparam IDLE    = 4'd0;
     localparam INIT    = 4'd1;
     localparam READ_A  = 4'd2;
-    localparam WAIT_A  = 4'd3;
-    localparam READ_B  = 4'd4;
-    localparam WAIT_B  = 4'd5;
-    localparam COMPUTE = 4'd6;
-    localparam WRITE_X = 4'd7;
-    localparam WRITE_Y = 4'd8;
-    localparam DONE    = 4'd9;
+    localparam WAIT_1  = 4'd3;
+    localparam WAIT_A  = 4'd4;
+    localparam READ_B  = 4'd5;
+    localparam WAIT_2  = 4'd6;
+    localparam WAIT_B  = 4'd7;
+    localparam COMPUTE = 4'd8;
+    localparam WRITE_X = 4'd9;
+    localparam WRITE_Y = 4'd10;
+    localparam DONE    = 4'd11;
 
     reg [3:0] state, next_state;
 
@@ -224,39 +226,39 @@ module mixed_fft_8_core #(
 
     generate
         // Stage 0: mult=0 add=0
-        butterfly_wrapper_16bit #(
+        butterfly_wrapper #(
             .MULT_PRECISION(0),
             .ADD_PRECISION (0)
         ) bf_stage0_inst (
-            .A_mem        (A_mem_24),
-            .B_mem        (B_mem_24),
-            .W            (twiddle_stage0),
+            .A        (A_mem_24),
+            .B        (B_mem_24),
+            .W            (twiddle),
             .X            (X_stage0),
             .Y            (Y_stage0),
             .output_is_fp8(fp8_out_stage0)
         );
 
         // Stage 1: mult=1 add=0
-        butterfly_wrapper_16bit #(
+        butterfly_wrapper #(
             .MULT_PRECISION(1),
             .ADD_PRECISION (0)
         ) bf_stage1_inst (
-            .A_mem        (A_mem_24),
-            .B_mem        (B_mem_24),
-            .W            (twiddle_stage1),
+            .A        (A_mem_24),
+            .B        (B_mem_24),
+            .W            (twiddle),
             .X            (X_stage1),
             .Y            (Y_stage1),
             .output_is_fp8(fp8_out_stage1)
         );
 
         // Stage 2: mult=1 add=1
-        butterfly_wrapper_16bit #(
+        butterfly_wrapper #(
             .MULT_PRECISION(1),
             .ADD_PRECISION (1)
         ) bf_stage2_inst (
-            .A_mem        (A_mem_24),
-            .B_mem        (B_mem_24),
-            .W            (twiddle_stage2),
+            .A        (A_mem_24),
+            .B        (B_mem_24),
+            .W            (twiddle),
             .X            (X_stage2),
             .Y            (Y_stage2),
             .output_is_fp8(fp8_out_stage2)
@@ -356,7 +358,7 @@ module mixed_fft_8_core #(
                     done  <= 0;
                     error <= 0;
                     fft_bank_sel <= 0;
-                    if (start && (N != MAX_N || (N & (N - 1)) != 0))
+                    if (start && (N > MAX_N || (N & (N - 1)) != 0))
                         error <= 1;
                 end
 
@@ -368,6 +370,9 @@ module mixed_fft_8_core #(
                     int_rd_addr <= idx_a;
                 end
 
+                WAIT_1: begin 
+                end
+
                 WAIT_A: begin
                     // Memory has 1-cycle read latency; data available next cycle
                 end
@@ -377,6 +382,9 @@ module mixed_fft_8_core #(
                     // Reconstruct 24-bit from the 16-bit memory output
                     A_mem_24    <= mem_rd_24;
                     int_rd_addr <= idx_b;
+                end
+
+                WAIT_2: begin 
                 end
 
                 WAIT_B: begin
@@ -430,9 +438,11 @@ module mixed_fft_8_core #(
         case (state)
             IDLE   : if (start && !error) next_state = INIT;
             INIT   : next_state = READ_A;
-            READ_A : next_state = WAIT_A;
+            READ_A : next_state = WAIT_1;
+            WAIT_1 : next_state = WAIT_A; 
             WAIT_A : next_state = READ_B;
-            READ_B : next_state = WAIT_B;
+            READ_B : next_state = WAIT_2;
+            WAIT_2 : next_state = WAIT_B;
             WAIT_B : next_state = COMPUTE;
             COMPUTE: next_state = WRITE_X;
             WRITE_X: next_state = WRITE_Y;

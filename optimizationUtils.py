@@ -99,49 +99,45 @@ class BlockwiseMutation(Mutation):
 
 class StagewiseMutation(Mutation):
     """
-    Mutation that operates on entire stages
-    Useful for exploring different stage-level precision strategies
+    Mutation that operates on entire stages.
+    With stage-level encoding each stage IS already a 2-gene block,
+    so this is equivalent to BlockwiseMutation but with stage-granularity
+    strategies (set all FP4, all FP8, flip, randomise).
     """
-    
+
     def __init__(self, fft_size, **kwargs):
         super().__init__(**kwargs)
         self.fft_size = fft_size
         import math
         self.num_stages = int(math.log2(fft_size))
-        self.butterflies_per_stage = fft_size // 2
-        self.genes_per_stage = self.butterflies_per_stage * 2
-    
+        self.butterflies_per_stage = fft_size // 2  # kept for informational consistency
+        self.genes_per_stage = 2  # one mult gene + one add gene per stage (stage-level encoding)
+
     def _do(self, problem, X, **kwargs):
         from globalVariablesMixedFFT import MUTATION_RATE
-        
+
         Xp = np.copy(X)
-        
+
         for i in range(len(Xp)):
-            # Randomly select a stage to mutate
             if random.random() < MUTATION_RATE:
                 stage_to_mutate = random.randint(0, self.num_stages - 1)
-                
+
                 gene_start = stage_to_mutate * self.genes_per_stage
-                gene_end = gene_start + self.genes_per_stage
-                
-                # Mutation strategy for entire stage
+                gene_end   = gene_start + self.genes_per_stage
+
                 strategy = random.randint(0, 3)
-                
+
                 if strategy == 0:
-                    # Set entire stage to FP4
-                    Xp[i][gene_start:gene_end] = 0
+                    Xp[i][gene_start:gene_end] = 0          # all FP4
                 elif strategy == 1:
-                    # Set entire stage to FP8
-                    Xp[i][gene_start:gene_end] = 1
+                    Xp[i][gene_start:gene_end] = 1          # all FP8
                 elif strategy == 2:
-                    # Flip all genes in stage
-                    for j in range(gene_start, gene_end):
+                    for j in range(gene_start, gene_end):   # flip
                         Xp[i][j] = 1 - Xp[i][j]
                 else:
-                    # Random for this stage
-                    for j in range(gene_start, gene_end):
+                    for j in range(gene_start, gene_end):   # random
                         Xp[i][j] = random.randint(0, 1)
-        
+
         return Xp
 
 
@@ -200,72 +196,61 @@ class TwoPointCrossover(Crossover):
 
 class StagewiseCrossover(Crossover):
     """
-    Crossover that exchanges entire stages between parents
-    Useful for combining stage-level strategies
+    Crossover that exchanges entire stages between parents.
+    With stage-level encoding each stage is a 2-gene block.
     """
-    
+
     def __init__(self, fft_size, **kwargs):
         super().__init__(2, 2, **kwargs)
         self.fft_size = fft_size
         import math
         self.num_stages = int(math.log2(fft_size))
-        self.butterflies_per_stage = fft_size // 2
-        self.genes_per_stage = self.butterflies_per_stage * 2
-    
+        self.butterflies_per_stage = fft_size // 2  # kept for informational consistency
+        self.genes_per_stage = 2  # one mult gene + one add gene per stage (stage-level encoding)
+
     def _do(self, problem, X, **kwargs):
         from globalVariablesMixedFFT import CROSSOVER_RATE
-        
+
         _, n_matings, n_var = X.shape
         Y = np.full_like(X, 0)
-        
+
         for k in range(n_matings):
             if random.random() < CROSSOVER_RATE:
-                # Select a stage to exchange
                 crossover_stage = random.randint(0, self.num_stages - 1)
-                
+
                 gene_start = crossover_stage * self.genes_per_stage
-                gene_end = gene_start + self.genes_per_stage
-                
+                gene_end   = gene_start + self.genes_per_stage
+
                 p1 = X[0, k]
                 p2 = X[1, k]
-                
+
                 # Offspring 1: P1[before] + P2[stage] + P1[after]
-                Y[0, k, :gene_start] = p1[:gene_start]
+                Y[0, k, :gene_start]        = p1[:gene_start]
                 Y[0, k, gene_start:gene_end] = p2[gene_start:gene_end]
-                Y[0, k, gene_end:] = p1[gene_end:]
-                
+                Y[0, k, gene_end:]          = p1[gene_end:]
+
                 # Offspring 2: P2[before] + P1[stage] + P2[after]
-                Y[1, k, :gene_start] = p2[:gene_start]
+                Y[1, k, :gene_start]        = p2[:gene_start]
                 Y[1, k, gene_start:gene_end] = p1[gene_start:gene_end]
-                Y[1, k, gene_end:] = p2[gene_end:]
+                Y[1, k, gene_end:]          = p2[gene_end:]
             else:
                 Y[0, k] = X[0, k]
                 Y[1, k] = X[1, k]
-        
+
         return Y
 
 
 def determineDecisionVariableLimit(fft_size):
     """
-    Determine chromosome bounds for given FFT size
-    
-    Args:
-        fft_size: FFT size
-    
+    Determine chromosome bounds for given FFT size (stage-level encoding).
+
     Returns:
-        [lower_limits, upper_limits]
+        [lower_limits, upper_limits]  each of length num_stages * 2
     """
     import math
-    
     num_stages = int(math.log2(fft_size))
-    butterflies_per_stage = fft_size // 2
-    total_butterflies = butterflies_per_stage * num_stages
-    chromosome_length = 2 * total_butterflies
-    
-    lower_limit = [0] * chromosome_length
-    upper_limit = [1] * chromosome_length
-    
-    return [lower_limit, upper_limit]
+    chromosome_length = 2 * num_stages
+    return [[0] * chromosome_length, [1] * chromosome_length]
 
 
 def analyze_population_diversity(population):

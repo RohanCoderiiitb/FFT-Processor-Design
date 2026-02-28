@@ -150,13 +150,14 @@ class MixedPrecisionFFTProblem(Problem):
         
         # Log chromosome statistics
         stats = self.template_gen.analyze_chromosome_statistics(chromosome)
+        num_stages = self.template_gen.num_stages
         log_message(
             f"Solution {sol_id}: Power={power:.4f}W, Area={area} LUTs, "
             f"SQNR={sqnr:.2f}dB, MAE={mae:.6f} | "
-            f"FP8_mult={stats['fp8_mult']}/{self.template_gen.total_butterflies} "
-            f"({stats['fp8_mult']/self.template_gen.total_butterflies*100:.1f}%), "
-            f"FP8_add={stats['fp8_add']}/{self.template_gen.total_butterflies} "
-            f"({stats['fp8_add']/self.template_gen.total_butterflies*100:.1f}%)"
+            f"FP8_mult={stats['fp8_mult']}/{num_stages} "
+            f"({stats['fp8_mult']/num_stages*100:.1f}%), "
+            f"FP8_add={stats['fp8_add']}/{num_stages} "
+            f"({stats['fp8_add']/num_stages*100:.1f}%)"
         )
         
         return self._compute_objectives_and_constraints(results)
@@ -269,8 +270,10 @@ class MixedPrecisionFFTProblem(Problem):
         mae = results['mae']
         
         # Objective 3: Performance error (lower is better)
-        # Combine SQNR (higher is better) and MAE (lower is better)
-        performance_error = (1.0 / (sqnr + 1.0)) + mae
+        # Clamp SQNR to 0 before inverting so that negative SQNR (failed sim)
+        # does not produce a negative performance_error that corrupts rankings.
+        sqnr_clamped = max(sqnr, 0.0)
+        performance_error = (1.0 / (sqnr_clamped + 1.0)) + mae
         
         objectives = [
             power * WEIGHT_POWER,
@@ -295,12 +298,13 @@ class MixedPrecisionFFTProblem(Problem):
         )
         
         stats = self.template_gen.analyze_chromosome_statistics(chromosome)
-        
+        num_stages = self.template_gen.num_stages
+
         with open(result_file, 'w') as f:
             f.write(f"FFT Size: {self.fft_size}\n")
             f.write(f"Generation: {CURRENT_GEN}\n")
             f.write(f"Solution ID: {sol_id}\n")
-            f.write(f"Total Butterflies: {self.template_gen.total_butterflies}\n")
+            f.write(f"Num Stages: {num_stages}\n")
             f.write(f"Chromosome Length: {len(chromosome)}\n")
             f.write(f"Chromosome: {list(chromosome)}\n")
             f.write(f"\nResults:\n")
@@ -308,12 +312,12 @@ class MixedPrecisionFFTProblem(Problem):
             f.write(f"  Area: {results['area']} LUTs\n")
             f.write(f"  SQNR: {results['sqnr']:.2f} dB\n")
             f.write(f"  MAE: {results['mae']:.6f}\n")
-            
+
             f.write(f"\nOverall Precision Distribution:\n")
-            f.write(f"  FP4 Multipliers: {stats['fp4_mult']} ({stats['fp4_mult']/self.template_gen.total_butterflies*100:.1f}%)\n")
-            f.write(f"  FP8 Multipliers: {stats['fp8_mult']} ({stats['fp8_mult']/self.template_gen.total_butterflies*100:.1f}%)\n")
-            f.write(f"  FP4 Adders: {stats['fp4_add']} ({stats['fp4_add']/self.template_gen.total_butterflies*100:.1f}%)\n")
-            f.write(f"  FP8 Adders: {stats['fp8_add']} ({stats['fp8_add']/self.template_gen.total_butterflies*100:.1f}%)\n")
+            f.write(f"  FP4 Multipliers: {stats['fp4_mult']} ({stats['fp4_mult']/num_stages*100:.1f}%)\n")
+            f.write(f"  FP8 Multipliers: {stats['fp8_mult']} ({stats['fp8_mult']/num_stages*100:.1f}%)\n")
+            f.write(f"  FP4 Adders: {stats['fp4_add']} ({stats['fp4_add']/num_stages*100:.1f}%)\n")
+            f.write(f"  FP8 Adders: {stats['fp8_add']} ({stats['fp8_add']/num_stages*100:.1f}%)\n")
             
             f.write(f"\nPer-Stage Breakdown:\n")
             f.write(f"{'Stage':<8} {'FP4 Mult':<12} {'FP8 Mult':<12} {'FP4 Add':<12} {'FP8 Add':<12}\n")
