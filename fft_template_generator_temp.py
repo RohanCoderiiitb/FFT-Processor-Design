@@ -54,7 +54,7 @@ class FFTTemplateGenerator:
     
     def generate_verilog(self, chromosome, output_file):
         """Generate a single top-level Verilog file for the given chromosome."""
-        config = self._chromosome_to_config(chromosome)
+        config = self.chromosome_to_config(chromosome)
         os.makedirs(os.path.dirname(output_file) or '.', exist_ok=True)
 
         core_code = self._generate_core(config)
@@ -215,13 +215,13 @@ class FFTTemplateGenerator:
             ap = s['add_precision']
             lines += [
                 f"        // Stage {sn}: mult={mp} add={ap}",
-                f"        butterfly_wrapper_16bit #(",
+                f"        butterfly_wrapper #(",
                 f"            .MULT_PRECISION({mp}),",
                 f"            .ADD_PRECISION ({ap})",
                 f"        ) bf_stage{sn}_inst (",
-                f"            .A_mem        (A_mem_24),",
-                f"            .B_mem        (B_mem_24),",
-                f"            .W            (twiddle_stage{sn}),",
+                f"            .A        (A_mem_24),",
+                f"            .B        (B_mem_24),",
+                f"            .W            (twiddle),",
                 f"            .X            (X_stage{sn}),",
                 f"            .Y            (Y_stage{sn}),",
                 f"            .output_is_fp8(fp8_out_stage{sn})",
@@ -332,13 +332,15 @@ module mixed_fft_{n}_core #(
     localparam IDLE    = 4'd0;
     localparam INIT    = 4'd1;
     localparam READ_A  = 4'd2;
-    localparam WAIT_A  = 4'd3;
-    localparam READ_B  = 4'd4;
-    localparam WAIT_B  = 4'd5;
-    localparam COMPUTE = 4'd6;
-    localparam WRITE_X = 4'd7;
-    localparam WRITE_Y = 4'd8;
-    localparam DONE    = 4'd9;
+    localparam WAIT_1  = 4'd3;
+    localparam WAIT_A  = 4'd4;
+    localparam READ_B  = 4'd5;
+    localparam WAIT_2  = 4'd6;
+    localparam WAIT_B  = 4'd7;
+    localparam COMPUTE = 4'd8;
+    localparam WRITE_X = 4'd9;
+    localparam WRITE_Y = 4'd10;
+    localparam DONE    = 4'd11;
 
     reg [3:0] state, next_state;
 
@@ -513,7 +515,7 @@ module mixed_fft_{n}_core #(
                     done  <= 0;
                     error <= 0;
                     fft_bank_sel <= 0;
-                    if (start && (N != MAX_N || (N & (N - 1)) != 0))
+                    if (start && (N > MAX_N || (N & (N - 1)) != 0))
                         error <= 1;
                 end
 
@@ -525,6 +527,9 @@ module mixed_fft_{n}_core #(
                     int_rd_addr <= idx_a;
                 end
 
+                WAIT_1: begin 
+                end
+
                 WAIT_A: begin
                     // Memory has 1-cycle read latency; data available next cycle
                 end
@@ -534,6 +539,9 @@ module mixed_fft_{n}_core #(
                     // Reconstruct 24-bit from the 16-bit memory output
                     A_mem_24    <= mem_rd_24;
                     int_rd_addr <= idx_b;
+                end
+
+                WAIT_2: begin 
                 end
 
                 WAIT_B: begin
@@ -587,9 +595,11 @@ module mixed_fft_{n}_core #(
         case (state)
             IDLE   : if (start && !error) next_state = INIT;
             INIT   : next_state = READ_A;
-            READ_A : next_state = WAIT_A;
+            READ_A : next_state = WAIT_1;
+            WAIT_1 : next_state = WAIT_A; 
             WAIT_A : next_state = READ_B;
-            READ_B : next_state = WAIT_B;
+            READ_B : next_state = WAIT_2;
+            WAIT_2 : next_state = WAIT_B;
             WAIT_B : next_state = COMPUTE;
             COMPUTE: next_state = WRITE_X;
             WRITE_X: next_state = WRITE_Y;
@@ -741,7 +751,7 @@ module mixed_fft_{n}_top #(
                         if (!fft_start_issued) begin
                             fft_start <= 1;
                             fft_start_issued <= 1;
-                        endfftacc@iiitb-OptiPlex-7080:~$ 
+                        end
 
                     end else begin
                         wr_en <= 0;
@@ -779,7 +789,7 @@ module mixed_fft_{n}_top #(
         end
     end
     
-    assign done = fft_done;fftacc@iiitb-OptiPlex-7080:~$ 
+    assign done = fft_done;
 
 '''
 
