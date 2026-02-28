@@ -173,8 +173,10 @@ class MixedPrecisionFFTProblem(Problem):
                 cmd, capture_output=True, text=True, timeout=600
             )
             if result.returncode != 0:
+                # Log the actual error — previously stderr was swallowed silently
+                err_snippet = (result.stderr or result.stdout or "no output")[-2000:]
                 log_message(
-                    f"Vivado failed for {design_name}:\n{result.stderr}",
+                    f"Vivado failed for {design_name} (rc={result.returncode}):\n{err_snippet}",
                     level='ERROR'
                 )
                 return MAX_POWER_W * 2, MAX_AREA_LUTS * 2
