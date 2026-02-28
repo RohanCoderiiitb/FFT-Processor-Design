@@ -147,13 +147,6 @@ module butterfly_generation_unit_8add_4mul(
         .complex_fp4(wb_product_fp4),
         .complex_fp8(wb_product_fp8)
     );
-    
-    //step 4: convert A from FP4 to FP8 for addition
-    wire [15:0] A_fp8;
-    complex_fp4_to_fp8 conv_a(
-        .complex_fp4(A_fp4),
-        .complex_fp8(A_fp8)
-    );
 
     //step 5: complex addition in FP8
     fp8_complex_add_sub add_inst(
