@@ -73,18 +73,25 @@ class FFTTemplateGenerator:
         out_dir = os.path.dirname(os.path.abspath(output_file))
         os.makedirs(out_dir, exist_ok=True)
 
-        # Derive a unique core module name from the output filename stem
-        stem = os.path.splitext(os.path.basename(output_file))[0]
-        # e.g. "fft_8_sol3_gen2" → core module = "mixed_fft_8_sol3_gen2_core"
+        # Derive unique module names from the output filename stem.
+        # e.g. output_file = "./generated_designs/fft_8_sol3_gen2.v"
+        #      stem             = "fft_8_sol3_gen2"
+        #      core_module_name = "fft_8_sol3_gen2_core"
+        #      top_module_name  = "fft_8_sol3_gen2_top"
+        stem             = os.path.splitext(os.path.basename(output_file))[0]
         core_module_name = f"{stem}_core"
+        top_module_name  = f"{stem}_top"
 
+        # Write core file (path supplied by caller, e.g. generated_designs/fft_8_sol3_gen2.v)
         core_code = self._generate_core(config, core_module_name=core_module_name)
         with open(output_file, 'w') as f:
             f.write(core_code)
 
-        # Shared top — always written so it's fresh; references core_module_name
-        top_file = os.path.join(out_dir, f"mixed_fft_{self.fft_size}_top.v")
-        top_code = self._generate_top(config, core_module_name=core_module_name)
+        # Write top file alongside the core in the same directory
+        top_file = os.path.join(out_dir, f"{stem}_top.v")
+        top_code = self._generate_top(config,
+                                       core_module_name=core_module_name,
+                                       top_module_name=top_module_name)
         with open(top_file, 'w') as f:
             f.write(top_code)
 
@@ -98,11 +105,13 @@ class FFTTemplateGenerator:
         config = self.chromosome_to_config(chromosome)
         os.makedirs(output_dir, exist_ok=True)
 
-        base_name = f"mixed_fft_{self.fft_size}"
+        base_name        = f"mixed_fft_{self.fft_size}"
         core_module_name = f"{base_name}_core"
+        top_module_name  = f"{base_name}_top"
 
         core = self._generate_core(config, core_module_name=core_module_name)
-        top  = self._generate_top(config,  core_module_name=core_module_name)
+        top  = self._generate_top(config,  core_module_name=core_module_name,
+                                            top_module_name=top_module_name)
 
         core_file = f"{output_dir}/{base_name}_core.v"
         top_file  = f"{output_dir}/{base_name}_top.v"
@@ -588,12 +597,14 @@ endmodule
     # Top module generator
     # ------------------------------------------------------------------
 
-    def _generate_top(self, config, core_module_name=None):
+    def _generate_top(self, config, core_module_name=None, top_module_name=None):
         n  = config['fft_size']
         aw = config['addr_width']
 
         if core_module_name is None:
             core_module_name = f"mixed_fft_{n}_core"
+        if top_module_name is None:
+            top_module_name = f"mixed_fft_{n}_top"
 
         return f"""\
 // Mixed-precision FFT TOP – {n}-point
@@ -602,7 +613,7 @@ endmodule
 
 `timescale 1ns/1ps
 
-module mixed_fft_{n}_top #(
+module {top_module_name} #(
     parameter MAX_N      = {n},
     parameter ADDR_WIDTH = {aw}
 )(

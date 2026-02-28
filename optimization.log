@@ -154,3 +154,1124 @@
 [2026-02-28 15:30:33] [INFO] Generation 2 complete
 [2026-02-28 15:30:33] [INFO] Optimization complete for 8-point FFT
 [2026-02-28 15:30:33] [INFO] Saving optimization results...
+[2026-02-28 16:17:42] [INFO] Initialized directory structure
+[2026-02-28 16:17:42] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:17:42] [INFO] Setting up Verilog source files
+[2026-02-28 16:17:42] [INFO] 
+============================================================
+[2026-02-28 16:17:42] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:17:42] [INFO] ============================================================
+
+[2026-02-28 16:17:42] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:17:42] [INFO] Chromosome length : 6
+[2026-02-28 16:17:42] [INFO] Number of stages  : 3
+[2026-02-28 16:17:42] [INFO] Total butterflies : 12
+[2026-02-28 16:17:42] [INFO] NSGA-II Configuration:
+[2026-02-28 16:17:42] [INFO]   Population size: 6
+[2026-02-28 16:17:42] [INFO]   Generations: 3
+[2026-02-28 16:17:42] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:17:42] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:17:42] [INFO]   Objectives: 3
+[2026-02-28 16:17:42] [INFO]   Parallel threads: 4
+[2026-02-28 16:17:42] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:17:42] [GEN] === Generation 0 ===
+[2026-02-28 16:17:42] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:17:42] [ERROR] Solution 3 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 1 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 4 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 2 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 0 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:17:42] [ERROR] Solution 5 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [INFO] Generation 0 complete
+[2026-02-28 16:17:42] [GEN] === Generation 1 ===
+[2026-02-28 16:17:42] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-02-28 16:17:42] [ERROR] Solution 2 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-02-28 16:17:42] [ERROR] Solution 0 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-02-28 16:17:42] [ERROR] Solution 1 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 3 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 5 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 4 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [INFO] Generation 1 complete
+[2026-02-28 16:17:42] [GEN] === Generation 2 ===
+[2026-02-28 16:17:42] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-02-28 16:17:42] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-02-28 16:17:42] [ERROR] Solution 1 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 2 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-02-28 16:17:42] [ERROR] Solution 3 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 0 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-02-28 16:17:42] [ERROR] Solution 4 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [ERROR] Solution 5 failed: too many values to unpack (expected 2)
+[2026-02-28 16:17:42] [INFO] Generation 2 complete
+[2026-02-28 16:17:42] [INFO] Optimization complete for 8-point FFT
+[2026-02-28 16:17:42] [INFO] Saving optimization results...
+[2026-02-28 16:18:09] [INFO] Initialized directory structure
+[2026-02-28 16:18:09] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:18:09] [INFO] Setting up Verilog source files
+[2026-02-28 16:18:09] [INFO] 
+============================================================
+[2026-02-28 16:18:09] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:18:09] [INFO] ============================================================
+
+[2026-02-28 16:18:09] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:18:09] [INFO] Chromosome length : 6
+[2026-02-28 16:18:09] [INFO] Number of stages  : 3
+[2026-02-28 16:18:09] [INFO] Total butterflies : 12
+[2026-02-28 16:18:09] [INFO] NSGA-II Configuration:
+[2026-02-28 16:18:09] [INFO]   Population size: 6
+[2026-02-28 16:18:09] [INFO]   Generations: 3
+[2026-02-28 16:18:09] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:18:09] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:18:09] [INFO]   Objectives: 3
+[2026-02-28 16:18:09] [INFO]   Parallel threads: 4
+[2026-02-28 16:18:09] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:18:09] [GEN] === Generation 0 ===
+[2026-02-28 16:18:09] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:18:09] [ERROR] Solution 3 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 1 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 4 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 2 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 0 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 5 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [INFO] Generation 0 complete
+[2026-02-28 16:18:09] [GEN] === Generation 1 ===
+[2026-02-28 16:18:09] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-02-28 16:18:09] [ERROR] Solution 1 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-02-28 16:18:09] [ERROR] Solution 3 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 2 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 4 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 0 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 5 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [INFO] Generation 1 complete
+[2026-02-28 16:18:09] [GEN] === Generation 2 ===
+[2026-02-28 16:18:09] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-02-28 16:18:09] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-02-28 16:18:09] [ERROR] Solution 4 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 2 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 3 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 0 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 5 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [ERROR] Solution 1 failed: too many values to unpack (expected 2)
+[2026-02-28 16:18:09] [INFO] Generation 2 complete
+[2026-02-28 16:18:09] [INFO] Optimization complete for 8-point FFT
+[2026-02-28 16:18:09] [INFO] Saving optimization results...
+[2026-02-28 16:25:32] [INFO] Initialized directory structure
+[2026-02-28 16:26:38] [INFO] Initialized directory structure
+[2026-02-28 16:26:38] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:26:38] [INFO] Setting up Verilog source files
+[2026-02-28 16:26:38] [INFO] 
+============================================================
+[2026-02-28 16:26:38] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:26:38] [INFO] ============================================================
+
+[2026-02-28 16:26:38] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:26:38] [INFO] Chromosome length : 6
+[2026-02-28 16:26:38] [INFO] Number of stages  : 3
+[2026-02-28 16:26:38] [INFO] Total butterflies : 12
+[2026-02-28 16:26:38] [INFO] NSGA-II Configuration:
+[2026-02-28 16:26:38] [INFO]   Population size: 6
+[2026-02-28 16:26:38] [INFO]   Generations: 3
+[2026-02-28 16:26:38] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:26:38] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:26:38] [INFO]   Objectives: 3
+[2026-02-28 16:26:38] [INFO]   Parallel threads: 4
+[2026-02-28 16:26:38] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:29:30] [INFO] Initialized directory structure
+[2026-02-28 16:30:19] [INFO] Initialized directory structure
+[2026-02-28 16:30:19] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:30:19] [INFO] Setting up Verilog source files
+[2026-02-28 16:30:19] [INFO] 
+============================================================
+[2026-02-28 16:30:19] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:30:19] [INFO] ============================================================
+
+[2026-02-28 16:30:19] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:30:19] [INFO] Chromosome length : 6
+[2026-02-28 16:30:19] [INFO] Number of stages  : 3
+[2026-02-28 16:30:19] [INFO] Total butterflies : 12
+[2026-02-28 16:30:19] [INFO] NSGA-II Configuration:
+[2026-02-28 16:30:19] [INFO]   Population size: 6
+[2026-02-28 16:30:19] [INFO]   Generations: 3
+[2026-02-28 16:30:19] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:30:19] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:30:19] [INFO]   Objectives: 3
+[2026-02-28 16:30:19] [INFO]   Parallel threads: 4
+[2026-02-28 16:30:19] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:30:19] [GEN] === Generation 0 ===
+[2026-02-28 16:30:19] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:30:19] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-02-28 16:30:19] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-02-28 16:30:19] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-02-28 16:30:19] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:30:19] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:30:19] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:30:19] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-02-28 16:30:19] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-02-28 16:30:19] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-02-28 16:30:19] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-02-28 16:30:19] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-02-28 16:30:19] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-02-28 16:30:19] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-02-28 16:30:19] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-02-28 16:30:19] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-02-28 16:30:39] [ERROR] Vivado failed for fft_8_sol1_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:30:39] [ERROR] Vivado failed for fft_8_sol0_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:30:39] [ERROR] Vivado failed for fft_8_sol2_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:30:39] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-02-28 16:30:39] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-02-28 16:30:39] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-02-28 16:30:39] [ERROR] Vivado failed for fft_8_sol3_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:30:39] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-02-28 16:30:39] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:30:39] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:30:39] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:30:39] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:30:39] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:30:39] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-02-28 16:30:39] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-02-28 16:30:39] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-02-28 16:30:39] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-02-28 16:30:39] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-02-28 16:30:39] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-02-28 16:30:39] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:30:54] [ERROR] Vivado failed for fft_8_sol4_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3140372) has died. This helper process will now exit
+
+[2026-02-28 16:30:54] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-02-28 16:30:54] [ERROR] Vivado failed for fft_8_sol5_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3140373) has died. This helper process will now exit
+
+[2026-02-28 16:30:54] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-02-28 16:30:54] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:30:54] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:30:54] [INFO] Generation 0 complete
+[2026-02-28 16:30:54] [GEN] === Generation 1 ===
+[2026-02-28 16:30:54] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-02-28 16:30:54] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-02-28 16:30:54] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-02-28 16:30:54] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-02-28 16:30:54] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen2.v
+[2026-02-28 16:30:54] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen2.v
+[2026-02-28 16:30:54] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen2_top.v
+[2026-02-28 16:30:54] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen2.v
+[2026-02-28 16:30:54] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen2_top.v
+[2026-02-28 16:30:54] [INFO] Running Vivado synthesis for fft_8_sol0_gen2
+[2026-02-28 16:30:54] [INFO] Running Vivado synthesis for fft_8_sol1_gen2
+[2026-02-28 16:30:54] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen2_top.v
+[2026-02-28 16:30:54] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen2.v
+[2026-02-28 16:30:54] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen2_top.v
+[2026-02-28 16:30:54] [INFO] Running Vivado synthesis for fft_8_sol3_gen2
+[2026-02-28 16:30:54] [INFO] Running Vivado synthesis for fft_8_sol2_gen2
+[2026-02-28 16:31:08] [ERROR] Vivado failed for fft_8_sol1_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:31:08] [INFO] Running performance evaluation for fft_8_sol1_gen2
+[2026-02-28 16:31:08] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:31:08] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-02-28 16:31:08] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen2.v
+[2026-02-28 16:31:08] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen2_top.v
+[2026-02-28 16:31:08] [INFO] Running Vivado synthesis for fft_8_sol4_gen2
+[2026-02-28 16:31:10] [ERROR] Vivado failed for fft_8_sol0_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3140708) has died. This helper process will now exit
+
+[2026-02-28 16:31:10] [INFO] Running performance evaluation for fft_8_sol0_gen2
+[2026-02-28 16:31:10] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:31:10] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-02-28 16:31:10] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen2.v
+[2026-02-28 16:31:10] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen2_top.v
+[2026-02-28 16:31:10] [INFO] Running Vivado synthesis for fft_8_sol5_gen2
+[2026-02-28 16:31:10] [ERROR] Vivado failed for fft_8_sol3_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3140710) has died. This helper process will now exit
+
+[2026-02-28 16:31:10] [INFO] Running performance evaluation for fft_8_sol3_gen2
+[2026-02-28 16:31:10] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:31:11] [ERROR] Vivado failed for fft_8_sol2_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3140711) has died. This helper process will now exit
+
+[2026-02-28 16:31:11] [INFO] Running performance evaluation for fft_8_sol2_gen2
+[2026-02-28 16:31:11] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:31:24] [ERROR] Vivado failed for fft_8_sol4_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3141046) has died. This helper process will now exit
+
+[2026-02-28 16:31:24] [INFO] Running performance evaluation for fft_8_sol4_gen2
+[2026-02-28 16:31:24] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:31:26] [ERROR] Vivado failed for fft_8_sol5_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3141113) has died. This helper process will now exit
+
+[2026-02-28 16:31:26] [INFO] Running performance evaluation for fft_8_sol5_gen2
+[2026-02-28 16:31:26] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:31:26] [INFO] Generation 1 complete
+[2026-02-28 16:31:26] [GEN] === Generation 2 ===
+[2026-02-28 16:31:26] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-02-28 16:31:26] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-02-28 16:31:26] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-02-28 16:31:26] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen3.v
+[2026-02-28 16:31:26] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen3_top.v
+[2026-02-28 16:31:26] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-02-28 16:31:26] [INFO] Running Vivado synthesis for fft_8_sol1_gen3
+[2026-02-28 16:31:26] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen3.v
+[2026-02-28 16:31:26] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen3_top.v
+[2026-02-28 16:31:26] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen3.v
+[2026-02-28 16:31:26] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen3.v
+[2026-02-28 16:31:26] [INFO] Running Vivado synthesis for fft_8_sol0_gen3
+[2026-02-28 16:31:26] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen3_top.v
+[2026-02-28 16:31:26] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen3_top.v
+[2026-02-28 16:31:26] [INFO] Running Vivado synthesis for fft_8_sol3_gen3
+[2026-02-28 16:31:26] [INFO] Running Vivado synthesis for fft_8_sol2_gen3
+[2026-02-28 16:31:40] [ERROR] Vivado failed for fft_8_sol0_gen3:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:31:40] [INFO] Running performance evaluation for fft_8_sol0_gen3
+[2026-02-28 16:31:40] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:31:40] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-02-28 16:31:40] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen3.v
+[2026-02-28 16:31:40] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen3_top.v
+[2026-02-28 16:31:40] [INFO] Running Vivado synthesis for fft_8_sol4_gen3
+[2026-02-28 16:31:43] [ERROR] Vivado failed for fft_8_sol2_gen3:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3141442) has died. This helper process will now exit
+
+[2026-02-28 16:31:43] [INFO] Running performance evaluation for fft_8_sol2_gen3
+[2026-02-28 16:31:43] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:31:43] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-02-28 16:31:43] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen3.v
+[2026-02-28 16:31:43] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen3_top.v
+[2026-02-28 16:31:43] [INFO] Running Vivado synthesis for fft_8_sol5_gen3
+[2026-02-28 16:31:43] [ERROR] Vivado failed for fft_8_sol3_gen3:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3141441) has died. This helper process will now exit
+
+[2026-02-28 16:31:43] [INFO] Running performance evaluation for fft_8_sol3_gen3
+[2026-02-28 16:31:43] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:31:43] [ERROR] Vivado failed for fft_8_sol1_gen3:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3141444) has died. This helper process will now exit
+
+[2026-02-28 16:31:43] [INFO] Running performance evaluation for fft_8_sol1_gen3
+[2026-02-28 16:31:43] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:31:57] [ERROR] Vivado failed for fft_8_sol4_gen3:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3141750) has died. This helper process will now exit
+
+[2026-02-28 16:31:57] [INFO] Running performance evaluation for fft_8_sol4_gen3
+[2026-02-28 16:31:57] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:31:59] [ERROR] Vivado failed for fft_8_sol5_gen3:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3141825) has died. This helper process will now exit
+
+[2026-02-28 16:31:59] [INFO] Running performance evaluation for fft_8_sol5_gen3
+[2026-02-28 16:31:59] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:31:59] [INFO] Generation 2 complete
+[2026-02-28 16:31:59] [INFO] Optimization complete for 8-point FFT
+[2026-02-28 16:31:59] [INFO] Saving optimization results...
+[2026-02-28 16:33:02] [INFO] Initialized directory structure
+[2026-02-28 16:33:02] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:33:02] [INFO] Setting up Verilog source files
+[2026-02-28 16:33:02] [INFO] 
+============================================================
+[2026-02-28 16:33:02] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:33:02] [INFO] ============================================================
+
+[2026-02-28 16:33:02] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:33:02] [INFO] Chromosome length : 6
+[2026-02-28 16:33:02] [INFO] Number of stages  : 3
+[2026-02-28 16:33:02] [INFO] Total butterflies : 12
+[2026-02-28 16:33:02] [INFO] NSGA-II Configuration:
+[2026-02-28 16:33:02] [INFO]   Population size: 6
+[2026-02-28 16:33:02] [INFO]   Generations: 3
+[2026-02-28 16:33:02] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:33:02] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:33:02] [INFO]   Objectives: 3
+[2026-02-28 16:33:02] [INFO]   Parallel threads: 4
+[2026-02-28 16:33:02] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:33:02] [GEN] === Generation 0 ===
+[2026-02-28 16:33:02] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:33:02] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-02-28 16:33:02] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-02-28 16:33:02] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-02-28 16:33:02] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:33:02] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:33:02] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:33:02] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-02-28 16:33:02] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-02-28 16:33:02] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-02-28 16:33:02] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-02-28 16:33:02] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-02-28 16:33:02] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-02-28 16:33:02] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-02-28 16:33:02] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-02-28 16:33:02] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-02-28 16:33:18] [ERROR] Vivado failed for fft_8_sol3_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3142535) has died. This helper process will now exit
+
+[2026-02-28 16:33:18] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-02-28 16:33:18] [ERROR] Vivado failed for fft_8_sol2_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3142534) has died. This helper process will now exit
+
+[2026-02-28 16:33:18] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-02-28 16:33:18] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:33:18] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:33:18] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:33:18] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:33:18] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-02-28 16:33:18] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-02-28 16:33:18] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-02-28 16:33:18] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-02-28 16:33:18] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-02-28 16:33:18] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-02-28 16:33:18] [ERROR] Vivado failed for fft_8_sol1_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3142532) has died. This helper process will now exit
+
+[2026-02-28 16:33:18] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-02-28 16:33:18] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:33:19] [ERROR] Vivado failed for fft_8_sol0_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3142533) has died. This helper process will now exit
+
+[2026-02-28 16:33:19] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-02-28 16:33:19] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:33:33] [ERROR] Vivado failed for fft_8_sol5_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3142881) has died. This helper process will now exit
+
+[2026-02-28 16:33:33] [ERROR] Vivado failed for fft_8_sol4_gen1:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3142882) has died. This helper process will now exit
+
+[2026-02-28 16:33:33] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-02-28 16:33:33] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-02-28 16:33:33] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:33:33] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:33:33] [INFO] Generation 0 complete
+[2026-02-28 16:33:33] [GEN] === Generation 1 ===
+[2026-02-28 16:33:33] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-02-28 16:33:33] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-02-28 16:33:33] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-02-28 16:33:33] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-02-28 16:33:33] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen2.v
+[2026-02-28 16:33:33] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen2.v
+[2026-02-28 16:33:33] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen2.v
+[2026-02-28 16:33:33] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen2.v
+[2026-02-28 16:33:33] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen2_top.v
+[2026-02-28 16:33:33] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen2_top.v
+[2026-02-28 16:33:33] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen2_top.v
+[2026-02-28 16:33:33] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen2_top.v
+[2026-02-28 16:33:33] [INFO] Running Vivado synthesis for fft_8_sol2_gen2
+[2026-02-28 16:33:33] [INFO] Running Vivado synthesis for fft_8_sol1_gen2
+[2026-02-28 16:33:33] [INFO] Running Vivado synthesis for fft_8_sol0_gen2
+[2026-02-28 16:33:33] [INFO] Running Vivado synthesis for fft_8_sol3_gen2
+[2026-02-28 16:33:49] [ERROR] Vivado failed for fft_8_sol2_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:33:49] [INFO] Running performance evaluation for fft_8_sol2_gen2
+[2026-02-28 16:33:49] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:33:49] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-02-28 16:33:49] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen2.v
+[2026-02-28 16:33:49] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen2_top.v
+[2026-02-28 16:33:49] [INFO] Running Vivado synthesis for fft_8_sol4_gen2
+[2026-02-28 16:33:51] [ERROR] Vivado failed for fft_8_sol3_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3143223) has died. This helper process will now exit
+
+[2026-02-28 16:33:51] [INFO] Running performance evaluation for fft_8_sol3_gen2
+[2026-02-28 16:33:51] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:33:51] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-02-28 16:33:51] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen2.v
+[2026-02-28 16:33:51] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen2_top.v
+[2026-02-28 16:33:51] [INFO] Running Vivado synthesis for fft_8_sol5_gen2
+[2026-02-28 16:33:51] [ERROR] Vivado failed for fft_8_sol0_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3143225) has died. This helper process will now exit
+
+[2026-02-28 16:33:51] [INFO] Running performance evaluation for fft_8_sol0_gen2
+[2026-02-28 16:33:51] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:33:51] [ERROR] Vivado failed for fft_8_sol1_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3143227) has died. This helper process will now exit
+
+[2026-02-28 16:33:51] [INFO] Running performance evaluation for fft_8_sol1_gen2
+[2026-02-28 16:33:51] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:34:05] [ERROR] Vivado failed for fft_8_sol4_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3143619) has died. This helper process will now exit
+
+[2026-02-28 16:34:05] [INFO] Running performance evaluation for fft_8_sol4_gen2
+[2026-02-28 16:34:05] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:34:07] [ERROR] Vivado failed for fft_8_sol5_gen2:
+ERROR: [Synth 8-2715] syntax error near ) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:6]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3143693) has died. This helper process will now exit
+
+[2026-02-28 16:34:07] [INFO] Running performance evaluation for fft_8_sol5_gen2
+[2026-02-28 16:34:07] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:34:07] [INFO] Generation 1 complete
+[2026-02-28 16:34:07] [GEN] === Generation 2 ===
+[2026-02-28 16:34:07] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-02-28 16:34:07] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-02-28 16:34:07] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen3.v
+[2026-02-28 16:34:07] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-02-28 16:34:07] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen3_top.v
+[2026-02-28 16:34:07] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-02-28 16:34:07] [INFO] Running Vivado synthesis for fft_8_sol0_gen3
+[2026-02-28 16:34:07] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen3.v
+[2026-02-28 16:34:07] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen3_top.v
+[2026-02-28 16:34:07] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen3.v
+[2026-02-28 16:34:07] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen3_top.v
+[2026-02-28 16:34:07] [INFO] Running Vivado synthesis for fft_8_sol1_gen3
+[2026-02-28 16:34:07] [INFO] Running Vivado synthesis for fft_8_sol2_gen3
+[2026-02-28 16:34:07] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen3.v
+[2026-02-28 16:34:07] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen3_top.v
+[2026-02-28 16:34:07] [INFO] Running Vivado synthesis for fft_8_sol3_gen3
+[2026-02-28 16:34:23] [ERROR] Vivado failed for fft_8_sol1_gen3:
+ERROR: [Synth 8-2715] syntax error near ; [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:9]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:34:23] [ERROR] Vivado failed for fft_8_sol0_gen3:
+ERROR: [Synth 8-2715] syntax error near ; [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:9]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:34:23] [ERROR] Vivado failed for fft_8_sol3_gen3:
+ERROR: [Synth 8-2715] syntax error near ; [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:9]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:34:23] [ERROR] Vivado failed for fft_8_sol2_gen3:
+ERROR: [Synth 8-2715] syntax error near ; [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:9]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:34:23] [INFO] Running performance evaluation for fft_8_sol1_gen3
+[2026-02-28 16:34:23] [INFO] Running performance evaluation for fft_8_sol0_gen3
+[2026-02-28 16:34:23] [INFO] Running performance evaluation for fft_8_sol3_gen3
+[2026-02-28 16:34:23] [INFO] Running performance evaluation for fft_8_sol2_gen3
+[2026-02-28 16:34:23] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:34:23] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:34:23] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-02-28 16:34:23] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-02-28 16:34:23] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen3.v
+[2026-02-28 16:34:23] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen3_top.v
+[2026-02-28 16:34:23] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen3.v
+[2026-02-28 16:34:23] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:34:23] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen3_top.v
+[2026-02-28 16:34:23] [INFO] Running Vivado synthesis for fft_8_sol4_gen3
+[2026-02-28 16:34:23] [INFO] Running Vivado synthesis for fft_8_sol5_gen3
+[2026-02-28 16:34:23] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:35:13] [INFO] Initialized directory structure
+[2026-02-28 16:35:13] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:35:13] [INFO] Setting up Verilog source files
+[2026-02-28 16:35:13] [INFO] 
+============================================================
+[2026-02-28 16:35:13] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:35:13] [INFO] ============================================================
+
+[2026-02-28 16:35:13] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:35:13] [INFO] Chromosome length : 6
+[2026-02-28 16:35:13] [INFO] Number of stages  : 3
+[2026-02-28 16:35:13] [INFO] Total butterflies : 12
+[2026-02-28 16:35:13] [INFO] NSGA-II Configuration:
+[2026-02-28 16:35:13] [INFO]   Population size: 6
+[2026-02-28 16:35:13] [INFO]   Generations: 3
+[2026-02-28 16:35:13] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:35:13] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:35:13] [INFO]   Objectives: 3
+[2026-02-28 16:35:13] [INFO]   Parallel threads: 4
+[2026-02-28 16:35:13] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:35:13] [GEN] === Generation 0 ===
+[2026-02-28 16:35:13] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:35:13] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-02-28 16:35:13] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-02-28 16:35:13] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-02-28 16:35:13] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:35:13] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:35:13] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:35:13] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-02-28 16:35:13] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-02-28 16:35:13] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-02-28 16:35:13] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-02-28 16:35:13] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-02-28 16:35:13] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-02-28 16:35:13] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-02-28 16:35:13] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-02-28 16:35:13] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-02-28 16:35:29] [ERROR] Vivado failed for fft_8_sol2_gen1:
+ERROR: [Synth 8-2715] syntax error near ; [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:9]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3145059) has died. This helper process will now exit
+
+[2026-02-28 16:35:29] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-02-28 16:35:29] [ERROR] Vivado failed for fft_8_sol0_gen1:
+ERROR: [Synth 8-2715] syntax error near ; [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:9]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3145057) has died. This helper process will now exit
+
+[2026-02-28 16:35:29] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-02-28 16:35:29] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:35:29] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:35:29] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:35:29] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:35:29] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-02-28 16:35:29] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-02-28 16:35:29] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-02-28 16:35:29] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-02-28 16:35:29] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-02-28 16:35:29] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-02-28 16:35:29] [ERROR] Vivado failed for fft_8_sol3_gen1:
+ERROR: [Synth 8-2715] syntax error near ; [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:9]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3145058) has died. This helper process will now exit
+
+[2026-02-28 16:35:29] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-02-28 16:35:29] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:35:29] [ERROR] Vivado failed for fft_8_sol1_gen1:
+ERROR: [Synth 8-2715] syntax error near ; [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:9]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+Parent process (pid 3145060) has died. This helper process will now exit
+
+[2026-02-28 16:35:29] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-02-28 16:35:30] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:36:31] [INFO] Initialized directory structure
+[2026-02-28 16:36:31] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:36:31] [INFO] Setting up Verilog source files
+[2026-02-28 16:36:31] [INFO] 
+============================================================
+[2026-02-28 16:36:31] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:36:31] [INFO] ============================================================
+
+[2026-02-28 16:36:31] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:36:31] [INFO] Chromosome length : 6
+[2026-02-28 16:36:31] [INFO] Number of stages  : 3
+[2026-02-28 16:36:31] [INFO] Total butterflies : 12
+[2026-02-28 16:36:31] [INFO] NSGA-II Configuration:
+[2026-02-28 16:36:31] [INFO]   Population size: 6
+[2026-02-28 16:36:31] [INFO]   Generations: 3
+[2026-02-28 16:36:31] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:36:31] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:36:31] [INFO]   Objectives: 3
+[2026-02-28 16:36:31] [INFO]   Parallel threads: 4
+[2026-02-28 16:36:31] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:36:31] [GEN] === Generation 0 ===
+[2026-02-28 16:36:31] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:36:31] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-02-28 16:36:31] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-02-28 16:36:31] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-02-28 16:36:31] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:36:31] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:36:31] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:36:31] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-02-28 16:36:31] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-02-28 16:36:31] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-02-28 16:36:31] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-02-28 16:36:31] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-02-28 16:36:31] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-02-28 16:36:31] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-02-28 16:36:31] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-02-28 16:36:31] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-02-28 16:36:45] [ERROR] Vivado failed for fft_8_sol1_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol1_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol1_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:36:45] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-02-28 16:36:45] [ERROR] Vivado failed for fft_8_sol3_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol3_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol3_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:36:45] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-02-28 16:36:45] [ERROR] Vivado failed for fft_8_sol2_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol2_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol2_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:36:45] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-02-28 16:36:45] [ERROR] Vivado failed for fft_8_sol0_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol0_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol0_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:36:45] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-02-28 16:36:45] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:36:45] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:36:45] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-02-28 16:36:45] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-02-28 16:36:45] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-02-28 16:36:45] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:36:45] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:36:45] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-02-28 16:36:45] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:36:45] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-02-28 16:36:45] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-02-28 16:36:45] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:36:59] [ERROR] Vivado failed for fft_8_sol5_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol5_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol5_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:36:59] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-02-28 16:36:59] [ERROR] Vivado failed for fft_8_sol4_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol4_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol4_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:36:59] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-02-28 16:36:59] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:36:59] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:36:59] [INFO] Generation 0 complete
+[2026-02-28 16:36:59] [GEN] === Generation 1 ===
+[2026-02-28 16:36:59] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-02-28 16:36:59] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-02-28 16:36:59] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-02-28 16:36:59] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen2.v
+[2026-02-28 16:36:59] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-02-28 16:36:59] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen2_top.v
+[2026-02-28 16:36:59] [INFO] Running Vivado synthesis for fft_8_sol0_gen2
+[2026-02-28 16:36:59] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen2.v
+[2026-02-28 16:36:59] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen2.v
+[2026-02-28 16:36:59] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen2_top.v
+[2026-02-28 16:36:59] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen2.v
+[2026-02-28 16:36:59] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen2_top.v
+[2026-02-28 16:36:59] [INFO] Running Vivado synthesis for fft_8_sol1_gen2
+[2026-02-28 16:36:59] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen2_top.v
+[2026-02-28 16:36:59] [INFO] Running Vivado synthesis for fft_8_sol3_gen2
+[2026-02-28 16:36:59] [INFO] Running Vivado synthesis for fft_8_sol2_gen2
+[2026-02-28 16:37:14] [ERROR] Vivado failed for fft_8_sol1_gen2:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol1_gen2_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen2.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol1_gen2_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen2_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:37:14] [INFO] Running performance evaluation for fft_8_sol1_gen2
+[2026-02-28 16:37:14] [ERROR] Vivado failed for fft_8_sol3_gen2:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol3_gen2_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen2.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol3_gen2_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen2_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:37:14] [ERROR] Vivado failed for fft_8_sol2_gen2:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol2_gen2_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen2.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol2_gen2_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen2_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:37:14] [INFO] Running performance evaluation for fft_8_sol3_gen2
+[2026-02-28 16:37:14] [INFO] Running performance evaluation for fft_8_sol2_gen2
+[2026-02-28 16:37:14] [ERROR] Vivado failed for fft_8_sol0_gen2:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol0_gen2_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen2.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol0_gen2_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen2_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:37:14] [INFO] Running performance evaluation for fft_8_sol0_gen2
+[2026-02-28 16:37:14] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:37:14] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-02-28 16:37:14] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:37:14] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-02-28 16:37:14] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen2.v
+[2026-02-28 16:37:14] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen2_top.v
+[2026-02-28 16:37:14] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen2.v
+[2026-02-28 16:37:14] [INFO] Running Vivado synthesis for fft_8_sol4_gen2
+[2026-02-28 16:37:14] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:37:14] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen2_top.v
+[2026-02-28 16:37:14] [INFO] Running Vivado synthesis for fft_8_sol5_gen2
+[2026-02-28 16:37:14] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:37:28] [ERROR] Vivado failed for fft_8_sol4_gen2:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol4_gen2_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen2.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol4_gen2_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen2_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:37:28] [INFO] Running performance evaluation for fft_8_sol4_gen2
+[2026-02-28 16:37:28] [ERROR] Vivado failed for fft_8_sol5_gen2:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol5_gen2_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen2.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol5_gen2_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen2_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:37:28] [INFO] Running performance evaluation for fft_8_sol5_gen2
+[2026-02-28 16:37:28] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:37:28] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:37:28] [INFO] Generation 1 complete
+[2026-02-28 16:37:28] [GEN] === Generation 2 ===
+[2026-02-28 16:37:28] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-02-28 16:37:28] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-02-28 16:37:28] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-02-28 16:37:28] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-02-28 16:37:28] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen3.v
+[2026-02-28 16:37:28] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen3.v
+[2026-02-28 16:37:28] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen3.v
+[2026-02-28 16:37:28] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen3_top.v
+[2026-02-28 16:37:28] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen3.v
+[2026-02-28 16:37:28] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen3_top.v
+[2026-02-28 16:37:28] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen3_top.v
+[2026-02-28 16:37:28] [INFO] Running Vivado synthesis for fft_8_sol2_gen3
+[2026-02-28 16:37:28] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen3_top.v
+[2026-02-28 16:37:28] [INFO] Running Vivado synthesis for fft_8_sol1_gen3
+[2026-02-28 16:37:28] [INFO] Running Vivado synthesis for fft_8_sol3_gen3
+[2026-02-28 16:37:28] [INFO] Running Vivado synthesis for fft_8_sol0_gen3
+[2026-02-28 16:37:30] [ERROR] Vivado failed for fft_8_sol3_gen3:
+
+[2026-02-28 16:37:30] [ERROR] Vivado failed for fft_8_sol0_gen3:
+
+[2026-02-28 16:37:30] [ERROR] Vivado failed for fft_8_sol2_gen3:
+
+[2026-02-28 16:37:30] [ERROR] Vivado failed for fft_8_sol1_gen3:
+
+[2026-02-28 16:37:30] [INFO] Running performance evaluation for fft_8_sol0_gen3
+[2026-02-28 16:37:30] [INFO] Running performance evaluation for fft_8_sol3_gen3
+[2026-02-28 16:37:30] [INFO] Running performance evaluation for fft_8_sol2_gen3
+[2026-02-28 16:37:30] [INFO] Running performance evaluation for fft_8_sol1_gen3
+[2026-02-28 16:37:30] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:37:30] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:37:30] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:37:30] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-02-28 16:37:30] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-02-28 16:37:30] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:37:30] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen3.v
+[2026-02-28 16:37:30] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen3.v
+[2026-02-28 16:37:30] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen3_top.v
+[2026-02-28 16:37:30] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen3_top.v
+[2026-02-28 16:37:30] [INFO] Running Vivado synthesis for fft_8_sol4_gen3
+[2026-02-28 16:37:30] [INFO] Running Vivado synthesis for fft_8_sol5_gen3
+[2026-02-28 16:37:44] [ERROR] Vivado failed for fft_8_sol5_gen3:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol5_gen3_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen3.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol5_gen3_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen3_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:37:44] [INFO] Running performance evaluation for fft_8_sol5_gen3
+[2026-02-28 16:37:44] [ERROR] Vivado failed for fft_8_sol4_gen3:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol4_gen3_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen3.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol4_gen3_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen3_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:37:44] [INFO] Running performance evaluation for fft_8_sol4_gen3
+[2026-02-28 16:37:44] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:37:44] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:40:12] [INFO] Initialized directory structure
+[2026-02-28 16:40:12] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:40:12] [INFO] Setting up Verilog source files
+[2026-02-28 16:40:12] [INFO] 
+============================================================
+[2026-02-28 16:40:12] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:40:12] [INFO] ============================================================
+
+[2026-02-28 16:40:12] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:40:12] [INFO] Chromosome length : 6
+[2026-02-28 16:40:12] [INFO] Number of stages  : 3
+[2026-02-28 16:40:12] [INFO] Total butterflies : 12
+[2026-02-28 16:40:12] [INFO] NSGA-II Configuration:
+[2026-02-28 16:40:12] [INFO]   Population size: 6
+[2026-02-28 16:40:12] [INFO]   Generations: 3
+[2026-02-28 16:40:12] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:40:12] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:40:12] [INFO]   Objectives: 3
+[2026-02-28 16:40:12] [INFO]   Parallel threads: 4
+[2026-02-28 16:40:12] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:40:12] [GEN] === Generation 0 ===
+[2026-02-28 16:40:12] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:40:12] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-02-28 16:40:12] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-02-28 16:40:12] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-02-28 16:40:12] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:40:12] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:40:12] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:40:12] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-02-28 16:40:12] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-02-28 16:40:12] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-02-28 16:40:12] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-02-28 16:40:12] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-02-28 16:40:12] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-02-28 16:40:12] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-02-28 16:40:12] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-02-28 16:40:12] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-02-28 16:40:26] [ERROR] Vivado failed for fft_8_sol3_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol3_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol3_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:40:26] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-02-28 16:40:26] [ERROR] Vivado failed for fft_8_sol2_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol2_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol2_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:40:26] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-02-28 16:40:26] [ERROR] Vivado failed for fft_8_sol0_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol0_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol0_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:40:26] [ERROR] Vivado failed for fft_8_sol1_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:58]
+ERROR: [Synth 8-6156] failed synthesizing module 'dit_fft_agu_variable' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol1_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol1_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:40:26] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-02-28 16:40:26] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-02-28 16:40:26] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:40:26] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:40:26] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:40:26] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:40:26] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:40:26] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:40:26] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-02-28 16:40:26] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-02-28 16:40:26] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-02-28 16:40:26] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-02-28 16:40:26] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-02-28 16:40:26] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-02-28 16:42:23] [INFO] Initialized directory structure
+[2026-02-28 16:42:23] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:42:23] [INFO] Setting up Verilog source files
+[2026-02-28 16:42:23] [INFO] 
+============================================================
+[2026-02-28 16:42:23] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:42:23] [INFO] ============================================================
+
+[2026-02-28 16:42:23] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:42:23] [INFO] Chromosome length : 6
+[2026-02-28 16:42:23] [INFO] Number of stages  : 3
+[2026-02-28 16:42:23] [INFO] Total butterflies : 12
+[2026-02-28 16:42:23] [INFO] NSGA-II Configuration:
+[2026-02-28 16:42:23] [INFO]   Population size: 6
+[2026-02-28 16:42:23] [INFO]   Generations: 3
+[2026-02-28 16:42:23] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:42:23] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:42:23] [INFO]   Objectives: 3
+[2026-02-28 16:42:23] [INFO]   Parallel threads: 4
+[2026-02-28 16:42:23] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:42:23] [GEN] === Generation 0 ===
+[2026-02-28 16:42:23] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:42:23] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-02-28 16:42:23] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-02-28 16:42:23] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-02-28 16:42:23] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:42:23] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:42:23] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-02-28 16:42:23] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:42:23] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-02-28 16:42:23] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-02-28 16:42:23] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-02-28 16:42:23] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-02-28 16:42:23] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-02-28 16:42:23] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-02-28 16:42:23] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-02-28 16:42:23] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-02-28 16:42:38] [ERROR] Vivado failed for fft_8_sol1_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor_unified' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1.v:192]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol1_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol1_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:42:38] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-02-28 16:42:38] [ERROR] Vivado failed for fft_8_sol3_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor_unified' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1.v:192]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol3_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol3_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:42:38] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-02-28 16:42:38] [ERROR] Vivado failed for fft_8_sol0_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor_unified' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1.v:192]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol0_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol0_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:42:38] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-02-28 16:42:38] [ERROR] Vivado failed for fft_8_sol2_gen1:
+ERROR: [Synth 8-439] module 'twiddle_factor_unified' not found [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1.v:192]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol2_gen1_core' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1.v:7]
+ERROR: [Synth 8-6156] failed synthesizing module 'fft_8_sol2_gen1_top' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v:7]
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+
+[2026-02-28 16:42:38] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-02-28 16:42:38] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:42:38] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:42:38] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-02-28 16:42:38] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-02-28 16:42:38] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-02-28 16:42:38] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:42:38] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:42:38] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:42:38] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-02-28 16:42:38] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-02-28 16:42:38] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-02-28 16:42:38] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:42:40] [ERROR] Vivado failed for fft_8_sol5_gen1:
+
+[2026-02-28 16:42:40] [ERROR] Vivado failed for fft_8_sol4_gen1:
+
+[2026-02-28 16:42:40] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-02-28 16:42:40] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-02-28 16:42:40] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:42:40] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:44:21] [INFO] Initialized directory structure
+[2026-02-28 16:44:21] [INFO] Running quick test with 8-point FFT
+[2026-02-28 16:44:21] [INFO] Setting up Verilog source files
+[2026-02-28 16:44:21] [INFO] 
+============================================================
+[2026-02-28 16:44:21] [INFO] Starting optimization for 8-point FFT
+[2026-02-28 16:44:21] [INFO] ============================================================
+
+[2026-02-28 16:44:21] [INFO] Initialized FFT-8 optimisation problem
+[2026-02-28 16:44:21] [INFO] Chromosome length : 6
+[2026-02-28 16:44:21] [INFO] Number of stages  : 3
+[2026-02-28 16:44:21] [INFO] Total butterflies : 12
+[2026-02-28 16:44:21] [INFO] NSGA-II Configuration:
+[2026-02-28 16:44:21] [INFO]   Population size: 6
+[2026-02-28 16:44:21] [INFO]   Generations: 3
+[2026-02-28 16:44:21] [INFO]   Crossover rate: 0.9
+[2026-02-28 16:44:21] [INFO]   Mutation rate: 0.05
+[2026-02-28 16:44:21] [INFO]   Objectives: 3
+[2026-02-28 16:44:21] [INFO]   Parallel threads: 4
+[2026-02-28 16:44:21] [INFO] Starting NSGA-II evolution...
+[2026-02-28 16:44:21] [GEN] === Generation 0 ===
+[2026-02-28 16:44:21] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-02-28 16:44:21] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-02-28 16:44:21] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-02-28 16:44:21] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-02-28 16:44:21] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-02-28 16:44:21] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-02-28 16:44:21] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-02-28 16:44:21] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-02-28 16:44:21] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-02-28 16:44:21] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-02-28 16:44:21] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-02-28 16:44:21] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-02-28 16:44:21] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-02-28 16:44:21] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-02-28 16:44:21] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-02-28 16:44:21] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-02-28 16:44:52] [ERROR] Vivado failed for fft_8_sol3_gen1:
+
+[2026-02-28 16:44:52] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-02-28 16:44:52] [ERROR] Vivado failed for fft_8_sol1_gen1:
+
+[2026-02-28 16:44:52] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-02-28 16:44:52] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-02-28 16:44:52] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-02-28 16:44:52] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-02-28 16:44:52] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-02-28 16:44:52] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-02-28 16:44:52] [INFO] Solution 1: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-02-28 16:44:52] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-02-28 16:44:52] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-02-28 16:44:52] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-02-28 16:44:52] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-02-28 16:44:52] [ERROR] Vivado failed for fft_8_sol2_gen1:
+
+[2026-02-28 16:44:52] [ERROR] Vivado failed for fft_8_sol0_gen1:
+
+[2026-02-28 16:44:52] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-02-28 16:44:52] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-02-28 16:44:53] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-02-28 16:44:53] [INFO] Solution 0: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:44:55] [ERROR] Vivado failed for fft_8_sol5_gen1:
+
+[2026-02-28 16:44:55] [ERROR] Vivado failed for fft_8_sol4_gen1:
+
+[2026-02-28 16:44:55] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-02-28 16:44:55] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-02-28 16:44:55] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-02-28 16:44:55] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
