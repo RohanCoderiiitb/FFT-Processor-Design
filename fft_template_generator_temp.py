@@ -1476,7 +1476,7 @@ module {top_module_name} #(
         .clk        (clk),
         .rst        (rst),
         .start      (fft_start),
-        .N          (MAX_N[ADDR_WIDTH-1:0]),
+        .N          (MAX_N),
         .done       (fft_done),
         .error      (error),
         .ext_wr_en  (wr_en),

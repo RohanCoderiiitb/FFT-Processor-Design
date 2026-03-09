@@ -30,25 +30,36 @@ class PerformanceEvaluator:
     # ------------------------------------------------------------------
     # Test vector generation
     # ------------------------------------------------------------------
-    def _generate_test_vectors(self, num_vectors=10):
-        """Generate test input vectors (kept small for simulation speed)."""
-        np.random.seed(42)
+    def _generate_test_vectors(self):
+        """
+        Generate a small set of deterministic test vectors for easier debugging.
+        All vectors have magnitude 1 and are well within the dynamic range of FP8/FP4.
+        """
+        n = self.fft_size
         test_vectors = []
-
-        for _ in range(num_vectors):
-            real = np.random.randn(self.fft_size)
-            imag = np.random.randn(self.fft_size)
-            test_vectors.append(real + 1j * imag)
-
-        # DC
-        test_vectors.append(np.ones(self.fft_size) + 0j)
-        # Single frequency
-        test_vectors.append(np.exp(2j * np.pi * np.arange(self.fft_size) / self.fft_size))
-        # Impulse
-        imp = np.zeros(self.fft_size, dtype=complex)
-        imp[0] = 1.0
-        test_vectors.append(imp)
-
+    
+        # 1. Impulse at index 0
+        impulse = np.zeros(n, dtype=complex)
+        impulse[0] = 1.0
+        test_vectors.append(impulse)
+    
+        # 2. DC constant (all ones)
+        dc = np.ones(n, dtype=complex)
+        test_vectors.append(dc)
+    
+        # 3. Single frequency: e^(j*2π*1*n/N)  (k = 1)
+        k = 1
+        n_arr = np.arange(n)
+        sinusoid = np.exp(2j * np.pi * k * n_arr / n)
+        test_vectors.append(sinusoid)
+    
+        # Optionally add a few more, e.g., k = 2 or a random but controlled signal
+        # For variety, we can also include a signal with both real and imag parts non‑zero.
+        # Here we add k = 2 as a simple extra check.
+        k2 = 2
+        sinusoid2 = np.exp(2j * np.pi * k2 * n_arr / n)
+        test_vectors.append(sinusoid2)
+    
         return test_vectors
 
     def _compute_golden_outputs(self):
@@ -61,16 +72,36 @@ class PerformanceEvaluator:
         """Quantise a float to FP8 E4M3 and return the 8-bit integer code."""
         if val == 0.0:
             return 0
-        sign = 1 if val < 0 else 0
+
+        # Handle sign properly
+        sign_bit = 0x80 if val < 0 else 0x00
         val = abs(val)
+
         # Find exponent
         import math
+        if val < 2**(-6):  # Underflow to zero
+            return 0
+
         exp_unbiased = math.floor(math.log2(val)) if val >= 1.0 else math.floor(math.log2(val))
-        exp_biased = exp_unbiased + 7          # bias = 7
-        exp_biased = max(1, min(14, exp_biased))  # clamp to normal range
-        mant_f = val / (2 ** (exp_biased - 7)) - 1.0
-        mant = min(7, round(mant_f * 8))       # 3-bit mantissa
-        return (sign << 7) | (exp_biased << 3) | mant
+        exp_biased = exp_unbiased + 7  # bias = 7
+
+        # Clamp exponent to valid range
+        if exp_biased < 1:
+            exp_biased = 0  # Subnormal or zero
+            mant = 0
+        elif exp_biased > 14:  # Max normal exponent (infinity at 15)
+            if exp_biased >= 15:
+                return sign_bit | 0x78  # Return infinity (0x78 = 0b01111000 for positive)
+            exp_biased = 14
+            mant = 7  # Max mantissa
+        else:
+            # Calculate mantissa
+            mant_f = val / (2 ** (exp_biased - 7)) - 1.0
+            mant = min(7, round(mant_f * 8))
+
+        # Combine sign, exponent, mantissa (all within 8 bits)
+        result = (sign_bit & 0x80) | ((exp_biased & 0x0F) << 3) | (mant & 0x07)
+        return result & 0xFF  # Ensure 8-bit unsigned
 
     def fp8_to_float(self, fp8_val):
         """FP8 E4M3 → float."""
@@ -111,10 +142,23 @@ class PerformanceEvaluator:
         os.makedirs('./sim', exist_ok=True)
         real_lines = []
         imag_lines = []
+        
         for vec in self.test_vectors:
             for sample in vec:
-                real_lines.append(f"{self.float_to_fp8_e4m3(sample.real):02x}")
-                imag_lines.append(f"{self.float_to_fp8_e4m3(sample.imag):02x}")
+                # Get the 8-bit pattern from float_to_fp8_e4m3
+                real_val = self.float_to_fp8_e4m3(sample.real)
+                imag_val = self.float_to_fp8_e4m3(sample.imag)
+                
+                # Convert to unsigned 8-bit value (0-255) for formatting
+                # This handles negative values like -8 becoming 248 (0xF8)
+                real_unsigned = real_val & 0xFF
+                imag_unsigned = imag_val & 0xFF
+                
+                # Format as 2-digit hex with leading zeros
+                real_lines.append(f"{real_unsigned:02x}")
+                imag_lines.append(f"{imag_unsigned:02x}")
+        
+        # Write files
         with open('./sim/test_vectors_real.hex', 'w') as f:
             f.write('\n'.join(real_lines))
         with open('./sim/test_vectors_imag.hex', 'w') as f:

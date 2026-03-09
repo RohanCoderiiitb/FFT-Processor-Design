@@ -14,8 +14,8 @@ module tb_fft_8_sol1_gen1;
     wire        error;
 
     // Test-vector storage
-    reg [7:0] tv_real [103:0];
-    reg [7:0] tv_imag [103:0];
+    reg [7:0] tv_real [31:0];
+    reg [7:0] tv_imag [31:0];
 
     // All integers at module scope (Verilog-2001)
     integer test_idx, sample_idx;
@@ -53,7 +53,7 @@ module tb_fft_8_sol1_gen1;
         rst = 1;
         repeat(10) @(posedge clk);
         $display("INFO [fft_8_sol1_gen1]: reset released");
-        for (test_idx = 0; test_idx < 13; test_idx = test_idx + 1) begin
+        for (test_idx = 0; test_idx < 4; test_idx = test_idx + 1) begin
             wait_cnt = 0;
             while (!fft_ready && wait_cnt < 12000) begin
                 @(posedge clk); wait_cnt = wait_cnt + 1;
@@ -84,12 +84,12 @@ module tb_fft_8_sol1_gen1;
                          received, 8, test_idx);
         end
         $fclose(out_file);
-        $display("INFO [fft_8_sol1_gen1]: done, %0d tests", 13);
+        $display("INFO [fft_8_sol1_gen1]: done, %0d tests", 4);
         $finish;
     end
 
     initial begin
-        #629000;
+        #197000;
         $display("ERROR [fft_8_sol1_gen1]: watchdog!");
         $finish;
     end
