@@ -5,7 +5,7 @@ module twiddle_factor_unified#(
     parameter ADDR_WIDTH = 10 // $clog2(1024)
 )(
     input [ADDR_WIDTH-1:0] k,   // Index k
-    input [ADDR_WIDTH:0] n,     // Current FFT size N
+    input [ADDR_WIDTH-1:0] n,     // Current FFT size N
     input PRECISION,
     output reg [15:0] twiddle_out
 );
