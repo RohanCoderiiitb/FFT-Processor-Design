@@ -118,90 +118,119 @@ def run_optimization_for_fft_size(fft_size):
 
 def save_optimization_results(result, callback, fft_size):
     """
-    Save optimization results to files
-    
-    Args:
-        result: PyMOO result object
-        callback: Callback object with evolution history
-        fft_size: FFT size
+    Save optimization results to files.
+
+    Handles the case where all solutions violated constraints and pymoo
+    returns result.X = None / result.F = None (no feasible Pareto front).
+    In that case we fall back to the least-infeasible solutions from the
+    final population (result.pop), so the run still produces useful output
+    and does not crash.
     """
     log_message("Saving optimization results...")
-    
+
     results_subdir = os.path.join(RESULTS_DIR, f"fft_{fft_size}")
     os.makedirs(results_subdir, exist_ok=True)
-    
-    # Save Pareto front objectives
-    pareto_objectives = result.F
-    np.save(
-        os.path.join(results_subdir, 'pareto_objectives.npy'),
-        pareto_objectives
-    )
-    
-    # Save Pareto front solutions (chromosomes)
-    pareto_solutions = result.X
-    np.save(
-        os.path.join(results_subdir, 'pareto_solutions.npy'),
-        pareto_solutions
-    )
-    
-    # Save evolution history
+
+    # ── Determine Pareto front (or fallback to least-infeasible pop) ──
+    pareto_objectives = result.F   # None when no feasible solution exists
+    pareto_solutions  = result.X   # None when no feasible solution exists
+    feasible = pareto_solutions is not None
+
+    if not feasible:
+        log_message(
+            "WARNING: No feasible solutions found — all solutions violated "
+            "constraints. Saving least-infeasible population as fallback.",
+            level='WARN'
+        )
+        # result.pop contains the final population with objective / CV data
+        pop = result.pop
+        if pop is not None and len(pop) > 0:
+            pareto_objectives = pop.get("F")   # shape (pop_size, n_obj)
+            pareto_solutions  = pop.get("X")   # shape (pop_size, n_var)
+            cv_vals           = pop.get("CV")  # constraint violation totals
+            # Sort by total constraint violation (ascending) so the "best"
+            # infeasible solutions come first in the report.
+            if cv_vals is not None:
+                order = np.argsort(cv_vals.ravel())
+                pareto_objectives = pareto_objectives[order]
+                pareto_solutions  = pareto_solutions[order]
+        else:
+            # Absolute worst-case: population object is empty/None
+            pareto_objectives = np.empty((0, OBJECTIVES))
+            pareto_solutions  = np.empty((0,), dtype=int)
+
+    # ── Persist arrays ──────────────────────────────────────────────────
+    np.save(os.path.join(results_subdir, 'pareto_objectives.npy'), pareto_objectives)
+    np.save(os.path.join(results_subdir, 'pareto_solutions.npy'),  pareto_solutions)
+
     fitness_data = callback.data
-    np.savez(
-        os.path.join(results_subdir, 'fitness_history.npz'),
-        *fitness_data
-    )
-    
-    # Save summary report
+    np.savez(os.path.join(results_subdir, 'fitness_history.npz'), *fitness_data)
+
+    # ── Summary report ─────────────────────────────────────────────────
     summary_file = os.path.join(results_subdir, 'summary.txt')
     with open(summary_file, 'w') as f:
-        f.write(f"Mixed-Precision FFT Optimization Results\n")
+        f.write("Mixed-Precision FFT Optimization Results\n")
         f.write(f"{'='*60}\n\n")
         f.write(f"FFT Size: {fft_size}\n")
         f.write(f"Population: {POPULATION}\n")
         f.write(f"Generations: {GENERATIONS}\n")
         f.write(f"Objectives: {OBJECTIVES}\n\n")
-        
-        f.write(f"Pareto Front Solutions: {len(pareto_solutions)}\n\n")
-        
-        f.write("Pareto Front (Objectives):\n")
+
+        if not feasible:
+            f.write("*** WARNING: No feasible solutions found. ***\n")
+            f.write("All solutions violated at least one constraint.\n")
+            f.write("Results below are the least-infeasible solutions from the "
+                    "final population.\n")
+            f.write("Root cause: check Verilog simulation (iverilog/vvp) and "
+                    "SQNR evaluation — SQNR=-100 dB indicates simulation failure.\n\n")
+
+        f.write(f"{'Pareto' if feasible else 'Fallback'} Front Solutions: "
+                f"{len(pareto_solutions)}\n\n")
+
+        if len(pareto_solutions) == 0:
+            f.write("No solutions to report.\n")
+            log_message(f"Results saved to {results_subdir} (no solutions)")
+            return
+
+        f.write(f"{'Pareto' if feasible else 'Fallback'} Front (Objectives):\n")
         f.write(f"{'ID':<5} {'Power(W)':<12} {'Area(LUTs)':<12} {'Perf Error':<12}\n")
         f.write('-' * 50 + '\n')
-        
         for i, obj in enumerate(pareto_objectives):
             f.write(f"{i:<5} {obj[0]:<12.6f} {obj[1]:<12.0f} {obj[2]:<12.6f}\n")
-        
+
         f.write("\n\nBest Solutions by Objective:\n")
         f.write('-' * 50 + '\n')
-        
+
         # Best power
         best_power_idx = np.argmin(pareto_objectives[:, 0])
         f.write(f"\nBest Power:\n")
-        f.write(f"  Solution ID: {best_power_idx}\n")
-        f.write(f"  Power: {pareto_objectives[best_power_idx, 0]:.6f} W\n")
-        f.write(f"  Area: {pareto_objectives[best_power_idx, 1]:.0f} LUTs\n")
-        f.write(f"  Perf Error: {pareto_objectives[best_power_idx, 2]:.6f}\n")
-        f.write(f"  Chromosome: {pareto_solutions[best_power_idx]}\n")
-        
+        f.write(f"  Solution ID  : {best_power_idx}\n")
+        f.write(f"  Power        : {pareto_objectives[best_power_idx, 0]:.6f} W\n")
+        f.write(f"  Area         : {pareto_objectives[best_power_idx, 1]:.0f} LUTs\n")
+        f.write(f"  Perf Error   : {pareto_objectives[best_power_idx, 2]:.6f}\n")
+        f.write(f"  Chromosome   : {pareto_solutions[best_power_idx]}\n")
+
         # Best area
         best_area_idx = np.argmin(pareto_objectives[:, 1])
         f.write(f"\nBest Area:\n")
-        f.write(f"  Solution ID: {best_area_idx}\n")
-        f.write(f"  Power: {pareto_objectives[best_area_idx, 0]:.6f} W\n")
-        f.write(f"  Area: {pareto_objectives[best_area_idx, 1]:.0f} LUTs\n")
-        f.write(f"  Perf Error: {pareto_objectives[best_area_idx, 2]:.6f}\n")
-        f.write(f"  Chromosome: {pareto_solutions[best_area_idx]}\n")
-        
+        f.write(f"  Solution ID  : {best_area_idx}\n")
+        f.write(f"  Power        : {pareto_objectives[best_area_idx, 0]:.6f} W\n")
+        f.write(f"  Area         : {pareto_objectives[best_area_idx, 1]:.0f} LUTs\n")
+        f.write(f"  Perf Error   : {pareto_objectives[best_area_idx, 2]:.6f}\n")
+        f.write(f"  Chromosome   : {pareto_solutions[best_area_idx]}\n")
+
         # Best performance
         best_perf_idx = np.argmin(pareto_objectives[:, 2])
         f.write(f"\nBest Performance:\n")
-        f.write(f"  Solution ID: {best_perf_idx}\n")
-        f.write(f"  Power: {pareto_objectives[best_perf_idx, 0]:.6f} W\n")
-        f.write(f"  Area: {pareto_objectives[best_perf_idx, 1]:.0f} LUTs\n")
-        f.write(f"  Perf Error: {pareto_objectives[best_perf_idx, 2]:.6f}\n")
-        f.write(f"  Chromosome: {pareto_solutions[best_perf_idx]}\n")
-    
+        f.write(f"  Solution ID  : {best_perf_idx}\n")
+        f.write(f"  Power        : {pareto_objectives[best_perf_idx, 0]:.6f} W\n")
+        f.write(f"  Area         : {pareto_objectives[best_perf_idx, 1]:.0f} LUTs\n")
+        f.write(f"  Perf Error   : {pareto_objectives[best_perf_idx, 2]:.6f}\n")
+        f.write(f"  Chromosome   : {pareto_solutions[best_perf_idx]}\n")
+
     log_message(f"Results saved to {results_subdir}")
-    log_message(f"Pareto front has {len(pareto_solutions)} solutions")
+    log_message(f"{'Pareto' if feasible else 'Fallback'} front has "
+                f"{len(pareto_solutions)} solutions")
 
 
 def run_full_optimization_sweep():
