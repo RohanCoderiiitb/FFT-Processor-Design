@@ -190,135 +190,139 @@ class PerformanceEvaluator:
     # ------------------------------------------------------------------
     def _generate_testbench(self, dut_file, design_name):
         """
-        Generate a testbench that instantiates the TOP module.
+        Generate a Verilog-2001 compatible testbench for the TOP module.
 
-        Top module ports (from _generate_top):
-            clk, rst, data_in_valid, data_in [23:0],
-            fft_ready, data_out_valid, data_out [23:0], done, error
-
-        Input samples are packed as 24-bit unified format:
-            [23:16] FP8 real   [15:8] FP8 imag   [7:4] FP4 real   [3:0] FP4 imag
-        We fill FP8 fields from our quantised test vectors; FP4 fields = 0.
+        Key fixes vs original:
+          - All integer variables declared at module scope (no declarations
+            inside named begin..end blocks -- that requires SystemVerilog).
+          - Unbounded while(!fft_ready) replaced with cycle-counted loop.
+          - Reset held for 8 cycles, 10-cycle settle before stimulus.
+          - Watchdog scaled to fft_size * num_tests * num_stages * 2000 ns.
+          - fwrite newline uses single \n (correct Verilog escape).
+          - Diagnostics: $display on reset release, fft_ready timeout, output count.
         """
-        top_module = f"{design_name}_top"
-        num_tests  = len(self.test_vectors)
+        top_module    = f"{design_name}_top"
+        num_tests     = len(self.test_vectors)
         total_samples = num_tests * self.fft_size
+        ready_timeout  = self.fft_size * self.num_stages * 500
+        output_timeout = self.fft_size * self.num_stages * 500
+        watchdog_ns    = self.fft_size * num_tests * self.num_stages * 2000 + 5000
 
-        tb_code = f"""\
-`timescale 1ns/1ps
+        # Build testbench using .format() so {{ }} are plain Verilog braces.
+        tb_template = (
+            '`timescale 1ns/1ps\n'
+            '\n'
+            'module tb_{dn};\n'
+            '\n'
+            '    // DUT signals\n'
+            '    reg         clk;\n'
+            '    reg         rst;\n'
+            '    reg         data_in_valid;\n'
+            '    reg  [23:0] data_in;\n'
+            '    wire        fft_ready;\n'
+            '    wire        data_out_valid;\n'
+            '    wire [23:0] data_out;\n'
+            '    wire        done;\n'
+            '    wire        error;\n'
+            '\n'
+            '    // Test-vector storage\n'
+            '    reg [7:0] tv_real [{ts_m1}:0];\n'
+            '    reg [7:0] tv_imag [{ts_m1}:0];\n'
+            '\n'
+            '    // All integers at module scope (Verilog-2001)\n'
+            '    integer test_idx, sample_idx;\n'
+            '    integer out_file;\n'
+            '    integer received;\n'
+            '    integer wait_cnt;\n'
+            '\n'
+            '    // DUT instantiation\n'
+            '    {top_mod} #(\n'
+            '        .MAX_N     ({fft_sz}),\n'
+            '        .ADDR_WIDTH({n_stg})\n'
+            '    ) dut (\n'
+            '        .clk           (clk),\n'
+            '        .rst           (rst),\n'
+            '        .data_in_valid (data_in_valid),\n'
+            '        .data_in       (data_in),\n'
+            '        .fft_ready     (fft_ready),\n'
+            '        .data_out_valid(data_out_valid),\n'
+            '        .data_out      (data_out),\n'
+            '        .done          (done),\n'
+            '        .error         (error)\n'
+            '    );\n'
+            '\n'
+            '    initial clk = 0;\n'
+            '    always  #5 clk = ~clk;\n'
+            '\n'
+            '    initial begin : STIM\n'
+            '        out_file = $fopen("./sim/{dn}_output.txt", "w");\n'
+            '        $readmemh("./sim/test_vectors_real.hex", tv_real);\n'
+            '        $readmemh("./sim/test_vectors_imag.hex", tv_imag);\n'
+            '        rst           = 0;\n'
+            '        data_in_valid = 0;\n'
+            '        data_in       = 0;\n'
+            '        repeat(8) @(posedge clk);\n'
+            '        rst = 1;\n'
+            '        repeat(10) @(posedge clk);\n'
+            '        $display("INFO [{dn}]: reset released");\n'
+            '        for (test_idx = 0; test_idx < {nt}; test_idx = test_idx + 1) begin\n'
+            '            wait_cnt = 0;\n'
+            '            while (!fft_ready && wait_cnt < {rtmo}) begin\n'
+            '                @(posedge clk); wait_cnt = wait_cnt + 1;\n'
+            '            end\n'
+            '            if (!fft_ready) begin\n'
+            '                $display("ERROR [{dn}]: fft_ready stuck low test %0d", test_idx);\n'
+            '                $fclose(out_file); $finish;\n'
+            '            end\n'
+            '            for (sample_idx = 0; sample_idx < {fft_sz}; sample_idx = sample_idx + 1) begin\n'
+            '                @(posedge clk);\n'
+            '                data_in_valid = 1;\n'
+            '                data_in = {lcb}tv_real[test_idx*{fft_sz}+sample_idx],\n'
+            '                          tv_imag[test_idx*{fft_sz}+sample_idx],\n'
+            '                          8\'h00{rcb};\n'
+            '            end\n'
+            '            @(posedge clk); data_in_valid = 0;\n'
+            '            received = 0; wait_cnt = 0;\n'
+            '            while (received < {fft_sz} && wait_cnt < {otmo}) begin\n'
+            '                @(posedge clk);\n'
+            '                if (data_out_valid) begin\n'
+            '                    $fwrite(out_file, "%06h\\n", data_out);\n'
+            '                    received = received + 1;\n'
+            '                end\n'
+            '                wait_cnt = wait_cnt + 1;\n'
+            '            end\n'
+            '            if (received < {fft_sz})\n'
+            '                $display("WARN [{dn}]: got %0d/%0d outputs test %0d",\n'
+            '                         received, {fft_sz}, test_idx);\n'
+            '        end\n'
+            '        $fclose(out_file);\n'
+            '        $display("INFO [{dn}]: done, %0d tests", {nt});\n'
+            '        $finish;\n'
+            '    end\n'
+            '\n'
+            '    initial begin\n'
+            '        #{wdog};\n'
+            '        $display("ERROR [{dn}]: watchdog!");\n'
+            '        $finish;\n'
+            '    end\n'
+            '\n'
+            'endmodule\n'
+        )
 
-module tb_{design_name};
+        tb_code = tb_template.format(
+            dn      = design_name,
+            top_mod = top_module,
+            fft_sz  = self.fft_size,
+            n_stg   = self.num_stages,
+            ts_m1   = total_samples - 1,
+            nt      = num_tests,
+            rtmo    = ready_timeout,
+            otmo    = output_timeout,
+            wdog    = watchdog_ns,
+            lcb     = '{',
+            rcb     = '}',
+        )
 
-    // ----------------------------------------------------------------
-    // DUT signals
-    // ----------------------------------------------------------------
-    reg         clk;
-    reg         rst;
-    reg         data_in_valid;
-    reg  [23:0] data_in;
-    wire        fft_ready;
-    wire        data_out_valid;
-    wire [23:0] data_out;
-    wire        done;
-    wire        error;
-
-    // ----------------------------------------------------------------
-    // Test-vector storage
-    // ----------------------------------------------------------------
-    reg [7:0] tv_real [{total_samples-1}:0];
-    reg [7:0] tv_imag [{total_samples-1}:0];
-
-    integer i, test_idx, sample_idx;
-    integer out_file;
-    integer sent, received;
-
-    // ----------------------------------------------------------------
-    // DUT instantiation
-    // ----------------------------------------------------------------
-    {top_module} #(
-        .MAX_N     ({self.fft_size}),
-        .ADDR_WIDTH({self.num_stages})
-    ) dut (
-        .clk           (clk),
-        .rst           (rst),
-        .data_in_valid (data_in_valid),
-        .data_in       (data_in),
-        .fft_ready     (fft_ready),
-        .data_out_valid(data_out_valid),
-        .data_out      (data_out),
-        .done          (done),
-        .error         (error)
-    );
-
-    // ----------------------------------------------------------------
-    // Clock
-    // ----------------------------------------------------------------
-    initial clk = 0;
-    always  #5 clk = ~clk;
-
-    // ----------------------------------------------------------------
-    // Stimulus
-    // ----------------------------------------------------------------
-    initial begin : STIM
-        out_file = $fopen("./sim/{design_name}_output.txt", "w");
-
-        // Load test vectors
-        $readmemh("./sim/test_vectors_real.hex", tv_real);
-        $readmemh("./sim/test_vectors_imag.hex", tv_imag);
-
-        // Active-low reset: assert rst=0, then release rst=1
-        rst           = 0;
-        data_in_valid = 0;
-        data_in       = 0;
-        repeat(4) @(posedge clk);
-        rst = 1;
-        repeat(2) @(posedge clk);
-
-        // ---- Run each test vector ----
-        for (test_idx = 0; test_idx < {num_tests}; test_idx = test_idx + 1) begin
-
-            // Wait for FFT to be ready
-            while (!fft_ready) @(posedge clk);
-
-            // Feed N samples
-            for (sample_idx = 0; sample_idx < {self.fft_size}; sample_idx = sample_idx + 1) begin
-                @(posedge clk);
-                data_in_valid = 1;
-                // Pack: [23:16]=FP8_real [15:8]=FP8_imag [7:0]=0 (FP4 unused)
-                data_in = {{tv_real[test_idx*{self.fft_size} + sample_idx],
-                           tv_imag[test_idx*{self.fft_size} + sample_idx],
-                           8'h00}};
-            end
-            @(posedge clk);
-            data_in_valid = 0;
-
-            // Collect N output samples
-            received = 0;
-            while (received < {self.fft_size}) begin
-                @(posedge clk);
-                if (data_out_valid) begin
-                    $fwrite(out_file, "%06h\\n", data_out);
-                    received = received + 1;
-                end
-            end
-        end
-
-        $fclose(out_file);
-        $display("Simulation complete: %0d tests run", {num_tests});
-        $finish;
-    end
-
-    // ----------------------------------------------------------------
-    // Timeout watchdog
-    // ----------------------------------------------------------------
-    initial begin
-        #({self.fft_size * num_tests * 200});
-        $display("ERROR: Simulation timeout for {design_name}!");
-        $finish;
-    end
-
-endmodule
-"""
         tb_file = f'./sim/tb_{design_name}.v'
         os.makedirs('./sim', exist_ok=True)
         with open(tb_file, 'w') as f:

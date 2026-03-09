@@ -6,3 +6,44 @@ Population: 6
 Generations: 3
 Objectives: 3
 
+*** WARNING: No feasible solutions found. ***
+All solutions violated at least one constraint.
+Results below are the least-infeasible solutions from the final population.
+Root cause: check Verilog simulation (iverilog/vvp) and SQNR evaluation — SQNR=-100 dB indicates simulation failure.
+
+Fallback Front Solutions: 6
+
+Fallback Front (Objectives):
+ID    Power(W)     Area(LUTs)   Perf Error  
+--------------------------------------------------
+0     0.068000     3            1000001.000000
+1     0.068000     3            1000001.000000
+2     0.068000     3            1000001.000000
+3     0.068000     3            1000001.000000
+4     0.068000     3            1000001.000000
+5     0.068000     3            1000001.000000
+
+
+Best Solutions by Objective:
+--------------------------------------------------
+
+Best Power:
+  Solution ID  : 0
+  Power        : 0.068000 W
+  Area         : 3 LUTs
+  Perf Error   : 1000001.000000
+  Chromosome   : [0 0 0 0 0 0]
+
+Best Area:
+  Solution ID  : 0
+  Power        : 0.068000 W
+  Area         : 3 LUTs
+  Perf Error   : 1000001.000000
+  Chromosome   : [0 0 0 0 0 0]
+
+Best Performance:
+  Solution ID  : 0
+  Power        : 0.068000 W
+  Area         : 3 LUTs
+  Perf Error   : 1000001.000000
+  Chromosome   : [0 0 0 0 0 0]
