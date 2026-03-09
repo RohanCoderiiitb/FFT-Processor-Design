@@ -6,7 +6,7 @@
 
 module fft_8_sol1_gen1_top #(
     parameter MAX_N      = 8,
-    parameter ADDR_WIDTH = 3
+    parameter ADDR_WIDTH = 4
 )(
     input  wire        clk,
     input  wire        rst,
@@ -66,7 +66,7 @@ module fft_8_sol1_gen1_top #(
         .clk        (clk),
         .rst        (rst),
         .start      (fft_start),
-        .N          (MAX_N[ADDR_WIDTH-1:0]),
+        .N          (MAX_N),
         .done       (fft_done),
         .error      (error),
         .ext_wr_en  (wr_en),

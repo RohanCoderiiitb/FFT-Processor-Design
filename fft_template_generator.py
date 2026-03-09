@@ -818,7 +818,7 @@ class FFTTemplateGenerator:
     def __init__(self, fft_size):
         self.fft_size = fft_size
         self.num_stages = int(math.log2(fft_size))
-        self.addr_width = self.num_stages          # log2(N) bits for addresses
+        self.addr_width = self.num_stages + 1         # log2(N) bits for addresses
         self.butterflies_per_stage = fft_size // 2
         self.total_butterflies = self.butterflies_per_stage * self.num_stages
         # Stage-level chromosome: 2 genes per stage
@@ -1175,7 +1175,7 @@ module {core_module_name} #(
     reg agu_next_step;
     wire [ADDR_WIDTH-1:0] idx_a, idx_b, k;
     wire agu_done_stage, agu_done_fft;
-    wire [{stage_bits}:0] curr_stage;
+    wire [{stage_bits}-1:0] curr_stage;
 
     dit_fft_agu_variable #(
         .MAX_N     (MAX_N),
@@ -1479,7 +1479,7 @@ module {top_module_name} #(
         .clk        (clk),
         .rst        (rst),
         .start      (fft_start),
-        .N          (MAX_N[ADDR_WIDTH-1:0]),
+        .N          (MAX_N),
         .done       (fft_done),
         .error      (error),
         .ext_wr_en  (wr_en),
