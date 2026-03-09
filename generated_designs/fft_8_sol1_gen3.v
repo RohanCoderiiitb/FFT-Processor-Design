@@ -75,7 +75,7 @@ module fft_8_sol1_gen3_core #(
     reg agu_next_step;
     wire [ADDR_WIDTH-1:0] idx_a, idx_b, k;
     wire agu_done_stage, agu_done_fft;
-    wire [2-1:0] curr_stage;
+    wire [2:0] curr_stage;
 
     dit_fft_agu_variable #(
         .MAX_N     (MAX_N),
