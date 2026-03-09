@@ -4,7 +4,7 @@ module dit_fft_agu_variable #(
 )(
     input clk,
     input reset,
-    input wire [ADDR_WIDTH:0] N, //runtime N value
+    input wire [ADDR_WIDTH-1:0] N, //runtime N value
     input wire next_step, //pulse from core to advance one butterfly
 
     output [ADDR_WIDTH-1:0] idx_a, //address for input A into butterfly unit

@@ -1175,7 +1175,7 @@ module {core_module_name} #(
     reg agu_next_step;
     wire [ADDR_WIDTH-1:0] idx_a, idx_b, k;
     wire agu_done_stage, agu_done_fft;
-    wire [{stage_bits}-1:0] curr_stage;
+    wire [{stage_bits}:0] curr_stage;
 
     dit_fft_agu_variable #(
         .MAX_N     (MAX_N),
