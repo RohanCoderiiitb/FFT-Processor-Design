@@ -815,7 +815,7 @@ class FFTTemplateGenerator:
     def __init__(self, fft_size):
         self.fft_size = fft_size
         self.num_stages = int(math.log2(fft_size))
-        self.addr_width = self.num_stages          # log2(N) bits for addresses
+        self.addr_width = self.num_stages + 1         # log2(N) bits for addresses
         self.butterflies_per_stage = fft_size // 2
         self.total_butterflies = self.butterflies_per_stage * self.num_stages
         # Stage-level chromosome: 2 genes per stage
