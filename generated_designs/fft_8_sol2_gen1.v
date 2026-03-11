@@ -5,7 +5,7 @@
 `timescale 1ns/1ps
 
 module fft_8_sol2_gen1_core #(
-    parameter MAX_N     = 8,
+    parameter MAX_N     = 1024,
     parameter ADDR_WIDTH = 10
 )(
     input  wire clk,
@@ -78,7 +78,7 @@ module fft_8_sol2_gen1_core #(
     wire [10-1:0] curr_stage;
 
     dit_fft_agu_variable #(
-        .MAX_N     (MAX_N),
+        .MAX_N     (1024),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) agu_inst (
         .clk          (clk),
@@ -147,7 +147,7 @@ module fft_8_sol2_gen1_core #(
                            fft_bank_sel;
 
     mixed_memory_unified #(
-        .n         (MAX_N),
+        .n         (1024),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) memory_inst (
         .clk         (clk),
@@ -187,7 +187,7 @@ module fft_8_sol2_gen1_core #(
     wire [15:0] twiddle;
 
     twiddle_factor_unified #(
-        .MAX_N     (8),
+        .MAX_N     (1024),
         .ADDR_WIDTH(10)
     ) twiddle_inst (
         .k           (k),
