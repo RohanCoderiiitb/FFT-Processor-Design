@@ -5,7 +5,7 @@
 `timescale 1ns/1ps
 
 module fft_8_sol4_gen1_top #(
-    parameter MAX_N      = 8,
+    parameter MAX_N      = 1024,
     parameter ADDR_WIDTH = 10
 )(
     input  wire        clk,
@@ -33,7 +33,7 @@ module fft_8_sol4_gen1_top #(
     // Bit-reversal on write address
     wire [ADDR_WIDTH-1:0] wr_addr_reversed;
     bit_reverse #(
-        .MAX_N(MAX_N),
+        .MAX_N(1024),
         .WIDTH(ADDR_WIDTH)
     ) bit_rev (
         .in (wr_addr),
