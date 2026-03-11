@@ -564,9 +564,10 @@ module {core_module_name} #(
                     agu_next_step <= 1;
                 end
                 DONE: begin
-                    done = 1'b1;
+                    done <= 1'b1;
                 end
             endcase
+        end
     end
 
     // ----------------------------------------------------------------
@@ -770,7 +771,7 @@ module {top_module_name} #(
                         rd_addr        <= 0;
                         data_out_valid <= 0;
                         output_count   <= output_count + 1;
-                    end else if (output_count <= N) begin
+                    end else if (output_count < N) begin
                         data_out       <= rd_data;
                         data_out_valid <= 1;
                         rd_addr        <= rd_addr + 1;
