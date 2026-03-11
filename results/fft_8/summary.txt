@@ -16,12 +16,12 @@ Fallback Front Solutions: 6
 Fallback Front (Objectives):
 ID    Power(W)     Area(LUTs)   Perf Error  
 --------------------------------------------------
-0     0.073000     211          1000001.000000
-1     0.078000     569          1000001.000000
-2     0.080000     589          1000001.000000
-3     0.082000     589          1000001.000000
-4     0.076000     368          1000001.000000
-5     0.077000     472          1000001.000000
+0     6.000000     20000        1000000.000000
+1     6.000000     20000        1000000.000000
+2     6.000000     20000        1000000.000000
+3     6.000000     20000        1000000.000000
+4     6.000000     20000        1000000.000000
+5     6.000000     20000        1000000.000000
 
 
 Best Solutions by Objective:
@@ -29,21 +29,21 @@ Best Solutions by Objective:
 
 Best Power:
   Solution ID  : 0
-  Power        : 0.073000 W
-  Area         : 211 LUTs
-  Perf Error   : 1000001.000000
+  Power        : 6.000000 W
+  Area         : 20000 LUTs
+  Perf Error   : 1000000.000000
   Chromosome   : [0 0 0 0 0 0]
 
 Best Area:
   Solution ID  : 0
-  Power        : 0.073000 W
-  Area         : 211 LUTs
-  Perf Error   : 1000001.000000
+  Power        : 6.000000 W
+  Area         : 20000 LUTs
+  Perf Error   : 1000000.000000
   Chromosome   : [0 0 0 0 0 0]
 
 Best Performance:
   Solution ID  : 0
-  Power        : 0.073000 W
-  Area         : 211 LUTs
-  Perf Error   : 1000001.000000
+  Power        : 6.000000 W
+  Area         : 20000 LUTs
+  Perf Error   : 1000000.000000
   Chromosome   : [0 0 0 0 0 0]

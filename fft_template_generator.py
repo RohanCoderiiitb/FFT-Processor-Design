@@ -823,6 +823,7 @@ class FFTTemplateGenerator:
         self.total_butterflies = self.butterflies_per_stage * self.num_stages
         # Stage-level chromosome: 2 genes per stage
         self.chromosome_length = self.num_stages * 2
+        self.MAX_N_HW = 1024
 
         print(f"FFTTemplateGenerator FFT-{fft_size}:")
         print(f"  Stages            : {self.num_stages}")
@@ -841,7 +842,8 @@ class FFTTemplateGenerator:
             'fft_size':   self.fft_size,
             'num_stages': self.num_stages,
             'addr_width': self.addr_width,
-            'stages':     []
+            'stages':     [],
+            'MAX_N_HW': self.MAX_N_HW
         }
         prev_out_prec = 0
 
@@ -1007,7 +1009,7 @@ class FFTTemplateGenerator:
             "    wire [15:0] twiddle;",
             "",
             "    twiddle_factor_unified #(",
-            f"        .MAX_N     ({n}),",
+            f"        .MAX_N     ({1024}),",
             f"        .ADDR_WIDTH({aw})",
             "    ) twiddle_inst (",
             "        .k           (k),",
@@ -1097,6 +1099,7 @@ class FFTTemplateGenerator:
         n  = config['fft_size']
         aw = config['addr_width']
         ns = config['num_stages']
+        MAXn = config['MAX_N_HW']
         stage_bits = 10
 
         if core_module_name is None:
@@ -1116,7 +1119,7 @@ class FFTTemplateGenerator:
 `timescale 1ns/1ps
 
 module {core_module_name} #(
-    parameter MAX_N     = {n},
+    parameter MAX_N     = {MAXn},
     parameter ADDR_WIDTH = {aw}
 )(
     input  wire clk,
@@ -1178,7 +1181,7 @@ module {core_module_name} #(
     wire [{stage_bits}-1:0] curr_stage;
 
     dit_fft_agu_variable #(
-        .MAX_N     (MAX_N),
+        .MAX_N     ({MAXn}),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) agu_inst (
         .clk          (clk),
@@ -1220,7 +1223,7 @@ module {core_module_name} #(
                            fft_bank_sel;
 
     mixed_memory_unified #(
-        .n         (MAX_N),
+        .n         ({MAXn}),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) memory_inst (
         .clk         (clk),
@@ -1418,7 +1421,7 @@ endmodule
 `timescale 1ns/1ps
 
 module {top_module_name} #(
-    parameter MAX_N      = {n},
+    parameter MAX_N      = {1024},
     parameter ADDR_WIDTH = {aw}
 )(
     input  wire        clk,
@@ -1446,7 +1449,7 @@ module {top_module_name} #(
     // Bit-reversal on write address
     wire [ADDR_WIDTH-1:0] wr_addr_reversed;
     bit_reverse #(
-        .MAX_N(MAX_N),
+        .MAX_N({1024}),
         .WIDTH(ADDR_WIDTH)
     ) bit_rev (
         .in (wr_addr),

@@ -27,8 +27,8 @@ module tb_fft_8_sol1_gen1;
 
     // DUT instantiation
     fft_8_sol1_gen1_top #(
-        .MAX_N     (8),
-        .ADDR_WIDTH(3)
+        .MAX_N     (1024),
+        .ADDR_WIDTH(10)
     ) dut (
         .clk           (clk),
         .rst           (rst),

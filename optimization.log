@@ -3567,3 +3567,378 @@ no output
 [2026-03-11 19:21:10] [INFO] Running performance evaluation for fft_8_sol5_gen2
 [2026-03-11 19:21:10] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
 [2026-03-11 19:21:10] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=1/3 (33.3%)
+[2026-03-11 19:52:07] [INFO] Initialized directory structure
+[2026-03-11 19:52:07] [INFO] Running quick test with 8-point FFT
+[2026-03-11 19:52:07] [INFO] Setting up Verilog source files
+[2026-03-11 19:52:07] [INFO] 
+============================================================
+[2026-03-11 19:52:07] [INFO] Starting optimization for 8-point FFT
+[2026-03-11 19:52:07] [INFO] ============================================================
+
+[2026-03-11 19:52:07] [INFO] Initialized FFT-8 optimisation problem
+[2026-03-11 19:52:07] [INFO] Chromosome length : 6
+[2026-03-11 19:52:07] [INFO] Number of stages  : 3
+[2026-03-11 19:52:07] [INFO] Total butterflies : 12
+[2026-03-11 19:52:07] [INFO] NSGA-II Configuration:
+[2026-03-11 19:52:07] [INFO]   Population size: 6
+[2026-03-11 19:52:07] [INFO]   Generations: 3
+[2026-03-11 19:52:07] [INFO]   Crossover rate: 0.9
+[2026-03-11 19:52:07] [INFO]   Mutation rate: 0.05
+[2026-03-11 19:52:07] [INFO]   Objectives: 3
+[2026-03-11 19:52:07] [INFO]   Parallel threads: 4
+[2026-03-11 19:52:07] [INFO] Starting NSGA-II evolution...
+[2026-03-11 19:52:07] [GEN] === Generation 0 ===
+[2026-03-11 19:52:07] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-03-11 19:52:07] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-03-11 19:52:07] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [INFO] Generation 0 complete
+[2026-03-11 19:52:07] [GEN] === Generation 1 ===
+[2026-03-11 19:52:07] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-03-11 19:52:07] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [INFO] Generation 1 complete
+[2026-03-11 19:52:07] [GEN] === Generation 2 ===
+[2026-03-11 19:52:07] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-03-11 19:52:07] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-03-11 19:52:07] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-03-11 19:52:07] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:52:07] [INFO] Generation 2 complete
+[2026-03-11 19:52:07] [INFO] Optimization complete for 8-point FFT
+[2026-03-11 19:52:07] [INFO] Saving optimization results...
+[2026-03-11 19:52:07] [WARN] WARNING: No feasible solutions found — all solutions violated constraints. Saving least-infeasible population as fallback.
+[2026-03-11 19:52:07] [INFO] Results saved to ./results/fft_8
+[2026-03-11 19:52:07] [INFO] Fallback front has 6 solutions
+[2026-03-11 19:52:07] [INFO] Quick test complete
+[2026-03-11 19:57:28] [INFO] Initialized directory structure
+[2026-03-11 19:57:28] [INFO] Running quick test with 8-point FFT
+[2026-03-11 19:57:28] [INFO] Setting up Verilog source files
+[2026-03-11 19:57:28] [INFO] 
+============================================================
+[2026-03-11 19:57:28] [INFO] Starting optimization for 8-point FFT
+[2026-03-11 19:57:28] [INFO] ============================================================
+
+[2026-03-11 19:57:28] [INFO] Initialized FFT-8 optimisation problem
+[2026-03-11 19:57:28] [INFO] Chromosome length : 6
+[2026-03-11 19:57:28] [INFO] Number of stages  : 3
+[2026-03-11 19:57:28] [INFO] Total butterflies : 12
+[2026-03-11 19:57:28] [INFO] NSGA-II Configuration:
+[2026-03-11 19:57:28] [INFO]   Population size: 6
+[2026-03-11 19:57:28] [INFO]   Generations: 3
+[2026-03-11 19:57:28] [INFO]   Crossover rate: 0.9
+[2026-03-11 19:57:28] [INFO]   Mutation rate: 0.05
+[2026-03-11 19:57:28] [INFO]   Objectives: 3
+[2026-03-11 19:57:28] [INFO]   Parallel threads: 4
+[2026-03-11 19:57:28] [INFO] Starting NSGA-II evolution...
+[2026-03-11 19:57:28] [GEN] === Generation 0 ===
+[2026-03-11 19:57:28] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-03-11 19:57:28] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-03-11 19:57:28] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [INFO] Generation 0 complete
+[2026-03-11 19:57:28] [GEN] === Generation 1 ===
+[2026-03-11 19:57:28] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-03-11 19:57:28] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-03-11 19:57:28] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [INFO] Generation 1 complete
+[2026-03-11 19:57:28] [GEN] === Generation 2 ===
+[2026-03-11 19:57:28] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-03-11 19:57:28] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-03-11 19:57:28] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-03-11 19:57:28] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-03-11 19:57:28] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 19:57:28] [INFO] Generation 2 complete
+[2026-03-11 19:57:28] [INFO] Optimization complete for 8-point FFT
+[2026-03-11 19:57:28] [INFO] Saving optimization results...
+[2026-03-11 19:57:28] [WARN] WARNING: No feasible solutions found — all solutions violated constraints. Saving least-infeasible population as fallback.
+[2026-03-11 19:57:28] [INFO] Results saved to ./results/fft_8
+[2026-03-11 19:57:28] [INFO] Fallback front has 6 solutions
+[2026-03-11 19:57:28] [INFO] Quick test complete
+[2026-03-11 20:01:12] [INFO] Initialized directory structure
+[2026-03-11 20:01:12] [INFO] Running quick test with 8-point FFT
+[2026-03-11 20:01:12] [INFO] Setting up Verilog source files
+[2026-03-11 20:01:12] [INFO] 
+============================================================
+[2026-03-11 20:01:12] [INFO] Starting optimization for 8-point FFT
+[2026-03-11 20:01:12] [INFO] ============================================================
+
+[2026-03-11 20:01:12] [INFO] Initialized FFT-8 optimisation problem
+[2026-03-11 20:01:12] [INFO] Chromosome length : 6
+[2026-03-11 20:01:12] [INFO] Number of stages  : 3
+[2026-03-11 20:01:12] [INFO] Total butterflies : 12
+[2026-03-11 20:01:12] [INFO] NSGA-II Configuration:
+[2026-03-11 20:01:12] [INFO]   Population size: 6
+[2026-03-11 20:01:12] [INFO]   Generations: 3
+[2026-03-11 20:01:12] [INFO]   Crossover rate: 0.9
+[2026-03-11 20:01:12] [INFO]   Mutation rate: 0.05
+[2026-03-11 20:01:12] [INFO]   Objectives: 3
+[2026-03-11 20:01:12] [INFO]   Parallel threads: 4
+[2026-03-11 20:01:12] [INFO] Starting NSGA-II evolution...
+[2026-03-11 20:01:12] [GEN] === Generation 0 ===
+[2026-03-11 20:01:12] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-03-11 20:01:12] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-03-11 20:01:12] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-03-11 20:01:12] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-03-11 20:01:12] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-03-11 20:01:12] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:12] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:12] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:12] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:12] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:12] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-03-11 20:01:12] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:12] [INFO] Generation 0 complete
+[2026-03-11 20:01:12] [GEN] === Generation 1 ===
+[2026-03-11 20:01:12] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-03-11 20:01:12] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-03-11 20:01:12] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-03-11 20:01:12] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-03-11 20:01:12] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-03-11 20:01:13] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-03-11 20:01:13] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [INFO] Generation 1 complete
+[2026-03-11 20:01:13] [GEN] === Generation 2 ===
+[2026-03-11 20:01:13] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-03-11 20:01:13] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-03-11 20:01:13] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-03-11 20:01:13] [ERROR] Solution 1 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [ERROR] Solution 2 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [ERROR] Solution 0 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-03-11 20:01:13] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-03-11 20:01:13] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-03-11 20:01:13] [ERROR] Solution 4 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [ERROR] Solution 5 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [ERROR] Solution 3 failed: name 'MAX_N_HW' is not defined
+[2026-03-11 20:01:13] [INFO] Generation 2 complete
+[2026-03-11 20:01:13] [INFO] Optimization complete for 8-point FFT
+[2026-03-11 20:01:13] [INFO] Saving optimization results...
+[2026-03-11 20:01:13] [WARN] WARNING: No feasible solutions found — all solutions violated constraints. Saving least-infeasible population as fallback.
+[2026-03-11 20:01:13] [INFO] Results saved to ./results/fft_8
+[2026-03-11 20:01:13] [INFO] Fallback front has 6 solutions
+[2026-03-11 20:01:13] [INFO] Quick test complete
+[2026-03-11 20:01:49] [INFO] Initialized directory structure
+[2026-03-11 20:01:49] [INFO] Running quick test with 8-point FFT
+[2026-03-11 20:01:49] [INFO] Setting up Verilog source files
+[2026-03-11 20:01:49] [INFO] 
+============================================================
+[2026-03-11 20:01:49] [INFO] Starting optimization for 8-point FFT
+[2026-03-11 20:01:49] [INFO] ============================================================
+
+[2026-03-11 20:01:49] [INFO] Initialized FFT-8 optimisation problem
+[2026-03-11 20:01:49] [INFO] Chromosome length : 6
+[2026-03-11 20:01:49] [INFO] Number of stages  : 3
+[2026-03-11 20:01:49] [INFO] Total butterflies : 12
+[2026-03-11 20:01:49] [INFO] NSGA-II Configuration:
+[2026-03-11 20:01:49] [INFO]   Population size: 6
+[2026-03-11 20:01:49] [INFO]   Generations: 3
+[2026-03-11 20:01:49] [INFO]   Crossover rate: 0.9
+[2026-03-11 20:01:49] [INFO]   Mutation rate: 0.05
+[2026-03-11 20:01:49] [INFO]   Objectives: 3
+[2026-03-11 20:01:49] [INFO]   Parallel threads: 4
+[2026-03-11 20:01:49] [INFO] Starting NSGA-II evolution...
+[2026-03-11 20:01:49] [GEN] === Generation 0 ===
+[2026-03-11 20:01:49] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-03-11 20:01:49] [ERROR] Solution 0 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 2 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 4 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 1 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 3 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-03-11 20:01:49] [ERROR] Solution 5 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [INFO] Generation 0 complete
+[2026-03-11 20:01:49] [GEN] === Generation 1 ===
+[2026-03-11 20:01:49] [INFO] Evaluating solution 0: [0, 1, 0, 0, 0, 0]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 1: [1, 0, 1, 0, 0, 0]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 2: [1, 0, 1, 1, 1, 1]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 3: [0, 0, 0, 1, 0, 1]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 1]
+[2026-03-11 20:01:49] [ERROR] Solution 1 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [INFO] Evaluating solution 5: [1, 1, 1, 0, 1, 0]
+[2026-03-11 20:01:49] [ERROR] Solution 3 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 0 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 4 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 2 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 5 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [INFO] Generation 1 complete
+[2026-03-11 20:01:49] [GEN] === Generation 2 ===
+[2026-03-11 20:01:49] [INFO] Evaluating solution 0: [1, 0, 0, 0, 1, 0]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 1: [1, 1, 0, 0, 1, 1]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 2: [0, 0, 1, 0, 0, 0]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 3: [1, 1, 1, 1, 0, 0]
+[2026-03-11 20:01:49] [INFO] Evaluating solution 4: [0, 0, 0, 1, 0, 0]
+[2026-03-11 20:01:49] [ERROR] Solution 1 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 2 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 3 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 4 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [ERROR] Solution 0 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 1]
+[2026-03-11 20:01:49] [ERROR] Solution 5 failed: name 'MAXn' is not defined
+[2026-03-11 20:01:49] [INFO] Generation 2 complete
+[2026-03-11 20:01:49] [INFO] Optimization complete for 8-point FFT
+[2026-03-11 20:01:49] [INFO] Saving optimization results...
+[2026-03-11 20:01:49] [WARN] WARNING: No feasible solutions found — all solutions violated constraints. Saving least-infeasible population as fallback.
+[2026-03-11 20:01:49] [INFO] Results saved to ./results/fft_8
+[2026-03-11 20:01:49] [INFO] Fallback front has 6 solutions
+[2026-03-11 20:01:49] [INFO] Quick test complete
+[2026-03-11 20:08:29] [INFO] Initialized directory structure
+[2026-03-11 20:08:29] [INFO] Running quick test with 8-point FFT
+[2026-03-11 20:08:29] [INFO] Setting up Verilog source files
+[2026-03-11 20:08:29] [INFO] 
+============================================================
+[2026-03-11 20:08:29] [INFO] Starting optimization for 8-point FFT
+[2026-03-11 20:08:29] [INFO] ============================================================
+
+[2026-03-11 20:08:29] [INFO] Initialized FFT-8 optimisation problem
+[2026-03-11 20:08:29] [INFO] Chromosome length : 6
+[2026-03-11 20:08:29] [INFO] Number of stages  : 3
+[2026-03-11 20:08:29] [INFO] Total butterflies : 12
+[2026-03-11 20:08:29] [INFO] NSGA-II Configuration:
+[2026-03-11 20:08:29] [INFO]   Population size: 6
+[2026-03-11 20:08:29] [INFO]   Generations: 3
+[2026-03-11 20:08:29] [INFO]   Crossover rate: 0.9
+[2026-03-11 20:08:29] [INFO]   Mutation rate: 0.05
+[2026-03-11 20:08:29] [INFO]   Objectives: 3
+[2026-03-11 20:08:29] [INFO]   Parallel threads: 4
+[2026-03-11 20:08:29] [INFO] Starting NSGA-II evolution...
+[2026-03-11 20:08:29] [GEN] === Generation 0 ===
+[2026-03-11 20:08:29] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-03-11 20:08:29] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-03-11 20:08:29] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-03-11 20:08:29] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-03-11 20:08:29] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-03-11 20:08:29] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-03-11 20:08:29] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-03-11 20:08:29] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-03-11 20:08:29] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-03-11 20:08:29] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-03-11 20:08:29] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-03-11 20:08:29] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-03-11 20:08:29] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-03-11 20:08:29] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-03-11 20:08:29] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-03-11 20:08:29] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-03-11 20:09:43] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-03-11 20:09:43] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-03-11 20:09:43] [INFO] Solution 3: Power=0.0680W, Area=3 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-03-11 20:09:43] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-03-11 20:09:43] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-03-11 20:09:43] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-03-11 20:09:43] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-03-11 20:09:43] [INFO] Solution 1: Power=0.0680W, Area=3 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-03-11 20:09:43] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-03-11 20:09:43] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-03-11 20:09:43] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-03-11 20:09:43] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-03-11 20:09:46] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-03-11 20:09:46] [INFO] Solution 2: Power=0.0680W, Area=3 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-03-11 20:09:51] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-03-11 20:09:51] [INFO] Solution 0: Power=0.0680W, Area=3 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-03-11 20:10:02] [ERROR] Vivado failed for fft_8_sol4_gen1 (rc=1):
+le 'twiddle_factor_unified' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:3]
+	Parameter MAX_N bound to: 1024 - type: integer 
+	Parameter ADDR_WIDTH bound to: 10 - type: integer 
+INFO: [Synth 8-3876] $readmem data file 'twiddles_1024.txt' is read successfully [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:21]
+WARNING: [Synth 8-151] case item 32'b00000000000000000000010000000000 is unreachable [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:31]
+INFO: [Synth 8-6155] done synthesizing module 'twiddle_factor_unified' (2#1) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:3]
+WARNING: [Synth 8-7071] port 'PRECISION' of module 'twiddle_factor_unified' is unconnected for instance 'tw_rom' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:60]
+WARNING: [Synth 8-7023] instance 'tw_rom' of module 'twiddle_factor_unified' has 4 connections declared, but only 3 given [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:60]
+INFO: [Synth 8-6155] done synthesizing module 'dit_fft_agu_variable' (3#1) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+INFO: [Synth 8-6157] synthesizing module 'mixed_memory_unified' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/memory.v:8]
+	Parameter n bound to: 1024 - type: integer 
+	Parameter ADDR_WIDTH bound to: 10 - type: integer 
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+INFO: [Synth 8-6155] done synthesizing module 'mixed_memory_unified' (4#1) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/memory.v:8]
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+1
+INFO: [Common 17-83] Releasing license: Synthesis
+18 Infos, 3 Warnings, 0 Critical Warnings and 1 Errors encountered.
+synth_design failed
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Wed Mar 11 20:09:59 2026...
+
+[2026-03-11 20:10:02] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-03-11 20:10:02] [ERROR] Vivado failed for fft_8_sol5_gen1 (rc=1):
+le 'twiddle_factor_unified' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:3]
+	Parameter MAX_N bound to: 1024 - type: integer 
+	Parameter ADDR_WIDTH bound to: 10 - type: integer 
+INFO: [Synth 8-3876] $readmem data file 'twiddles_1024.txt' is read successfully [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:21]
+WARNING: [Synth 8-151] case item 32'b00000000000000000000010000000000 is unreachable [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:31]
+INFO: [Synth 8-6155] done synthesizing module 'twiddle_factor_unified' (2#1) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/twiddle_rom.v:3]
+WARNING: [Synth 8-7071] port 'PRECISION' of module 'twiddle_factor_unified' is unconnected for instance 'tw_rom' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:60]
+WARNING: [Synth 8-7023] instance 'tw_rom' of module 'twiddle_factor_unified' has 4 connections declared, but only 3 given [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:60]
+INFO: [Synth 8-6155] done synthesizing module 'dit_fft_agu_variable' (3#1) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/agu.v:1]
+INFO: [Synth 8-6157] synthesizing module 'mixed_memory_unified' [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/memory.v:8]
+	Parameter n bound to: 1024 - type: integer 
+	Parameter ADDR_WIDTH bound to: 10 - type: integer 
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+INFO: [Synth 8-6155] done synthesizing module 'mixed_memory_unified' (4#1) [/home/fftacc/FFT-Hardware/FFT-Processor-Design/verilog_sources/memory.v:8]
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+1
+INFO: [Common 17-83] Releasing license: Synthesis
+18 Infos, 3 Warnings, 0 Critical Warnings and 1 Errors encountered.
+synth_design failed
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Wed Mar 11 20:09:59 2026...
+
+[2026-03-11 20:10:02] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-03-11 20:10:02] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-03-11 20:10:02] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
