@@ -50,8 +50,8 @@ module tb_fft_8_sol2_gen2;
     end
 
     initial begin : STIM
-        out_file = $fopen("./sim/fft_8_sol2_gen2_output.txt", "w");
-        $readmemh("./sim/test_vectors.hex", tv_24bit);
+        out_file = $fopen("/home/fftacc/FFT-Hardware/FFT-Processor-Design/sim/fft_8_sol2_gen2_output.txt", "w");
+        $readmemh("/home/fftacc/FFT-Hardware/FFT-Processor-Design/sim/test_vectors.hex", tv_24bit);
         rst           = 0;
         data_in_valid = 0;
         data_in       = 0;

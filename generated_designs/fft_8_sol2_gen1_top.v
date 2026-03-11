@@ -6,7 +6,7 @@
 
 module fft_8_sol2_gen1_top #(
     parameter MAX_N      = 8,
-    parameter ADDR_WIDTH = 4
+    parameter ADDR_WIDTH = 10
 )(
     input  wire        clk,
     input  wire        rst,

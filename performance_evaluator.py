@@ -108,38 +108,39 @@ class PerformanceEvaluator:
 
     def float_to_fp8_e4m3(self, val):
         """Quantise a float to FP8 E4M3 and return the 8-bit integer code."""
+        import math
         if val == 0.0:
             return 0
 
-        # Handle sign properly
         sign_bit = 0x80 if val < 0 else 0x00
         val = abs(val)
 
-        # Find exponent
-        import math
-        if val < 2**(-6):  # Underflow to zero
-            return 0
+        # Underflow to zero for very small values
+        if val < 2**(-6):
+            return sign_bit  # signed zero
 
-        exp_unbiased = math.floor(math.log2(val)) if val >= 1.0 else math.floor(math.log2(val))
-        exp_biased = exp_unbiased + 7  # bias = 7
+        exp_unbiased = math.floor(math.log2(val))
+        exp_biased   = exp_unbiased + 7  # bias = 7
 
-        # Clamp exponent to valid range
+        # Clamp exponent to valid range [1, 14] for normal numbers
         if exp_biased < 1:
-            exp_biased = 0  # Subnormal or zero
-            mant = 0
-        elif exp_biased > 14:  # Max normal exponent (infinity at 15)
-            if exp_biased >= 15:
-                return sign_bit | 0x78  # Return infinity (0x78 = 0b01111000 for positive)
-            exp_biased = 14
-            mant = 7  # Max mantissa
+            # Subnormal: exponent field = 0, mantissa = val / 2^(-6)
+            exp_biased = 0
+            mant = min(7, round(val / (2 ** -6) * 8))
+        elif exp_biased >= 15:
+            # Saturate to max normal (no infinity in E4M3)
+            return sign_bit | 0x7E  # max positive normal: 0_1110_111
         else:
-            # Calculate mantissa
-            mant_f = val / (2 ** (exp_biased - 7)) - 1.0
-            mant = min(7, round(mant_f * 8))
+            mant_f = val / (2 ** exp_unbiased) - 1.0
+            mant   = min(7, round(mant_f * 8))
+            # Handle mantissa overflow
+            if mant >= 8:
+                mant = 0
+                exp_biased += 1
+                if exp_biased >= 15:
+                    return sign_bit | 0x7E
 
-        # Combine sign, exponent, mantissa (all within 8 bits)
-        result = (sign_bit & 0x80) | ((exp_biased & 0x0F) << 3) | (mant & 0x07)
-        return result & 0xFF  # Ensure 8-bit unsigned
+        return (sign_bit & 0x80) | ((exp_biased & 0x0F) << 3) | (mant & 0x07)
 
     def fp8_to_float(self, fp8_val):
         """FP8 E4M3 → float."""
@@ -197,7 +198,8 @@ class PerformanceEvaluator:
         self._write_test_vectors()
         tb_file = self._generate_testbench(verilog_file, design_name)
 
-        os.makedirs('./sim', exist_ok=True)
+        sim_dir = os.path.abspath('./sim')
+        os.makedirs(sim_dir, exist_ok=True)
 
         # Expand the glob NOW in Python — subprocess does NOT expand globs
         lib_sources = sorted(glob_module.glob(
@@ -212,15 +214,19 @@ class PerformanceEvaluator:
         top_file = verilog_file.replace('.v', '_top.v')
         extra = [top_file] if os.path.exists(top_file) else []
 
+        vvp_path  = os.path.join(sim_dir, f'{design_name}.vvp')
+        # Output file must use an absolute path so vvp finds it regardless of cwd
+        out_file  = os.path.join(sim_dir, f'{design_name}_output.txt')
+
         compile_cmd = (
             ['iverilog',
-             '-o', f'./sim/{design_name}.vvp',
-             '-I', self.verilog_sources_dir,
-             '-g2012',            # SystemVerilog/Verilog-2012 mode
+             '-o', vvp_path,
+             '-I', os.path.abspath(self.verilog_sources_dir),
+             '-g2012',
              tb_file,
-             verilog_file]        # core
-            + extra               # top (if present)
-            + lib_sources         # fully-expanded library files
+             verilog_file]
+            + extra
+            + lib_sources
         )
 
         try:
@@ -228,22 +234,34 @@ class PerformanceEvaluator:
                 compile_cmd, capture_output=True, text=True
             )
             if result.returncode != 0:
-                print(f"iverilog compile failed for {design_name}:\n"
-                      f"  stdout: {result.stdout}\n"
-                      f"  stderr: {result.stderr}")
+                print(f"iverilog compile FAILED for {design_name}:\n"
+                      f"  stdout: {result.stdout[-2000:]}\n"
+                      f"  stderr: {result.stderr[-2000:]}")
                 return None
 
             sim_result = subprocess.run(
-                ['vvp', f'./sim/{design_name}.vvp'],
-                capture_output=True, text=True, timeout=120
+                ['vvp', vvp_path],
+                capture_output=True, text=True, timeout=120,
+                cwd=os.path.abspath('.')   # keep cwd consistent
             )
             if sim_result.returncode != 0:
-                print(f"vvp simulation failed for {design_name}:\n"
-                      f"  {sim_result.stderr}")
+                print(f"vvp simulation FAILED for {design_name}:\n"
+                      f"  stdout: {sim_result.stdout[-2000:]}\n"
+                      f"  stderr: {sim_result.stderr[-2000:]}")
                 return None
 
-            return self._parse_simulation_output(f'./sim/{design_name}_output.txt')
+            # Print any simulation $display output for debugging
+            if sim_result.stdout:
+                for line in sim_result.stdout.splitlines():
+                    if any(kw in line for kw in ('ERROR', 'WARN', 'stuck', 'watchdog')):
+                        print(f"SIM [{design_name}]: {line}")
 
+            return self._parse_simulation_output(out_file)
+
+        except FileNotFoundError as e:
+            print(f"Simulator binary not found for {design_name}: {e}\n"
+                  f"  Ensure 'iverilog' and 'vvp' are on your PATH.")
+            return None
         except subprocess.TimeoutExpired:
             print(f"Simulation timeout for {design_name}")
             return None
@@ -264,8 +282,9 @@ class PerformanceEvaluator:
           - Unbounded while(!fft_ready) replaced with cycle-counted loop.
           - Reset held for 8 cycles, 10-cycle settle before stimulus.
           - Watchdog scaled to fft_size * num_tests * num_stages * 2000 ns.
-          - fwrite newline uses single \n (correct Verilog escape).
+          - fwrite newline uses single \\n (correct Verilog escape).
           - Diagnostics: $display on reset release, fft_ready timeout, output count.
+          - $fopen / $readmemh use absolute paths so vvp can be run from any cwd.
         """
         top_module    = f"{design_name}_top"
         num_tests     = len(self.test_vectors)
@@ -273,6 +292,10 @@ class PerformanceEvaluator:
         ready_timeout  = self.fft_size * self.num_stages * 500
         output_timeout = self.fft_size * self.num_stages * 500
         watchdog_ns    = self.fft_size * num_tests * self.num_stages * 2000 + 5000
+
+        sim_dir    = os.path.abspath('./sim')
+        out_path   = os.path.join(sim_dir, f'{design_name}_output.txt').replace('\\', '/')
+        tvec_path  = os.path.join(sim_dir, 'test_vectors.hex').replace('\\', '/')
 
         # Build testbench using .format() so {{ }} are plain Verilog braces.
         tb_template = (
@@ -328,8 +351,8 @@ class PerformanceEvaluator:
         '    end\n'
         '\n'
         '    initial begin : STIM\n'
-        '        out_file = $fopen("./sim/{dn}_output.txt", "w");\n'
-        '        $readmemh("./sim/test_vectors.hex", tv_24bit);\n'
+        '        out_file = $fopen("{out_path}", "w");\n'
+        '        $readmemh("{tvec_path}", tv_24bit);\n'
         '        rst           = 0;\n'
         '        data_in_valid = 0;\n'
         '        data_in       = 0;\n'
@@ -395,17 +418,19 @@ class PerformanceEvaluator:
         )
 
         tb_code = tb_template.format(
-            dn      = design_name,
-            top_mod = top_module,
-            fft_sz  = self.fft_size,
-            n_stg   = self.num_stages,
-            ts_m1   = total_samples - 1,
-            nt      = num_tests,
-            rtmo    = ready_timeout,
-            otmo    = output_timeout,
-            wdog    = watchdog_ns,
-            lcb     = '{',
-            rcb     = '}',
+            dn       = design_name,
+            top_mod  = top_module,
+            fft_sz   = self.fft_size,
+            n_stg    = self.num_stages,
+            ts_m1    = total_samples - 1,
+            nt       = num_tests,
+            rtmo     = ready_timeout,
+            otmo     = output_timeout,
+            wdog     = watchdog_ns,
+            lcb      = '{',
+            rcb      = '}',
+            out_path = out_path,
+            tvec_path= tvec_path,
         )
 
         tb_file = f'./sim/tb_{design_name}.v'
@@ -425,7 +450,16 @@ class PerformanceEvaluator:
     def _parse_simulation_output(self, output_file):
         """
         Parse simulation output.
-        Each line is a 6-hex-digit 24-bit word: [23:16]=FP8_real [15:8]=FP8_imag
+        Each line is a 6-hex-digit 24-bit word in the unified format:
+          [23:16] = FP8 real
+          [15:8]  = FP8 imag
+          [7:4]   = FP4 real
+          [3:0]   = FP4 imag
+
+        We determine whether the sample is FP8 or FP4 by checking whether
+        the upper 16 bits are non-zero (FP8 result stored there) or zero
+        (FP4-only result stored in [7:0]).  This mirrors how the core packs
+        write-back data in WRITE_X / WRITE_Y.
         """
         outputs = []
         try:
@@ -435,10 +469,24 @@ class PerformanceEvaluator:
                     if not line:
                         continue
                     word = int(line, 16) & 0xFFFFFF
-                    real_fp8 = (word >> 16) & 0xFF
-                    imag_fp8 = (word >>  8) & 0xFF
-                    outputs.append(self.fp8_to_float(real_fp8)
-                                   + 1j * self.fp8_to_float(imag_fp8))
+                    fp8_real = (word >> 16) & 0xFF
+                    fp8_imag = (word >>  8) & 0xFF
+                    fp4_real = (word >>  4) & 0x0F
+                    fp4_imag =  word        & 0x0F
+
+                    # If the upper 16 bits are both zero the butterfly wrote
+                    # an FP4 result (packed into [7:0]); otherwise it's FP8.
+                    if fp8_real == 0 and fp8_imag == 0:
+                        real_val = self.fp4_to_float(fp4_real)
+                        imag_val = self.fp4_to_float(fp4_imag)
+                    else:
+                        real_val = self.fp8_to_float(fp8_real)
+                        imag_val = self.fp8_to_float(fp8_imag)
+
+                    outputs.append(real_val + 1j * imag_val)
+        except FileNotFoundError:
+            print(f"Simulation output file not found: {output_file}")
+            return None
         except Exception as e:
             print(f"Error parsing simulation output {output_file}: {e}")
             return None
