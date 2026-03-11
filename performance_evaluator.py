@@ -333,6 +333,7 @@ class PerformanceEvaluator:
         '    ) dut (\n'
         '        .clk           (clk),\n'
         '        .rst           (rst),\n'
+        '        .N             (10\'d{fft_sz}),\n'
         '        .data_in_valid (data_in_valid),\n'
         '        .data_in       (data_in),\n'
         '        .fft_ready     (fft_ready),\n'
