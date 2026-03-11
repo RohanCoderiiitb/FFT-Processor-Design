@@ -818,7 +818,7 @@ class FFTTemplateGenerator:
     def __init__(self, fft_size):
         self.fft_size = fft_size
         self.num_stages = int(math.log2(fft_size))
-        self.addr_width = self.num_stages + 1         # log2(N) bits for addresses
+        self.addr_width = 10         # log2(N) bits for addresses
         self.butterflies_per_stage = fft_size // 2
         self.total_butterflies = self.butterflies_per_stage * self.num_stages
         # Stage-level chromosome: 2 genes per stage
@@ -1097,7 +1097,7 @@ class FFTTemplateGenerator:
         n  = config['fft_size']
         aw = config['addr_width']
         ns = config['num_stages']
-        stage_bits = max(1, math.ceil(math.log2(ns + 1)))
+        stage_bits = 10
 
         if core_module_name is None:
             core_module_name = f"mixed_fft_{n}_core"

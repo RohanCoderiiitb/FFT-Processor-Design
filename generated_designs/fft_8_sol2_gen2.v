@@ -6,7 +6,7 @@
 
 module fft_8_sol2_gen2_core #(
     parameter MAX_N     = 8,
-    parameter ADDR_WIDTH = 4
+    parameter ADDR_WIDTH = 10
 )(
     input  wire clk,
     input  wire rst,
@@ -75,7 +75,7 @@ module fft_8_sol2_gen2_core #(
     reg agu_next_step;
     wire [ADDR_WIDTH-1:0] idx_a, idx_b, k;
     wire agu_done_stage, agu_done_fft;
-    wire [2-1:0] curr_stage;
+    wire [10-1:0] curr_stage;
 
     dit_fft_agu_variable #(
         .MAX_N     (MAX_N),
@@ -188,7 +188,7 @@ module fft_8_sol2_gen2_core #(
 
     twiddle_factor_unified #(
         .MAX_N     (8),
-        .ADDR_WIDTH(4)
+        .ADDR_WIDTH(10)
     ) twiddle_inst (
         .k           (k),
         .n           (N),
