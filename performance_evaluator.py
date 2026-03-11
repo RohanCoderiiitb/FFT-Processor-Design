@@ -289,9 +289,13 @@ class PerformanceEvaluator:
         top_module    = f"{design_name}_top"
         num_tests     = len(self.test_vectors)
         total_samples = num_tests * self.fft_size
-        ready_timeout  = self.fft_size * self.num_stages * 500
-        output_timeout = self.fft_size * self.num_stages * 500
-        watchdog_ns    = self.fft_size * num_tests * self.num_stages * 2000 + 5000
+        # Memory reset loops over MAX_N=1024 entries: budget >=1024 cycles before ready.
+        # Each butterfly op takes ~12 pipeline states; FFT-N has (N/2)*log2(N) butterflies.
+        butterflies      = (self.fft_size // 2) * self.num_stages
+        per_test_cycles  = self.fft_size + butterflies * 12 + self.fft_size + 200
+        ready_timeout    = 1024 + per_test_cycles          # cycles to wait for fft_ready
+        output_timeout   = self.fft_size * 20 + 200        # cycles to collect N outputs
+        watchdog_ns      = (1024 + num_tests * per_test_cycles + 500) * 10  # 10ns/cycle
 
         sim_dir    = os.path.abspath('./sim')
         out_path   = os.path.join(sim_dir, f'{design_name}_output.txt').replace('\\', '/')
