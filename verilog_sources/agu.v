@@ -12,22 +12,24 @@ module dit_fft_agu_variable #(
     output [ADDR_WIDTH-1:0] k, //twiddle factor index
     output reg done_stage, //goes high when one stage is finished, used to swap banks
     output reg done_fft, //goes high when fft is done (all stages)
-    output reg [2:0] curr_stage, //current stage (0 to 4 for N=32)
+    output reg [ADDR_WIDTH-1:0] curr_stage, //current stage (0 to log2(MAX_N)-1)
 
     output [15:0] twiddle_output //output for twiddle ROM
 );
 
-    //calculate number of stages based on N
-    //we do this combinationally since N is fixed during FFT execution
-    reg [2:0] total_stages;
+    // Calculate number of stages based on runtime N = log2(N).
+    // Must be ADDR_WIDTH bits wide to hold values up to log2(MAX_N).
+    // Computed combinationally; N is stable throughout one FFT execution.
+    // Loop runs i = 0..ADDR_WIDTH (inclusive) so that N=MAX_N (= 2^ADDR_WIDTH)
+    // is correctly mapped to total_stages = ADDR_WIDTH.
+    reg [ADDR_WIDTH-1:0] total_stages;
+    integer i;
     always @(*) begin
-        case(N)
-            6'd4:  total_stages = 3'd2;
-            6'd8:  total_stages = 3'd3;
-            6'd16: total_stages = 3'd4;
-            6'd32: total_stages = 3'd5;
-            default: total_stages = 3'd0; //invalid
-        endcase
+        total_stages = {ADDR_WIDTH{1'b0}};
+        for (i = 0; i <= ADDR_WIDTH; i = i + 1) begin
+            if (N == (1 << i))
+                total_stages = i[ADDR_WIDTH-1:0];
+        end
     end
 
     //implementing decimation in time (DIT) algorithm
