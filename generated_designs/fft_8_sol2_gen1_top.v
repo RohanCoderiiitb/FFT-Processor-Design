@@ -48,6 +48,7 @@ module fft_8_sol2_gen1_top #(
 
     reg [1:0]            mem_state, mem_next_state;
     reg [ADDR_WIDTH-1:0] input_count, output_count;
+    reg [ADDR_WIDTH-1:0] rd_addr_count; // tracks addresses issued to memory
     reg                  fft_start, fft_start_issued;
     reg                  ext_reading;
     reg                  read_bank_sel;
@@ -82,10 +83,11 @@ module fft_8_sol2_gen1_top #(
     always @(*) begin
         mem_next_state = mem_state;
         case (mem_state)
-            MEM_IDLE:    if (data_in_valid)          mem_next_state = MEM_WRITE;
-            MEM_WRITE:   if (input_count >= N)   mem_next_state = MEM_PROCESS;
-            MEM_PROCESS: if (fft_done)               mem_next_state = MEM_READ;
-            MEM_READ:    if (output_count >= N)  mem_next_state = MEM_IDLE;
+            MEM_IDLE:    if (data_in_valid)                          mem_next_state = MEM_WRITE;
+            MEM_WRITE:   if (input_count >= N)                       mem_next_state = MEM_PROCESS;
+            MEM_PROCESS: if (fft_done)                               mem_next_state = MEM_READ;
+            // Transition only after all N outputs have been emitted
+            MEM_READ:    if (output_count >= N && rd_addr_count >= N) mem_next_state = MEM_IDLE;
         endcase
     end
 
@@ -94,6 +96,7 @@ module fft_8_sol2_gen1_top #(
             mem_state        <= MEM_IDLE;
             input_count      <= 0;
             output_count     <= 0;
+            rd_addr_count    <= 0;
             wr_en            <= 0;
             wr_addr          <= 0;
             rd_addr          <= 0;
@@ -113,6 +116,7 @@ module fft_8_sol2_gen1_top #(
                     fft_ready        <= 1;
                     input_count      <= 0;
                     output_count     <= 0;
+                    rd_addr_count    <= 0;
                     data_out_valid   <= 0;
                     fft_start_issued <= 0;
                     ext_reading      <= 0;
@@ -143,32 +147,53 @@ module fft_8_sol2_gen1_top #(
                 end
 
                 MEM_PROCESS: begin
-                    wr_en <= 0;
+                    wr_en       <= 0;
+                    ext_reading <= 0;  // core owns memory; external reads not active
                     if (fft_done) begin
                         output_count  <= 0;
-                        // After NUM_STAGES ping-pong flips, result bank = NUM_STAGES[0]
+                        rd_addr_count <= 0;
+                        // After NUM_STAGES ping-pong flips, result is in bank NUM_STAGES[0]
                         read_bank_sel <= NUM_STAGES[0];
-                        ext_reading   <= 1;
-                    end else begin
-                        ext_reading <= 0;
                     end
                 end
 
                 MEM_READ: begin
+                    // Memory (mixed_memory_unified) has 2-cycle read latency:
+                    //   cycle 0: address registered by memory
+                    //   cycle 1: data fetched from array into rd_data_full
+                    //   cycle 2: precision slice applied → rd_data valid
+                    //
+                    // Strategy: issue all N addresses first (rd_addr_count 0..N-1),
+                    // then collect N outputs after the 2-cycle pipeline fills.
+                    // output_count counts valid data_out_valid pulses emitted.
+                    //
+                    // Timeline:
+                    //   rd_addr_count: 0  1  2  3  4  5  6  7  8  8  8
+                    //   rd_addr       : 0  1  2  3  4  5  6  7  -  -  -
+                    //   data valid    : -  -  x0 x1 x2 x3 x4 x5 x6 x7 -
+                    //   output_count  : 0  0  0  1  2  3  4  5  6  7  8 -> IDLE
+
                     ext_reading <= 1;
-                    if (output_count == 0) begin
-                        rd_addr        <= 0;
-                        data_out_valid <= 0;
-                        output_count   <= output_count + 1;
-                    end else if (output_count < N) begin
+
+                    // Phase 1: keep issuing next read address while more to fetch
+                    if (rd_addr_count < N) begin
+                        rd_addr       <= rd_addr_count;
+                        rd_addr_count <= rd_addr_count + 1;
+                    end
+
+                    // Phase 2: after 2-cycle pipeline delay, data becomes valid
+                    // rd_addr_count reaches 2 means addr 0 was issued 2 cycles ago
+                    if (rd_addr_count >= 2 && output_count < N) begin
                         data_out       <= rd_data;
                         data_out_valid <= 1;
-                        rd_addr        <= rd_addr + 1;
                         output_count   <= output_count + 1;
                     end else begin
                         data_out_valid <= 0;
-                        ext_reading    <= 0;
                     end
+
+                    // Stop driving ext_reading once all addresses issued
+                    if (rd_addr_count >= N && output_count >= N)
+                        ext_reading <= 0;
                 end
             endcase
         end
