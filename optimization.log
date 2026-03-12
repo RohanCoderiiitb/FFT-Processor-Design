@@ -4167,3 +4167,471 @@ Parent process (pid 19624) has died. This helper process will now exit
 [2026-03-11 23:16:41] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
 [2026-03-11 23:16:41] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
 [2026-03-11 23:16:41] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-03-12 16:45:28] [INFO] Initialized directory structure
+[2026-03-12 16:45:28] [INFO] Running quick test with 8-point FFT
+[2026-03-12 16:45:28] [INFO] Setting up Verilog source files
+[2026-03-12 16:45:28] [INFO] 
+============================================================
+[2026-03-12 16:45:28] [INFO] Starting optimization for 8-point FFT
+[2026-03-12 16:45:28] [INFO] ============================================================
+
+[2026-03-12 16:45:28] [INFO] Initialized FFT-8 optimisation problem
+[2026-03-12 16:45:28] [INFO] Chromosome length : 6
+[2026-03-12 16:45:28] [INFO] Number of stages  : 3
+[2026-03-12 16:45:28] [INFO] Total butterflies : 12
+[2026-03-12 16:45:28] [INFO] NSGA-II Configuration:
+[2026-03-12 16:45:28] [INFO]   Population size: 6
+[2026-03-12 16:45:28] [INFO]   Generations: 3
+[2026-03-12 16:45:28] [INFO]   Crossover rate: 0.9
+[2026-03-12 16:45:28] [INFO]   Mutation rate: 0.05
+[2026-03-12 16:45:28] [INFO]   Objectives: 3
+[2026-03-12 16:45:28] [INFO]   Parallel threads: 4
+[2026-03-12 16:45:28] [INFO] Starting NSGA-II evolution...
+[2026-03-12 16:45:28] [GEN] === Generation 0 ===
+[2026-03-12 16:45:28] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-03-12 16:45:28] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-03-12 16:45:28] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-03-12 16:45:28] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-03-12 16:45:28] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-03-12 16:45:28] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-03-12 16:45:28] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-03-12 16:45:28] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-03-12 16:45:28] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-03-12 16:45:28] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-03-12 16:45:28] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-03-12 16:45:28] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-03-12 16:45:28] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-03-12 16:45:28] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-03-12 16:45:28] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-03-12 16:45:28] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-03-12 16:47:13] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-03-12 16:47:13] [INFO] Solution 0: Power=0.1240W, Area=8191 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-03-12 16:47:13] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-03-12 16:47:13] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-03-12 16:47:13] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-03-12 16:47:13] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-03-12 16:47:54] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-03-12 16:47:54] [INFO] Solution 1: Power=0.2260W, Area=18036 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-03-12 16:47:54] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-03-12 16:47:54] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-03-12 16:47:54] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-03-12 16:47:54] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-03-12 16:48:06] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-03-12 16:48:06] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-03-12 16:48:06] [INFO] Solution 3: Power=0.2270W, Area=18072 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-03-12 16:48:06] [INFO] Solution 2: Power=0.2270W, Area=18095 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-03-12 16:49:04] [ERROR] Vivado failed for fft_8_sol5_gen1 (rc=1):
+  
+	   2 Input    4 Bit        Muxes := 57    
+	   5 Input    3 Bit        Muxes := 2     
+	   2 Input    3 Bit        Muxes := 20    
+	   4 Input    3 Bit        Muxes := 2     
+	   3 Input    3 Bit        Muxes := 6     
+	   2 Input    2 Bit        Muxes := 31    
+	   4 Input    2 Bit        Muxes := 3     
+	   2 Input    1 Bit        Muxes := 65    
+	   7 Input    1 Bit        Muxes := 4     
+	   4 Input    1 Bit        Muxes := 20    
+	  14 Input    1 Bit        Muxes := 6     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 90 (col length:60)
+BRAMs: 100 (col length: RAMB18 60 RAMB36 30)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+No constraint files found.
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+DSP Report: Generating DSP agu_inst/idx_a, operation Mode is: C+A*B.
+DSP Report: operator agu_inst/idx_a is absorbed into DSP agu_inst/idx_a.
+DSP Report: operator agu_inst/group_offset is absorbed into DSP agu_inst/idx_a.
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+1
+1
+INFO: [Common 17-83] Releasing license: Synthesis
+48 Infos, 5 Warnings, 0 Critical Warnings and 1 Errors encountered.
+synth_design failed
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Thu Mar 12 16:49:00 2026...
+
+[2026-03-12 16:49:04] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-03-12 16:49:04] [ERROR] Vivado failed for fft_8_sol4_gen1 (rc=1):
+-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2679.875 ; gain = 0.000 ; free physical = 21618 ; free virtual = 28430
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Synth Design complete, checksum: 1823ed81
+INFO: [Common 17-83] Releasing license: Synthesis
+52 Infos, 6 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:01:29 ; elapsed = 00:01:33 . Memory (MB): peak = 2679.875 ; gain = 130.680 ; free physical = 21805 ; free virtual = 28617
+# create_clock -period $clock_period -name clk [get_ports clk]
+# opt_design
+Command: opt_design
+Attempting to get a license for feature 'Implementation' and/or device 'xc7a35t'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7a35t'
+Running DRC as a precondition to command opt_design
+
+Starting DRC Task
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Project 1-461] DRC finished with 0 Errors
+INFO: [Project 1-462] Please refer to the DRC report (report_drc) for more information.
+
+Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.38 . Memory (MB): peak = 2743.906 ; gain = 64.031 ; free physical = 21790 ; free virtual = 28603
+
+Starting Cache Timing Information Task
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Ending Cache Timing Information Task | Checksum: 71566d13
+
+Time (s): cpu = 00:00:06 ; elapsed = 00:00:05 . Memory (MB): peak = 2956.719 ; gain = 212.812 ; free physical = 21423 ; free virtual = 28245
+INFO: [Common 17-83] Releasing license: Implementation
+8 Infos, 0 Warnings, 0 Critical Warnings and 1 Errors encountered.
+opt_design failed
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Thu Mar 12 16:49:00 2026...
+
+[2026-03-12 16:49:04] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-03-12 16:49:04] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-03-12 16:49:04] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
+[2026-03-12 16:59:40] [INFO] Initialized directory structure
+[2026-03-12 16:59:40] [INFO] Running quick test with 8-point FFT
+[2026-03-12 16:59:40] [INFO] Setting up Verilog source files
+[2026-03-12 16:59:40] [INFO] 
+============================================================
+[2026-03-12 16:59:40] [INFO] Starting optimization for 8-point FFT
+[2026-03-12 16:59:40] [INFO] ============================================================
+
+[2026-03-12 16:59:40] [INFO] Initialized FFT-8 optimisation problem
+[2026-03-12 16:59:40] [INFO] Chromosome length : 6
+[2026-03-12 16:59:40] [INFO] Number of stages  : 3
+[2026-03-12 16:59:40] [INFO] Total butterflies : 12
+[2026-03-12 16:59:40] [INFO] NSGA-II Configuration:
+[2026-03-12 16:59:40] [INFO]   Population size: 6
+[2026-03-12 16:59:40] [INFO]   Generations: 3
+[2026-03-12 16:59:40] [INFO]   Crossover rate: 0.9
+[2026-03-12 16:59:40] [INFO]   Mutation rate: 0.05
+[2026-03-12 16:59:40] [INFO]   Objectives: 3
+[2026-03-12 16:59:40] [INFO]   Parallel threads: 4
+[2026-03-12 16:59:40] [INFO] Starting NSGA-II evolution...
+[2026-03-12 16:59:40] [GEN] === Generation 0 ===
+[2026-03-12 16:59:40] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-03-12 16:59:40] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-03-12 16:59:40] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-03-12 16:59:40] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-03-12 16:59:40] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-03-12 16:59:40] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-03-12 16:59:40] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-03-12 16:59:40] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-03-12 16:59:40] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-03-12 16:59:40] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-03-12 16:59:40] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-03-12 16:59:40] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-03-12 16:59:40] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-03-12 16:59:40] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-03-12 16:59:40] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-03-12 16:59:40] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-03-12 17:01:25] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-03-12 17:01:25] [INFO] Solution 0: Power=0.1160W, Area=8176 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-03-12 17:01:25] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-03-12 17:01:25] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-03-12 17:01:25] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-03-12 17:01:25] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-03-12 17:02:05] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-03-12 17:02:05] [INFO] Solution 1: Power=0.2120W, Area=18069 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-03-12 17:02:05] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-03-12 17:02:05] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-03-12 17:02:05] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-03-12 17:02:05] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-03-12 17:02:10] [ERROR] Vivado failed for fft_8_sol5_gen1 (rc=-2):
+no output
+[2026-03-12 17:02:10] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-03-12 17:02:10] [INFO] Solution 5: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
+[2026-03-12 17:02:15] [ERROR] Vivado failed for fft_8_sol4_gen1 (rc=1):
+        Muxes := 2     
+	   2 Input    4 Bit        Muxes := 43    
+	   5 Input    3 Bit        Muxes := 2     
+	   2 Input    3 Bit        Muxes := 26    
+	   4 Input    3 Bit        Muxes := 4     
+	   3 Input    3 Bit        Muxes := 4     
+	   2 Input    2 Bit        Muxes := 53    
+	   4 Input    2 Bit        Muxes := 3     
+	   2 Input    1 Bit        Muxes := 75    
+	   7 Input    1 Bit        Muxes := 2     
+	   4 Input    1 Bit        Muxes := 20    
+	  15 Input    1 Bit        Muxes := 7     
+	   5 Input    1 Bit        Muxes := 1     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 90 (col length:60)
+BRAMs: 100 (col length: RAMB18 60 RAMB36 30)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+No constraint files found.
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+DSP Report: Generating DSP agu_inst/idx_a, operation Mode is: C+A*B.
+DSP Report: operator agu_inst/idx_a is absorbed into DSP agu_inst/idx_a.
+DSP Report: operator agu_inst/group_offset is absorbed into DSP agu_inst/idx_a.
+1
+1
+INFO: [Common 17-83] Releasing license: Synthesis
+47 Infos, 3 Warnings, 0 Critical Warnings and 1 Errors encountered.
+synth_design failed
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Thu Mar 12 17:02:14 2026...
+
+[2026-03-12 17:02:15] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-03-12 17:02:15] [INFO] Solution 4: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-03-12 17:02:15] [ERROR] Vivado failed for fft_8_sol2_gen1 (rc=1):
+$util_rpt_file]} {
+#     set fp [open $util_rpt_file r]
+#     set content [read $fp]
+#     close $fp
+# 
+#     # Try CLB LUTs or Slice LUTs first (total line)
+#     foreach line [split $content "\n"] {
+#         if {[regexp {^\|\s*(CLB LUTs|Slice LUTs)\s*\|\s*(\d+)\s*\|} $line -> _lbl val]} {
+#             set lut_count [string trim $val]
+#             break
+#         }
+#     }
+#     # Fallback: sum LUT-as-Logic + LUT-as-Memory
+#     if {$lut_count == 0} {
+#         set lut_logic 0
+#         set lut_mem 0
+#         foreach line [split $content "\n"] {
+#             if {[regexp {^\|\s*LUT as Logic\s*\|\s*(\d+)\s*\|} $line -> val]} {
+#                 set lut_logic [string trim $val]
+#             }
+#             if {[regexp {^\|\s*LUT as Memory\s*\|\s*(\d+)\s*\|} $line -> val]} {
+#                 set lut_mem [string trim $val]
+#             }
+#         }
+#         set lut_count [expr {$lut_logic + $lut_mem}]
+#     }
+# }
+# set power_rpt_file "/tmp/${design_name}_power.rpt"
+# report_power -file $power_rpt_file
+Command: report_power -file /tmp/fft_8_sol2_gen1_power.rpt
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Running Vector-less Activity Propagation...
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+Resolution: Set the HD.CLK_SRC property of the out-of-context port to the location of the clock buffer instance in the top-level design
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+
+Finished Running Vector-less Activity Propagation
+2 Infos, 1 Warnings, 0 Critical Warnings and 0 Errors encountered.
+report_power failed
+report_power: Time (s): cpu = 00:00:37 ; elapsed = 00:00:11 . Memory (MB): peak = 3225.445 ; gain = 127.570 ; free physical = 19809 ; free virtual = 26695
+INFO: [Common 17-344] 'report_power' was cancelled
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Thu Mar 12 17:02:12 2026...
+
+[2026-03-12 17:02:15] [ERROR] Vivado failed for fft_8_sol3_gen1 (rc=1):
+$util_rpt_file]} {
+#     set fp [open $util_rpt_file r]
+#     set content [read $fp]
+#     close $fp
+# 
+#     # Try CLB LUTs or Slice LUTs first (total line)
+#     foreach line [split $content "\n"] {
+#         if {[regexp {^\|\s*(CLB LUTs|Slice LUTs)\s*\|\s*(\d+)\s*\|} $line -> _lbl val]} {
+#             set lut_count [string trim $val]
+#             break
+#         }
+#     }
+#     # Fallback: sum LUT-as-Logic + LUT-as-Memory
+#     if {$lut_count == 0} {
+#         set lut_logic 0
+#         set lut_mem 0
+#         foreach line [split $content "\n"] {
+#             if {[regexp {^\|\s*LUT as Logic\s*\|\s*(\d+)\s*\|} $line -> val]} {
+#                 set lut_logic [string trim $val]
+#             }
+#             if {[regexp {^\|\s*LUT as Memory\s*\|\s*(\d+)\s*\|} $line -> val]} {
+#                 set lut_mem [string trim $val]
+#             }
+#         }
+#         set lut_count [expr {$lut_logic + $lut_mem}]
+#     }
+# }
+# set power_rpt_file "/tmp/${design_name}_power.rpt"
+# report_power -file $power_rpt_file
+Command: report_power -file /tmp/fft_8_sol3_gen1_power.rpt
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Running Vector-less Activity Propagation...
+WARNING: [Timing 38-242] The property HD.CLK_SRC of clock port "clk" is not set. In out-of-context mode, this prevents timing estimation for clock delay/skew
+Resolution: Set the HD.CLK_SRC property of the out-of-context port to the location of the clock buffer instance in the top-level design
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+
+Finished Running Vector-less Activity Propagation
+2 Infos, 1 Warnings, 0 Critical Warnings and 0 Errors encountered.
+report_power failed
+report_power: Time (s): cpu = 00:00:36 ; elapsed = 00:00:11 . Memory (MB): peak = 3228.492 ; gain = 129.578 ; free physical = 19913 ; free virtual = 26752
+INFO: [Common 17-344] 'report_power' was cancelled
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Thu Mar 12 17:02:13 2026...
+
+[2026-03-12 17:02:15] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-03-12 17:02:15] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-03-12 17:02:16] [INFO] Solution 2: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-03-12 17:02:16] [INFO] Solution 3: Power=6.0000W, Area=20000 LUTs, SQNR=-100.00dB, MAE=1000000.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-03-12 17:34:03] [INFO] Initialized directory structure
+[2026-03-12 17:34:03] [INFO] Running quick test with 8-point FFT
+[2026-03-12 17:34:03] [INFO] Setting up Verilog source files
+[2026-03-12 17:34:03] [INFO] 
+============================================================
+[2026-03-12 17:34:03] [INFO] Starting optimization for 8-point FFT
+[2026-03-12 17:34:03] [INFO] ============================================================
+
+[2026-03-12 17:34:03] [INFO] Initialized FFT-8 optimisation problem
+[2026-03-12 17:34:03] [INFO] Chromosome length : 6
+[2026-03-12 17:34:03] [INFO] Number of stages  : 3
+[2026-03-12 17:34:03] [INFO] Total butterflies : 12
+[2026-03-12 17:34:03] [INFO] NSGA-II Configuration:
+[2026-03-12 17:34:03] [INFO]   Population size: 6
+[2026-03-12 17:34:03] [INFO]   Generations: 3
+[2026-03-12 17:34:03] [INFO]   Crossover rate: 0.9
+[2026-03-12 17:34:03] [INFO]   Mutation rate: 0.05
+[2026-03-12 17:34:03] [INFO]   Objectives: 3
+[2026-03-12 17:34:03] [INFO]   Parallel threads: 4
+[2026-03-12 17:34:03] [INFO] Starting NSGA-II evolution...
+[2026-03-12 17:34:03] [GEN] === Generation 0 ===
+[2026-03-12 17:34:03] [INFO] Evaluating solution 0: [0, 0, 0, 0, 0, 0]
+[2026-03-12 17:34:03] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen1.v
+[2026-03-12 17:34:03] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen1_top.v
+[2026-03-12 17:34:03] [INFO] Running Vivado synthesis for fft_8_sol0_gen1
+[2026-03-12 17:34:03] [INFO] Evaluating solution 1: [1, 1, 1, 1, 1, 1]
+[2026-03-12 17:34:03] [INFO] Evaluating solution 2: [0, 0, 1, 1, 1, 1]
+[2026-03-12 17:34:03] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen1.v
+[2026-03-12 17:34:03] [INFO] Evaluating solution 3: [1, 1, 0, 0, 0, 0]
+[2026-03-12 17:34:03] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen1_top.v
+[2026-03-12 17:34:03] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen1.v
+[2026-03-12 17:34:03] [INFO] Running Vivado synthesis for fft_8_sol1_gen1
+[2026-03-12 17:34:03] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen1_top.v
+[2026-03-12 17:34:03] [INFO] Running Vivado synthesis for fft_8_sol2_gen1
+[2026-03-12 17:34:03] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen1.v
+[2026-03-12 17:34:03] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen1_top.v
+[2026-03-12 17:34:03] [INFO] Running Vivado synthesis for fft_8_sol3_gen1
+[2026-03-12 17:36:26] [INFO] Running performance evaluation for fft_8_sol0_gen1
+[2026-03-12 17:36:26] [INFO] Solution 0: Power=0.2430W, Area=16874 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=0/3 (0.0%), FP8_add=0/3 (0.0%)
+[2026-03-12 17:36:26] [INFO] Evaluating solution 4: [1, 0, 1, 0, 1, 0]
+[2026-03-12 17:36:26] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen1.v
+[2026-03-12 17:36:26] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen1_top.v
+[2026-03-12 17:36:26] [INFO] Running Vivado synthesis for fft_8_sol4_gen1
+[2026-03-12 17:36:50] [INFO] Running performance evaluation for fft_8_sol1_gen1
+[2026-03-12 17:36:50] [INFO] Solution 1: Power=0.3550W, Area=17371 LUTs, SQNR=-0.96dB, MAE=2.810690 | FP8_mult=3/3 (100.0%), FP8_add=3/3 (100.0%)
+[2026-03-12 17:36:50] [INFO] Evaluating solution 5: [0, 1, 0, 1, 0, 1]
+[2026-03-12 17:36:50] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen1.v
+[2026-03-12 17:36:50] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen1_top.v
+[2026-03-12 17:36:50] [INFO] Running Vivado synthesis for fft_8_sol5_gen1
+[2026-03-12 17:37:03] [INFO] Running performance evaluation for fft_8_sol2_gen1
+[2026-03-12 17:37:03] [INFO] Running performance evaluation for fft_8_sol3_gen1
+[2026-03-12 17:37:03] [INFO] Solution 2: Power=0.2640W, Area=17508 LUTs, SQNR=0.10dB, MAE=1.279730 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-03-12 17:37:03] [INFO] Solution 3: Power=0.2680W, Area=17507 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-03-12 17:38:48] [INFO] Running performance evaluation for fft_8_sol5_gen1
+[2026-03-12 17:38:48] [INFO] Solution 5: Power=0.3100W, Area=16876 LUTs, SQNR=0.58dB, MAE=1.750000 | FP8_mult=0/3 (0.0%), FP8_add=3/3 (100.0%)
+[2026-03-12 17:38:55] [INFO] Running performance evaluation for fft_8_sol4_gen1
+[2026-03-12 17:38:55] [INFO] Solution 4: Power=0.2800W, Area=16996 LUTs, SQNR=-4.02dB, MAE=3.799123 | FP8_mult=3/3 (100.0%), FP8_add=0/3 (0.0%)
+[2026-03-12 17:38:55] [INFO] Generation 0 complete
+[2026-03-12 17:38:55] [GEN] === Generation 1 ===
+[2026-03-12 17:38:55] [INFO] Evaluating solution 2: [1, 1, 0, 1, 0, 1]
+[2026-03-12 17:38:55] [INFO] Evaluating solution 0: [1, 0, 0, 0, 0, 0]
+[2026-03-12 17:38:55] [INFO] Evaluating solution 3: [0, 0, 1, 0, 1, 0]
+[2026-03-12 17:38:55] [INFO] Evaluating solution 1: [1, 1, 1, 1, 0, 0]
+[2026-03-12 17:38:55] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen2.v
+[2026-03-12 17:38:55] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen2.v
+[2026-03-12 17:38:55] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen2.v
+[2026-03-12 17:38:55] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen2_top.v
+[2026-03-12 17:38:55] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen2_top.v
+[2026-03-12 17:38:55] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen2.v
+[2026-03-12 17:38:55] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen2_top.v
+[2026-03-12 17:38:55] [INFO] Running Vivado synthesis for fft_8_sol2_gen2
+[2026-03-12 17:38:55] [INFO] Running Vivado synthesis for fft_8_sol3_gen2
+[2026-03-12 17:38:55] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen2_top.v
+[2026-03-12 17:38:55] [INFO] Running Vivado synthesis for fft_8_sol0_gen2
+[2026-03-12 17:38:55] [INFO] Running Vivado synthesis for fft_8_sol1_gen2
+[2026-03-12 17:41:57] [INFO] Running performance evaluation for fft_8_sol2_gen2
+[2026-03-12 17:41:57] [INFO] Running performance evaluation for fft_8_sol1_gen2
+[2026-03-12 17:41:57] [INFO] Solution 2: Power=0.2820W, Area=17547 LUTs, SQNR=0.26dB, MAE=2.003843 | FP8_mult=1/3 (33.3%), FP8_add=3/3 (100.0%)
+[2026-03-12 17:41:57] [INFO] Evaluating solution 4: [0, 0, 0, 0, 1, 0]
+[2026-03-12 17:41:57] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen2.v
+[2026-03-12 17:41:57] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen2_top.v
+[2026-03-12 17:41:57] [INFO] Running Vivado synthesis for fft_8_sol4_gen2
+[2026-03-12 17:41:57] [INFO] Solution 1: Power=0.2780W, Area=17414 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=2/3 (66.7%), FP8_add=2/3 (66.7%)
+[2026-03-12 17:41:57] [INFO] Evaluating solution 5: [0, 1, 0, 0, 0, 0]
+[2026-03-12 17:41:57] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen2.v
+[2026-03-12 17:41:57] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen2_top.v
+[2026-03-12 17:41:57] [INFO] Running Vivado synthesis for fft_8_sol5_gen2
+[2026-03-12 17:42:05] [INFO] Running performance evaluation for fft_8_sol3_gen2
+[2026-03-12 17:42:05] [INFO] Running performance evaluation for fft_8_sol0_gen2
+[2026-03-12 17:42:06] [INFO] Solution 0: Power=0.2450W, Area=17169 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=1/3 (33.3%), FP8_add=0/3 (0.0%)
+[2026-03-12 17:42:06] [INFO] Solution 3: Power=0.2460W, Area=17169 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=2/3 (66.7%), FP8_add=0/3 (0.0%)
+[2026-03-12 17:44:00] [INFO] Running performance evaluation for fft_8_sol5_gen2
+[2026-03-12 17:44:00] [INFO] Solution 5: Power=0.2610W, Area=17169 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=0/3 (0.0%), FP8_add=1/3 (33.3%)
+[2026-03-12 17:44:17] [INFO] Running performance evaluation for fft_8_sol4_gen2
+[2026-03-12 17:44:17] [INFO] Solution 4: Power=0.2460W, Area=17169 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=1/3 (33.3%), FP8_add=0/3 (0.0%)
+[2026-03-12 17:44:17] [INFO] Generation 1 complete
+[2026-03-12 17:44:17] [GEN] === Generation 2 ===
+[2026-03-12 17:44:17] [INFO] Evaluating solution 0: [1, 0, 1, 0, 0, 0]
+[2026-03-12 17:44:17] [INFO] Evaluating solution 2: [0, 1, 1, 0, 0, 1]
+[2026-03-12 17:44:17] [INFO] Evaluating solution 1: [0, 0, 0, 1, 1, 0]
+[2026-03-12 17:44:17] [INFO] Evaluating solution 3: [0, 1, 0, 0, 0, 1]
+[2026-03-12 17:44:17] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol2_gen3.v
+[2026-03-12 17:44:17] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol0_gen3.v
+[2026-03-12 17:44:17] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol3_gen3.v
+[2026-03-12 17:44:17] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol0_gen3_top.v
+[2026-03-12 17:44:17] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol3_gen3_top.v
+[2026-03-12 17:44:17] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol2_gen3_top.v
+[2026-03-12 17:44:17] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol1_gen3.v
+[2026-03-12 17:44:17] [INFO] Running Vivado synthesis for fft_8_sol0_gen3
+[2026-03-12 17:44:17] [INFO] Running Vivado synthesis for fft_8_sol2_gen3
+[2026-03-12 17:44:17] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol1_gen3_top.v
+[2026-03-12 17:44:17] [INFO] Running Vivado synthesis for fft_8_sol3_gen3
+[2026-03-12 17:44:17] [INFO] Running Vivado synthesis for fft_8_sol1_gen3
+[2026-03-12 17:46:49] [INFO] Running performance evaluation for fft_8_sol3_gen3
+[2026-03-12 17:46:49] [INFO] Solution 3: Power=0.2660W, Area=17168 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=0/3 (0.0%), FP8_add=2/3 (66.7%)
+[2026-03-12 17:46:49] [INFO] Evaluating solution 4: [0, 1, 0, 1, 0, 0]
+[2026-03-12 17:46:49] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol4_gen3.v
+[2026-03-12 17:46:49] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol4_gen3_top.v
+[2026-03-12 17:46:49] [INFO] Running Vivado synthesis for fft_8_sol4_gen3
+[2026-03-12 17:47:19] [INFO] Running performance evaluation for fft_8_sol0_gen3
+[2026-03-12 17:47:19] [INFO] Solution 0: Power=0.2490W, Area=17045 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=2/3 (66.7%), FP8_add=0/3 (0.0%)
+[2026-03-12 17:47:19] [INFO] Evaluating solution 5: [0, 0, 0, 0, 0, 1]
+[2026-03-12 17:47:19] [INFO] Generated Verilog core : ./generated_designs/fft_8_sol5_gen3.v
+[2026-03-12 17:47:19] [INFO] Generated Verilog top  : /home/fftacc/FFT-Hardware/FFT-Processor-Design/generated_designs/fft_8_sol5_gen3_top.v
+[2026-03-12 17:47:19] [INFO] Running Vivado synthesis for fft_8_sol5_gen3
+[2026-03-12 17:47:22] [INFO] Running performance evaluation for fft_8_sol2_gen3
+[2026-03-12 17:47:22] [INFO] Solution 2: Power=0.3340W, Area=17201 LUTs, SQNR=-1.11dB, MAE=2.177802 | FP8_mult=1/3 (33.3%), FP8_add=2/3 (66.7%)
+[2026-03-12 17:47:25] [INFO] Running performance evaluation for fft_8_sol1_gen3
+[2026-03-12 17:47:25] [INFO] Solution 1: Power=0.2640W, Area=17484 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=1/3 (33.3%), FP8_add=1/3 (33.3%)
+[2026-03-12 17:48:52] [INFO] Running performance evaluation for fft_8_sol4_gen3
+[2026-03-12 17:48:52] [INFO] Solution 4: Power=0.2660W, Area=16847 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=0/3 (0.0%), FP8_add=2/3 (66.7%)
+[2026-03-12 17:49:20] [INFO] Running performance evaluation for fft_8_sol5_gen3
+[2026-03-12 17:49:20] [INFO] Solution 5: Power=0.2530W, Area=17172 LUTs, SQNR=0.00dB, MAE=1.000000 | FP8_mult=0/3 (0.0%), FP8_add=1/3 (33.3%)
+[2026-03-12 17:49:20] [INFO] Generation 2 complete
+[2026-03-12 17:49:20] [INFO] Optimization complete for 8-point FFT
+[2026-03-12 17:49:20] [INFO] Saving optimization results...
+[2026-03-12 17:49:20] [WARN] WARNING: No feasible solutions found — all solutions violated constraints. Saving least-infeasible population as fallback.
+[2026-03-12 17:49:20] [INFO] Results saved to ./results/fft_8
+[2026-03-12 17:49:20] [INFO] Fallback front has 6 solutions
+[2026-03-12 17:49:20] [INFO] Quick test complete

@@ -10,25 +10,21 @@ module bit_reverse #(
     reg [WIDTH-1:0] temp_out;
     integer i;
     
+    // Explicit 10-bit matching to prevent simulator case/shift evaluation bugs
     always @(*) begin
-        // Compute log2(N) using a robust case statement
-        // to avoid 32-bit shift evaluation bugs in some simulators
-        case (N)
-            1024: log2_N = 10;
-            512:  log2_N = 9;
-            256:  log2_N = 8;
-            128:  log2_N = 7;
-            64:   log2_N = 6;
-            32:   log2_N = 5;
-            16:   log2_N = 4;
-            8:    log2_N = 3;
-            4:    log2_N = 2;
-            2:    log2_N = 1;
-            default: log2_N = 0;
-        endcase
+        if      (N == 10'd1024 || N == 10'd0) log2_N = 10'd10;
+        else if (N == 10'd512) log2_N = 10'd9;
+        else if (N == 10'd256) log2_N = 10'd8;
+        else if (N == 10'd128) log2_N = 10'd7;
+        else if (N == 10'd64)  log2_N = 10'd6;
+        else if (N == 10'd32)  log2_N = 10'd5;
+        else if (N == 10'd16)  log2_N = 10'd4;
+        else if (N == 10'd8)   log2_N = 10'd3;
+        else if (N == 10'd4)   log2_N = 10'd2;
+        else if (N == 10'd2)   log2_N = 10'd1;
+        else                   log2_N = 10'd3; // Failsafe
         
         // Full width bit reversal using a temporary variable
-        // to avoid combinational feedback loops (out = out >> ...)
         temp_out = 0;
         for (i = 0; i < WIDTH; i = i + 1) begin
             temp_out[i] = in[WIDTH-1-i];
