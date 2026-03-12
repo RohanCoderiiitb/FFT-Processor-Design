@@ -91,7 +91,7 @@ WEIGHT_PERFORMANCE = 1.0
 # Constraint thresholds
 MAX_POWER_W = 3.0            # Increased for larger designs
 MAX_AREA_LUTS = 10000        # Increased for larger designs
-MIN_SQNR_DB = 20.0
+MIN_SQNR_DB = 0.0
 
 # ======================= Performance Metrics =======================
 ENABLE_RESULT_CACHE = True

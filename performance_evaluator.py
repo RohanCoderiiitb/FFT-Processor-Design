@@ -1,164 +1,134 @@
 """
 Performance Evaluation Module
-Calculates SQNR and MAE by comparing approximate FFT output with golden reference.
+==============================
+Calculates SQNR and MAE by running iverilog/vvp simulation of generated
+mixed-precision FFT designs and comparing against an FP32 NumPy reference.
 
-Fixes vs original:
-  - iverilog glob: './verilog_sources/*.v' was passed as a literal string to
-    subprocess (no shell expansion). Now expanded with Python glob.
-  - Testbench instantiates the TOP module (e.g. fft_8_sol0_gen1_top) using its
-    actual port interface, not a phantom design_name module with wrong ports.
-  - Vivado stderr is now captured and logged so failures aren't silent.
-  - rst polarity fixed: core uses active-low reset (negedge rst), so testbench
-    must drive rst=0 to hold reset, then rst=1 to release.
-  - Test vectors written to file before simulation; readmemh uses fp8 hex.
+Testbench interface matches the generated top module:
+  - load_en / load_addr / load_data   (input loading, FP8 16-bit)
+  - start / done                      (FFT trigger / completion)
+  - unload_en / unload_addr / unload_data (result readout, 16-bit)
+
+This mirrors fft_test.v / tb_fft_test.v exactly.
+
+Key design decisions
+--------------------
+* Active-low async reset: tb drives rst=0 for reset, rst=1 to release.
+* 2-cycle memory read latency: unload loop waits 3 @posedge per sample
+  (address issued → 2 register stages → data stable).
+* Input packed as FP8: load_data = {fp8_real[7:0], fp8_imag[7:0]}.
+* Output parsed as FP8 from unload_data[15:0].
+* One twiddles file is generated per simulation run in ./sim/.
 """
 
 import numpy as np
 import subprocess
 import os
 import glob as glob_module
-import struct
+import math
 
 
 class PerformanceEvaluator:
     def __init__(self, fft_size):
-        self.fft_size = fft_size
+        self.fft_size          = fft_size
+        self.num_stages        = int(math.log2(fft_size))
         self.verilog_sources_dir = './verilog_sources'
-        self.test_vectors   = self._generate_test_vectors()
-        self.golden_outputs = self._compute_golden_outputs()
+        self.test_vectors      = self._generate_test_vectors()
+        self.golden_outputs    = self._compute_golden_outputs()
 
-    # ------------------------------------------------------------------
-    # Test vector generation
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # Test vectors
+    # ==================================================================
     def _generate_test_vectors(self):
-        """
-        Generate a small set of deterministic test vectors for easier debugging.
-        All vectors have magnitude 1 and are well within the dynamic range of FP8/FP4.
-        """
-        n = self.fft_size
-        test_vectors = []
-    
-        # 1. Impulse at index 0
-        impulse = np.zeros(n, dtype=complex)
-        impulse[0] = 1.0
-        test_vectors.append(impulse)
-    
-        # 2. DC constant (all ones)
-        dc = np.ones(n, dtype=complex)
-        test_vectors.append(dc)
-    
-        # 3. Single frequency: e^(j*2π*1*n/N)  (k = 1)
-        k = 1
+        n     = self.fft_size
         n_arr = np.arange(n)
-        sinusoid = np.exp(2j * np.pi * k * n_arr / n)
-        test_vectors.append(sinusoid)
-    
-        # Optionally add a few more, e.g., k = 2 or a random but controlled signal
-        # For variety, we can also include a signal with both real and imag parts non‑zero.
-        # Here we add k = 2 as a simple extra check.
-        k2 = 2
-        sinusoid2 = np.exp(2j * np.pi * k2 * n_arr / n)
-        test_vectors.append(sinusoid2)
-    
-        return test_vectors
+        vecs  = []
+
+        # 1. Impulse at index 0  → FFT = all-ones
+        v = np.zeros(n, dtype=complex); v[0] = 1.0
+        vecs.append(v)
+
+        # 2. DC constant (all ones) → FFT = N at bin 0, else 0
+        vecs.append(np.ones(n, dtype=complex))
+
+        # 3. Single frequency k=1
+        vecs.append(np.exp(2j * np.pi * 1 * n_arr / n))
+
+        # 4. Single frequency k=2
+        vecs.append(np.exp(2j * np.pi * 2 * n_arr / n))
+
+        return vecs
 
     def _compute_golden_outputs(self):
         return [np.fft.fft(v) for v in self.test_vectors]
 
-    # ------------------------------------------------------------------
+    # ==================================================================
     # Float ↔ FP conversion helpers
-    # ------------------------------------------------------------------
-    def float_to_fp4(self, val):
-        """
-        Convert a float to FP4 E2M1 format.
-        Returns a 4-bit unsigned integer (0-15).
-        Format: [sign(1)][exp(2)][mant(1)]
-        """
-        if val == 0.0:
-            return 0
-
-        sign = 0x8 if val < 0 else 0x0
-        val = abs(val)
-
-        # Simplified mapping (adjust as needed for your actual FP4 definition)
-        if val < 0.5:
-            # Subnormal or zero
-            exp = 0
-            mant = 1 if val >= 0.25 else 0
-        else:
-            # Normal: 1.mant * 2^(exp-1)
-            exp = 1
-            if val < 1.0:
-                exp = 1
-                mant = 0
-            elif val < 1.5:
-                exp = 1
-                mant = 1
-            elif val < 2.0:
-                exp = 2
-                mant = 0
-            elif val < 3.0:
-                exp = 2
-                mant = 1
-            else:
-                exp = 3
-                mant = 1  # max
-
-        return (sign & 0x8) | ((exp & 0x3) << 1) | (mant & 0x1)
-
+    # ==================================================================
     def float_to_fp8_e4m3(self, val):
-        """Quantise a float to FP8 E4M3 and return the 8-bit integer code."""
-        import math
+        """Quantise a float to FP8 E4M3 (bias=7); returns 8-bit integer."""
         if val == 0.0:
             return 0
-
         sign_bit = 0x80 if val < 0 else 0x00
         val = abs(val)
-
-        # Underflow to zero for very small values
-        if val < 2**(-6):
-            return sign_bit  # signed zero
-
-        exp_unbiased = math.floor(math.log2(val))
-        exp_biased   = exp_unbiased + 7  # bias = 7
-
-        # Clamp exponent to valid range [1, 14] for normal numbers
-        if exp_biased < 1:
-            # Subnormal: exponent field = 0, mantissa = val / 2^(-6)
-            exp_biased = 0
-            mant = min(7, round(val / (2 ** -6) * 8))
-        elif exp_biased >= 15:
-            # Saturate to max normal (no infinity in E4M3)
-            return sign_bit | 0x7E  # max positive normal: 0_1110_111
+        if val < 2 ** (-6):
+            return sign_bit
+        exp_u = math.floor(math.log2(val))
+        exp_b = exp_u + 7
+        if exp_b < 1:
+            exp_b = 0
+            mant  = min(7, round(val / (2 ** -6) * 8))
+        elif exp_b >= 15:
+            return sign_bit | 0x7E
         else:
-            mant_f = val / (2 ** exp_unbiased) - 1.0
+            mant_f = val / (2 ** exp_u) - 1.0
             mant   = min(7, round(mant_f * 8))
-            # Handle mantissa overflow
             if mant >= 8:
                 mant = 0
-                exp_biased += 1
-                if exp_biased >= 15:
+                exp_b += 1
+                if exp_b >= 15:
                     return sign_bit | 0x7E
-
-        return (sign_bit & 0x80) | ((exp_biased & 0x0F) << 3) | (mant & 0x07)
+        return (sign_bit & 0x80) | ((exp_b & 0x0F) << 3) | (mant & 0x07)
 
     def fp8_to_float(self, fp8_val):
-        """FP8 E4M3 → float."""
+        """FP8 E4M3 (bias=7) → float."""
+        fp8_val &= 0xFF
         if fp8_val == 0:
             return 0.0
         sign = (fp8_val >> 7) & 0x1
         exp  = (fp8_val >> 3) & 0xF
         mant =  fp8_val       & 0x7
         if exp == 0:
-            value = mant / 8.0
+            value = mant / 8.0 * (2 ** -6)
         elif exp == 15:
-            return float('inf') if mant == 0 else float('nan')
+            return float('nan')
         else:
             value = (1.0 + mant / 8.0) * (2 ** (exp - 7))
         return -value if sign else value
 
+    def float_to_fp4(self, val):
+        """Quantise a float to FP4 E2M1 (bias=1); returns 4-bit integer."""
+        if val == 0.0:
+            return 0
+        sign = 0x8 if val < 0 else 0x0
+        val  = abs(val)
+        if val < 0.5:
+            exp = 0; mant = 1 if val >= 0.25 else 0
+        elif val < 1.0:
+            exp = 1; mant = 0
+        elif val < 1.5:
+            exp = 1; mant = 1
+        elif val < 2.0:
+            exp = 2; mant = 0
+        elif val < 3.0:
+            exp = 2; mant = 1
+        else:
+            exp = 3; mant = 1
+        return (sign & 0x8) | ((exp & 0x3) << 1) | (mant & 0x1)
+
     def fp4_to_float(self, fp4_val):
-        """FP4 E2M1 → float."""
+        """FP4 E2M1 (bias=1) → float."""
+        fp4_val &= 0xF
         if fp4_val == 0:
             return 0.0
         sign = (fp4_val >> 3) & 0x1
@@ -170,53 +140,268 @@ class PerformanceEvaluator:
             value = (1.0 + mant * 0.5) * (2 ** (exp - 1))
         return -value if sign else value
 
-    # ------------------------------------------------------------------
-    # Test-vector file writer
-    # ------------------------------------------------------------------
-    def _write_test_vectors(self):
+    # ==================================================================
+    # Twiddle file generator
+    # ==================================================================
+    def _write_twiddle_file(self, sim_dir):
+        """
+        Write twiddles_1024.txt in binary format for $readmemb.
+        Format per line: 24 binary digits  (MSB first)
+          [23:16] FP8 real
+          [15:8]  FP8 imag
+          [7:4]   FP4 real
+          [3:0]   FP4 imag
+        Only the first 512 entries are used (symmetry handles the rest).
+        """
+        path = os.path.join(sim_dir, 'twiddles_1024.txt')
+        with open(path, 'w') as f:
+            for idx in range(512):
+                angle = -2.0 * math.pi * idx / 1024.0
+                re    = math.cos(angle)
+                im    = math.sin(angle)
+
+                fp8_re = self.float_to_fp8_e4m3(re) & 0xFF
+                fp8_im = self.float_to_fp8_e4m3(im) & 0xFF
+                fp4_re = self.float_to_fp4(re)       & 0x0F
+                fp4_im = self.float_to_fp4(im)       & 0x0F
+
+                word = (fp8_re << 16) | (fp8_im << 8) | (fp4_re << 4) | fp4_im
+                f.write(f"{word:024b}\n")
+        return path
+
+    # ==================================================================
+    # Test-vector file writer  (for reference; not used by this TB)
+    # ==================================================================
+    def _write_test_vectors_hex(self, sim_dir):
+        path = os.path.join(sim_dir, 'test_vectors.hex')
+        with open(path, 'w') as f:
+            for vec in self.test_vectors:
+                for sample in vec:
+                    fp8_re = self.float_to_fp8_e4m3(sample.real) & 0xFF
+                    fp8_im = self.float_to_fp8_e4m3(sample.imag) & 0xFF
+                    f.write(f"{fp8_re:02x}{fp8_im:02x}\n")
+        return path
+
+    # ==================================================================
+    # Testbench generator
+    # ==================================================================
+    def _generate_testbench(self, dut_file, design_name):
+        design_name = self._sanitize_name(design_name)
+        """
+        Generate a Verilog-2001 compatible testbench that exercises the
+        generated TOP module using the same interface as tb_fft_test.v:
+
+            load_en / load_addr / load_data
+            start / done
+            unload_en / unload_addr / unload_data
+
+        Outputs FP8 hex pairs (real, imag) one per line to sim/<dn>_output.txt.
+        """
+        n          = self.fft_size
+        addr_bits  = int(math.log2(n))
+        num_tests  = len(self.test_vectors)
+        top_module = f"{design_name}_top"
+
+        # Timing budgets
+        butterflies     = (n // 2) * self.num_stages
+        cycles_per_fft  = n + butterflies * 10 + n * 4 + 200
+        ready_timeout   = 1024 + cycles_per_fft   # wait-for-done budget
+        unload_cycles   = n * 5                    # 3 cycles latency + margin
+        watchdog_ns     = (1024 + num_tests * (cycles_per_fft + n * 5) + 1000) * 10
+
+        sim_dir  = os.path.abspath('./sim')
+        out_path = os.path.join(sim_dir, f'{design_name}_output.txt').replace('\\', '/')
+
+        # Build per-test input load lines and expected-output comments
+        # Encode all test vectors as Verilog parameter arrays
+        vec_hex_lines = []
+        for ti, vec in enumerate(self.test_vectors):
+            for si, sample in enumerate(vec):
+                fp8_re = self.float_to_fp8_e4m3(sample.real) & 0xFF
+                fp8_im = self.float_to_fp8_e4m3(sample.imag) & 0xFF
+                word   = (fp8_re << 8) | fp8_im
+                vec_hex_lines.append(f"        tv[{ti*n + si}] = 16'h{word:04x};")
+        vec_init = '\n'.join(vec_hex_lines)
+
+        tb = f"""\
+// Auto-generated testbench for {top_module}
+// Mirrors tb_fft_test.v interface exactly.
+`timescale 1ns/1ps
+
+module tb_{design_name};
+
+    reg        clk;
+    reg        rst;
+    reg        start;
+    wire       done;
+
+    reg        load_en;
+    reg  [{addr_bits-1}:0]  load_addr;
+    reg  [15:0] load_data;
+
+    reg        unload_en;
+    reg  [{addr_bits-1}:0]  unload_addr;
+    wire [15:0] unload_data;
+
+    integer i, ti, out_file;
+
+    // Test vector storage: fp8 packed {{real[7:0], imag[7:0]}}
+    reg [15:0] tv [{num_tests*n - 1}:0];
+
+    // DUT
+    {top_module} dut (
+        .clk        (clk),
+        .rst        (rst),
+        .start      (start),
+        .done       (done),
+        .load_en    (load_en),
+        .load_addr  (load_addr),
+        .load_data  (load_data),
+        .unload_en  (unload_en),
+        .unload_addr(unload_addr),
+        .unload_data(unload_data)
+    );
+
+    // 100 MHz clock
+    initial clk = 0;
+    always  #5 clk = ~clk;
+
+    // Watchdog
+    initial begin
+        #{watchdog_ns};
+        $display("WATCHDOG TIMEOUT for {design_name}");
+        $finish;
+    end
+
+    initial begin : STIM
+        integer wait_cnt;
+
+        // Pre-load test vectors
+{vec_init}
+
+        // Open output file
+        out_file = $fopen("{out_path}", "w");
+
+        // Initialise signals
+        rst        = 0;
+        start      = 0;
+        load_en    = 0;
+        load_addr  = 0;
+        load_data  = 0;
+        unload_en  = 0;
+        unload_addr= 0;
+
+        // Hold reset for 8 cycles then release
+        repeat(8) @(posedge clk);
+        rst = 1;
+        repeat(4) @(posedge clk);
+
+        // Run each test vector
+        for (ti = 0; ti < {num_tests}; ti = ti + 1) begin
+
+            // --- Load phase ---
+            @(posedge clk);
+            load_en = 1;
+            for (i = 0; i < {n}; i = i + 1) begin
+                load_addr = i[{addr_bits-1}:0];
+                load_data = tv[ti*{n} + i];
+                @(posedge clk);
+            end
+            load_en = 0;
+
+            @(posedge clk);
+
+            // --- Run FFT ---
+            start = 1;
+            @(posedge clk);
+            start = 0;
+
+            // Wait for done
+            wait_cnt = 0;
+            while (!done && wait_cnt < {ready_timeout}) begin
+                @(posedge clk);
+                wait_cnt = wait_cnt + 1;
+            end
+            if (!done)
+                $display("WARN: done never asserted for test %0d, design {design_name}", ti);
+
+            @(posedge clk);
+
+            // --- Unload phase ---
+            // Memory has 2-cycle read latency.
+            // For each sample: assert address, wait 3 posedge clk, sample data.
+            unload_en = 1;
+            for (i = 0; i < {n}; i = i + 1) begin
+                unload_addr = i[{addr_bits-1}:0];
+                @(posedge clk);
+                @(posedge clk);
+                @(posedge clk);
+                $fwrite(out_file, "%04h\\n", unload_data);
+            end
+            unload_en = 0;
+
+            @(posedge clk);
+            @(posedge clk);
+
+        end // for ti
+
+        $fclose(out_file);
+        $display("Simulation complete for {design_name}. Results in {out_path}");
+        $finish;
+    end
+
+endmodule
+"""
+        tb_file = f'./sim/tb_{design_name}.v'
         os.makedirs('./sim', exist_ok=True)
-        lines = []
-        for vec in self.test_vectors:
-            for sample in vec:
-                fp8_real = self.float_to_fp8_e4m3(sample.real) & 0xFF
-                fp8_imag = self.float_to_fp8_e4m3(sample.imag) & 0xFF
-                fp4_real = self.float_to_fp4(sample.real) & 0x0F
-                fp4_imag = self.float_to_fp4(sample.imag) & 0x0F
-                word_24bit = (fp8_real << 16) | (fp8_imag << 8) | (fp4_real << 4) | fp4_imag
-                lines.append(f"{word_24bit:06x}")
-        with open('./sim/test_vectors.hex', 'w') as f:
-            f.write('\n'.join(lines))
+        with open(tb_file, 'w') as f:
+            f.write(tb)
+        return tb_file
 
-    # ------------------------------------------------------------------
-    # Simulation
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # Simulation runner
+    # ==================================================================
+    @staticmethod
+    def _sanitize_name(name):
+        """Replace characters invalid in Verilog identifiers."""
+        import re
+        return re.sub(r'[^A-Za-z0-9_]', '_', name)
+
     def run_verilog_simulation(self, verilog_file, design_name):
+        design_name = self._sanitize_name(design_name)
         """
-        Compile and simulate the generated FFT design with iverilog/vvp.
-        Returns array of complex outputs, or None on failure.
+        Compile with iverilog and simulate with vvp.
+        verilog_file  = path to the *core* .v file
+        The matching *_top.v must sit in the same directory.
+        Returns list of complex outputs, or None on failure.
         """
-        self._write_test_vectors()
-        tb_file = self._generate_testbench(verilog_file, design_name)
-
         sim_dir = os.path.abspath('./sim')
         os.makedirs(sim_dir, exist_ok=True)
 
-        # Expand the glob NOW in Python — subprocess does NOT expand globs
-        lib_sources = sorted(glob_module.glob(
-            os.path.join(self.verilog_sources_dir, '*.v')
-        ))
+        # Write twiddle ROM file into sim dir so $readmemb finds it
+        self._write_twiddle_file(sim_dir)
 
+        tb_file = self._generate_testbench(verilog_file, design_name)
+
+        # Expand glob for RTL library sources.
+        # Exclude fft_test.v and tb_fft_test.v — these are reference designs
+        # with conflicting module names, not library primitives.
+        _exclude = {'fft_test.v', 'tb_fft_test.v'}
+        lib_sources = sorted(
+            f for f in glob_module.glob(
+                os.path.join(self.verilog_sources_dir, '*.v')
+            )
+            if os.path.basename(f) not in _exclude
+        )
         if not lib_sources:
             print(f"ERROR: No .v files found in {self.verilog_sources_dir}")
             return None
 
         # Top file lives next to the core file
         top_file = verilog_file.replace('.v', '_top.v')
-        extra = [top_file] if os.path.exists(top_file) else []
+        extra    = [top_file] if os.path.exists(top_file) else []
 
-        vvp_path  = os.path.join(sim_dir, f'{design_name}.vvp')
-        # Output file must use an absolute path so vvp finds it regardless of cwd
-        out_file  = os.path.join(sim_dir, f'{design_name}_output.txt')
+        vvp_path = os.path.join(sim_dir, f'{design_name}.vvp')
 
         compile_cmd = (
             ['iverilog',
@@ -230,37 +415,36 @@ class PerformanceEvaluator:
         )
 
         try:
-            result = subprocess.run(
-                compile_cmd, capture_output=True, text=True
-            )
+            result = subprocess.run(compile_cmd, capture_output=True, text=True)
             if result.returncode != 0:
-                print(f"iverilog compile FAILED for {design_name}:\n"
-                      f"  stdout: {result.stdout[-2000:]}\n"
-                      f"  stderr: {result.stderr[-2000:]}")
+                print(f"iverilog FAILED for {design_name}:\n"
+                      f"  stdout: {result.stdout[-3000:]}\n"
+                      f"  stderr: {result.stderr[-3000:]}")
                 return None
 
             sim_result = subprocess.run(
                 ['vvp', vvp_path],
-                capture_output=True, text=True, timeout=120,
-                cwd=os.path.abspath('.')   # keep cwd consistent
+                capture_output=True, text=True,
+                timeout=300,
+                cwd=sim_dir   # run from sim dir so $fopen relative paths work
             )
             if sim_result.returncode != 0:
-                print(f"vvp simulation FAILED for {design_name}:\n"
-                      f"  stdout: {sim_result.stdout[-2000:]}\n"
-                      f"  stderr: {sim_result.stderr[-2000:]}")
+                print(f"vvp FAILED for {design_name}:\n"
+                      f"  stdout: {sim_result.stdout[-3000:]}\n"
+                      f"  stderr: {sim_result.stderr[-3000:]}")
                 return None
 
-            # Print any simulation $display output for debugging
-            if sim_result.stdout:
-                for line in sim_result.stdout.splitlines():
-                    if any(kw in line for kw in ('ERROR', 'WARN', 'stuck', 'watchdog')):
-                        print(f"SIM [{design_name}]: {line}")
+            # Print notable simulation messages
+            for line in sim_result.stdout.splitlines():
+                if any(kw in line for kw in ('ERROR', 'WARN', 'WATCHDOG', 'TIMEOUT')):
+                    print(f"SIM [{design_name}]: {line}")
 
-            return self._parse_simulation_output(out_file)
+            return self._parse_simulation_output(
+                os.path.join(sim_dir, f'{design_name}_output.txt')
+            )
 
         except FileNotFoundError as e:
-            print(f"Simulator binary not found for {design_name}: {e}\n"
-                  f"  Ensure 'iverilog' and 'vvp' are on your PATH.")
+            print(f"Simulator not found: {e}\n  Ensure iverilog/vvp are on PATH.")
             return None
         except subprocess.TimeoutExpired:
             print(f"Simulation timeout for {design_name}")
@@ -269,202 +453,13 @@ class PerformanceEvaluator:
             print(f"Simulation error for {design_name}: {e}")
             return None
 
-    # ------------------------------------------------------------------
-    # Testbench generator
-    # ------------------------------------------------------------------
-    def _generate_testbench(self, dut_file, design_name):
-        """
-        Generate a Verilog-2001 compatible testbench for the TOP module.
-
-        Key fixes vs original:
-          - All integer variables declared at module scope (no declarations
-            inside named begin..end blocks -- that requires SystemVerilog).
-          - Unbounded while(!fft_ready) replaced with cycle-counted loop.
-          - Reset held for 8 cycles, 10-cycle settle before stimulus.
-          - Watchdog scaled to fft_size * num_tests * num_stages * 2000 ns.
-          - fwrite newline uses single \\n (correct Verilog escape).
-          - Diagnostics: $display on reset release, fft_ready timeout, output count.
-          - $fopen / $readmemh use absolute paths so vvp can be run from any cwd.
-        """
-        top_module    = f"{design_name}_top"
-        num_tests     = len(self.test_vectors)
-        total_samples = num_tests * self.fft_size
-        # Memory reset loops over MAX_N=1024 entries: budget >=1024 cycles before ready.
-        # Each butterfly op takes ~12 pipeline states; FFT-N has (N/2)*log2(N) butterflies.
-        butterflies      = (self.fft_size // 2) * self.num_stages
-        per_test_cycles  = self.fft_size + butterflies * 12 + self.fft_size + 200
-        ready_timeout    = 1024 + per_test_cycles          # cycles to wait for fft_ready
-        output_timeout   = self.fft_size * 20 + 200        # cycles to collect N outputs
-        watchdog_ns      = (1024 + num_tests * per_test_cycles + 500) * 10  # 10ns/cycle
-
-        sim_dir    = os.path.abspath('./sim')
-        out_path   = os.path.join(sim_dir, f'{design_name}_output.txt').replace('\\', '/')
-        tvec_path  = os.path.join(sim_dir, 'test_vectors.hex').replace('\\', '/')
-
-        # Build testbench using .format() so {{ }} are plain Verilog braces.
-        tb_template = (
-        '`timescale 1ns/1ps\n'
-        '\n'
-        'module tb_{dn};\n'
-        '\n'
-        '    // DUT signals\n'
-        '    reg         clk;\n'
-        '    reg         rst;\n'
-        '    reg         data_in_valid;\n'
-        '    reg  [23:0] data_in;\n'
-        '    wire        fft_ready;\n'
-        '    wire        data_out_valid;\n'
-        '    wire [23:0] data_out;\n'
-        '    wire        done;\n'
-        '    wire        error;\n'
-        '\n'
-        '    // Debug signals\n'
-        '    reg [31:0] cycle_count;\n'
-        '\n'
-        '    // Test-vector storage\n'
-        '    reg [23:0] tv_24bit [{ts_m1}:0];\n'
-        '\n'
-        '    // All integers at module scope\n'
-        '    integer test_idx, sample_idx;\n'
-        '    integer out_file;\n'
-        '    integer received;\n'
-        '    integer wait_cnt;\n'
-        '\n'
-        '    // DUT instantiation\n'
-        '    {top_mod} #(\n'
-        '        .MAX_N     (1024),\n'
-        '        .ADDR_WIDTH(10)\n'
-        '    ) dut (\n'
-        '        .clk           (clk),\n'
-        '        .rst           (rst),\n'
-        '        .N             (10\'d{fft_sz}),\n'
-        '        .data_in_valid (data_in_valid),\n'
-        '        .data_in       (data_in),\n'
-        '        .fft_ready     (fft_ready),\n'
-        '        .data_out_valid(data_out_valid),\n'
-        '        .data_out      (data_out),\n'
-        '        .done          (done),\n'
-        '        .error         (error)\n'
-        '    );\n'
-        '\n'
-        '    initial clk = 0;\n'
-        '    always  #5 clk = ~clk;\n'
-        '\n'
-        '    // Cycle counter for debugging\n'
-        '    always @(posedge clk) begin\n'
-        '        cycle_count <= cycle_count + 1;\n'
-        '    end\n'
-        '\n'
-        '    initial begin : STIM\n'
-        '        out_file = $fopen("{out_path}", "w");\n'
-        '        $readmemh("{tvec_path}", tv_24bit);\n'
-        '        rst           = 0;\n'
-        '        data_in_valid = 0;\n'
-        '        data_in       = 0;\n'
-        '        cycle_count   = 0;\n'
-        '        repeat(8) @(posedge clk);\n'
-        '        rst = 1;\n'
-        '        repeat(10) @(posedge clk);\n'
-        '        $display("INFO [%s]: reset released at cycle %0d", "{dn}", cycle_count);\n'
-        '\n'
-        '        for (test_idx = 0; test_idx < {nt}; test_idx = test_idx + 1) begin\n'
-        '            $display("INFO [%s]: starting test %0d at cycle %0d", "{dn}", test_idx, cycle_count);\n'
-        '            wait_cnt = 0;\n'
-        '            while (!fft_ready && wait_cnt < 12000) begin\n'
-        '                @(posedge clk); wait_cnt = wait_cnt + 1;\n'
-        '                if (wait_cnt % 1000 == 0)\n'
-        '                    $display("DEBUG [%s]: waiting for fft_ready... cycle %0d, fft_ready=%%b", "{dn}", cycle_count, fft_ready);\n'
-        '            end\n'
-        '            if (!fft_ready) begin\n'
-        '                $display("ERROR [%s]: fft_ready stuck low after %%0d cycles test %%0d", "{dn}", wait_cnt, test_idx);\n'
-        '                $display("DEBUG [%s]: done=%%b, error=%%b", "{dn}", done, error);\n'
-        '                $fclose(out_file); $finish;\n'
-        '            end\n'
-        '            $display("INFO [%s]: fft_ready asserted at cycle %0d", "{dn}", cycle_count);\n'
-        '\n'
-        '            for (sample_idx = 0; sample_idx < {fft_sz}; sample_idx = sample_idx + 1) begin\n'
-        '                @(posedge clk);\n'
-        '                data_in_valid = 1;\n'
-        '                data_in = {{tv_24bit[test_idx*{fft_sz}+sample_idx]}};\n'
-        '                if (sample_idx == 0)\n'
-        '                    $display("INFO [%s]: first sample at cycle %0d: %%h", "{dn}", cycle_count, data_in);\n'
-        '            end\n'
-        '            @(posedge clk); data_in_valid = 0;\n'
-        '            $display("INFO [%s]: finished feeding samples at cycle %0d", "{dn}", cycle_count);\n'
-        '\n'
-        '            received = 0; wait_cnt = 0;\n'
-        '            while (received < {fft_sz} && wait_cnt < {otmo}) begin\n'
-        '                @(posedge clk);\n'
-        '                if (data_out_valid) begin\n'
-        '                    $fwrite(out_file, "%%06h\\n", data_out);\n'
-        '                    received = received + 1;\n'
-        '                    if (received == 1)\n'
-        '                        $display("INFO [%s]: first output at cycle %0d: %%h", "{dn}", cycle_count, data_out);\n'
-        '                end\n'
-        '                wait_cnt = wait_cnt + 1;\n'
-        '            end\n'
-        '            if (received < {fft_sz})\n'
-        '                $display("WARN [%s]: got %%0d/%%0d outputs test %%0d", "{dn}", received, {fft_sz}, test_idx);\n'
-        '            else\n'
-        '                $display("INFO [%s]: test %%0d complete, got %%0d outputs at cycle %0d", "{dn}", test_idx, received, cycle_count);\n'
-        '        end\n'
-        '        $fclose(out_file);\n'
-        '        $display("INFO [%s]: all tests complete at cycle %0d", "{dn}", cycle_count);\n'
-        '        $finish;\n'
-        '    end\n'
-        '\n'
-        '    initial begin\n'
-        '        #{wdog};\n'
-        '        $display("ERROR [%s]: watchdog! cycle count = %%0d", "{dn}", cycle_count);\n'
-        '        $finish;\n'
-        '    end\n'
-        '\n'
-        'endmodule\n'
-        )
-
-        tb_code = tb_template.format(
-            dn       = design_name,
-            top_mod  = top_module,
-            fft_sz   = self.fft_size,
-            n_stg    = self.num_stages,
-            ts_m1    = total_samples - 1,
-            nt       = num_tests,
-            rtmo     = ready_timeout,
-            otmo     = output_timeout,
-            wdog     = watchdog_ns,
-            lcb      = '{',
-            rcb      = '}',
-            out_path = out_path,
-            tvec_path= tvec_path,
-        )
-
-        tb_file = f'./sim/tb_{design_name}.v'
-        os.makedirs('./sim', exist_ok=True)
-        with open(tb_file, 'w') as f:
-            f.write(tb_code)
-        return tb_file
-
-    @property
-    def num_stages(self):
-        import math
-        return int(math.log2(self.fft_size))
-
-    # ------------------------------------------------------------------
+    # ==================================================================
     # Output parser
-    # ------------------------------------------------------------------
+    # ==================================================================
     def _parse_simulation_output(self, output_file):
         """
-        Parse simulation output.
-        Each line is a 6-hex-digit 24-bit word in the unified format:
-          [23:16] = FP8 real
-          [15:8]  = FP8 imag
-          [7:4]   = FP4 real
-          [3:0]   = FP4 imag
-
-        We determine whether the sample is FP8 or FP4 by checking whether
-        the upper 16 bits are non-zero (FP8 result stored there) or zero
-        (FP4-only result stored in [7:0]).  This mirrors how the core packs
-        write-back data in WRITE_X / WRITE_Y.
+        Parse 4-hex-digit lines written by the testbench.
+        Each line is: {fp8_real[7:0], fp8_imag[7:0]}  (16-bit = 4 hex chars).
         """
         outputs = []
         try:
@@ -473,87 +468,80 @@ class PerformanceEvaluator:
                     line = line.strip()
                     if not line:
                         continue
-                    word = int(line, 16) & 0xFFFFFF
-                    fp8_real = (word >> 16) & 0xFF
-                    fp8_imag = (word >>  8) & 0xFF
-                    fp4_real = (word >>  4) & 0x0F
-                    fp4_imag =  word        & 0x0F
-
-                    # If the upper 16 bits are both zero the butterfly wrote
-                    # an FP4 result (packed into [7:0]); otherwise it's FP8.
-                    if fp8_real == 0 and fp8_imag == 0:
-                        real_val = self.fp4_to_float(fp4_real)
-                        imag_val = self.fp4_to_float(fp4_imag)
-                    else:
-                        real_val = self.fp8_to_float(fp8_real)
-                        imag_val = self.fp8_to_float(fp8_imag)
-
-                    outputs.append(real_val + 1j * imag_val)
+                    word     = int(line, 16) & 0xFFFF
+                    fp8_real = (word >> 8) & 0xFF
+                    fp8_imag =  word       & 0xFF
+                    outputs.append(
+                        self.fp8_to_float(fp8_real) + 1j * self.fp8_to_float(fp8_imag)
+                    )
         except FileNotFoundError:
             print(f"Simulation output file not found: {output_file}")
             return None
         except Exception as e:
-            print(f"Error parsing simulation output {output_file}: {e}")
+            print(f"Error parsing {output_file}: {e}")
             return None
-
         return np.array(outputs) if outputs else None
 
-    # ------------------------------------------------------------------
+    # ==================================================================
     # Metrics
-    # ------------------------------------------------------------------
+    # ==================================================================
     def calculate_sqnr(self, golden, approximate):
-        signal_power = np.mean(np.abs(golden) ** 2)
-        noise_power  = np.mean(np.abs(golden - approximate) ** 2)
+        sig_power   = np.mean(np.abs(golden) ** 2)
+        noise_power = np.mean(np.abs(golden - approximate) ** 2)
         if noise_power == 0:
             return float('inf')
-        return 10 * np.log10(signal_power / noise_power)
+        return 10 * np.log10(sig_power / noise_power)
 
     def calculate_mean_error(self, golden, approximate):
         return float(np.mean(np.abs(golden - approximate)))
 
-    # ------------------------------------------------------------------
+    # ==================================================================
     # Top-level entry point
-    # ------------------------------------------------------------------
+    # ==================================================================
     def evaluate_design(self, verilog_file, design_name):
         """
         Run simulation and return (avg_sqnr_dB, avg_mae).
+        On failure returns (-100.0, 1e6).
         """
+        design_name = self._sanitize_name(design_name)
         sim_outputs = self.run_verilog_simulation(verilog_file, design_name)
-
         if sim_outputs is None or len(sim_outputs) == 0:
             return -100.0, 1e6
 
-        num_tests   = len(self.test_vectors)
-        total_sqnr  = 0.0
-        total_mae   = 0.0
-        valid_tests = 0
+        n          = self.fft_size
+        num_tests  = len(self.test_vectors)
+        total_sqnr = 0.0
+        total_mae  = 0.0
+        valid      = 0
 
-        for i in range(min(num_tests, len(sim_outputs) // self.fft_size)):
-            start = i * self.fft_size
-            approx  = sim_outputs[start : start + self.fft_size]
-            golden  = self.golden_outputs[i]
+        for i in range(min(num_tests, len(sim_outputs) // n)):
+            approx = sim_outputs[i * n : (i + 1) * n]
+            golden = self.golden_outputs[i]
 
             sqnr = self.calculate_sqnr(golden, approx)
             mae  = self.calculate_mean_error(golden, approx)
 
-            if not (np.isinf(sqnr) or np.isnan(sqnr)):
+            if not (math.isinf(sqnr) or math.isnan(sqnr)):
                 total_sqnr += sqnr
                 total_mae  += mae
-                valid_tests += 1
+                valid      += 1
 
-        if valid_tests == 0:
+        if valid == 0:
             return -100.0, 1e6
+        return total_sqnr / valid, total_mae / valid
 
-        return total_sqnr / valid_tests, total_mae / valid_tests
 
-
-# ---------------------------------------------------------------------------
+# =============================================================================
+# Quick smoke-test
+# =============================================================================
 def test_evaluator():
-    evaluator = PerformanceEvaluator(fft_size=8)
-    print(f"Test vectors : {len(evaluator.test_vectors)}")
-    print(f"FFT size     : {evaluator.fft_size}")
-    print(f"FP4 0b0101   → {evaluator.fp4_to_float(0b0101):.4f}  (expect 1.5)")
-    print(f"FP8 0b01000011 → {evaluator.fp8_to_float(0b01000011):.4f}")
+    ev = PerformanceEvaluator(fft_size=8)
+    print(f"Test vectors : {len(ev.test_vectors)}")
+    print(f"FFT size     : {ev.fft_size}")
+    print(f"FP4 0b0101   → {ev.fp4_to_float(0b0101):.4f}  (expect 1.5)")
+    print(f"FP8 0b01000011 → {ev.fp8_to_float(0b01000011):.6f}  (expect ~1.375)")
+    print(f"FP8(1.0) encode → 0x{ev.float_to_fp8_e4m3(1.0):02x}  (expect 0x38)")
+    print(f"FP8(0.0) encode → 0x{ev.float_to_fp8_e4m3(0.0):02x}  (expect 0x00)")
 
 
 if __name__ == "__main__":

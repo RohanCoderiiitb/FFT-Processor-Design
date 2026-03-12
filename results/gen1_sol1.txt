@@ -6,10 +6,10 @@ Chromosome Length : 6
 Chromosome        : [1, 1, 1, 1, 1, 1]
 
 Results:
-  Power  : 0.251000 W
-  Area   : 17955 LUTs
-  SQNR   : -100.00 dB
-  MAE    : 1000000.000000
+  Power  : 0.355000 W
+  Area   : 17371 LUTs
+  SQNR   : -0.96 dB
+  MAE    : 2.810690
 
 Overall Precision Distribution:
   FP4 Multipliers: 0 (0.0%)

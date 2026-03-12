@@ -15,31 +15,27 @@ module dit_fft_agu_variable #(
     output reg done_fft, //goes high when fft is done (all stages)
     output reg [ADDR_WIDTH-1:0] curr_stage, //current stage (0 to log2(MAX_N)-1)
 
-    // Note: The floating twiddle_output has been removed to avoid missing PRECISION port errors 
-    // since the core module instantiates its own twiddle ROM.
+    // Floating twiddle_output removed to avoid missing PRECISION port errors 
     output [15:0] twiddle_output 
 );
 
-    // Provide a safe default for the floating output
     assign twiddle_output = 16'h0000;
 
     reg [ADDR_WIDTH-1:0] total_stages;
     
-    // Robust stage calculation to prevent 32-bit shift underflow deadlock
+    // Explicit 10-bit matching to prevent simulator case/shift underflow bugs
     always @(*) begin
-        case (N)
-            1024: total_stages = 10;
-            512:  total_stages = 9;
-            256:  total_stages = 8;
-            128:  total_stages = 7;
-            64:   total_stages = 6;
-            32:   total_stages = 5;
-            16:   total_stages = 4;
-            8:    total_stages = 3;
-            4:    total_stages = 2;
-            2:    total_stages = 1;
-            default: total_stages = 0;
-        endcase
+        if      (N == 10'd1024 || N == 10'd0) total_stages = 10'd10;
+        else if (N == 10'd512) total_stages = 10'd9;
+        else if (N == 10'd256) total_stages = 10'd8;
+        else if (N == 10'd128) total_stages = 10'd7;
+        else if (N == 10'd64)  total_stages = 10'd6;
+        else if (N == 10'd32)  total_stages = 10'd5;
+        else if (N == 10'd16)  total_stages = 10'd4;
+        else if (N == 10'd8)   total_stages = 10'd3;
+        else if (N == 10'd4)   total_stages = 10'd2;
+        else if (N == 10'd2)   total_stages = 10'd1;
+        else                   total_stages = 10'd3; // Failsafe
     end
 
     //implementing decimation in time (DIT) algorithm
@@ -56,7 +52,9 @@ module dit_fft_agu_variable #(
     wire [ADDR_WIDTH-1:0] k_idx = butterfly * (N / group_size);
     assign k = k_idx; 
 
-    wire [ADDR_WIDTH-1:0] num_groups = N >> (curr_stage + 1); 
+    // Explicit shift amount to bypass 32-bit addition simulator quirks
+    wire [ADDR_WIDTH-1:0] shift_amt = curr_stage + 1;
+    wire [ADDR_WIDTH-1:0] num_groups = N >> shift_amt; 
 
     always @(posedge clk or negedge reset) begin
         if (!reset) begin

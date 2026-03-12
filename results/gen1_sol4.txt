@@ -1,0 +1,25 @@
+FFT Size          : 8
+Generation        : 1
+Solution ID       : 4
+Num Stages        : 3
+Chromosome Length : 6
+Chromosome        : [1, 0, 1, 0, 1, 0]
+
+Results:
+  Power  : 0.280000 W
+  Area   : 16996 LUTs
+  SQNR   : -4.02 dB
+  MAE    : 3.799123
+
+Overall Precision Distribution:
+  FP4 Multipliers: 0 (0.0%)
+  FP8 Multipliers: 3 (100.0%)
+  FP4 Adders     : 3 (100.0%)
+  FP8 Adders     : 0 (0.0%)
+
+Per-Stage Breakdown:
+Stage    FP4 Mult     FP8 Mult     FP4 Add      FP8 Add     
+------------------------------------------------------------
+0        0            1            1            0           
+1        0            1            1            0           
+2        0            1            1            0           

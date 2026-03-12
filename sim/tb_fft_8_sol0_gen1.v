@@ -1,116 +1,157 @@
+// Auto-generated testbench for fft_8_sol0_gen1_top
+// Mirrors tb_fft_test.v interface exactly.
 `timescale 1ns/1ps
 
 module tb_fft_8_sol0_gen1;
 
-    // DUT signals
-    reg         clk;
-    reg         rst;
-    reg         data_in_valid;
-    reg  [23:0] data_in;
-    wire        fft_ready;
-    wire        data_out_valid;
-    wire [23:0] data_out;
-    wire        done;
-    wire        error;
+    reg        clk;
+    reg        rst;
+    reg        start;
+    wire       done;
 
-    // Debug signals
-    reg [31:0] cycle_count;
+    reg        load_en;
+    reg  [2:0]  load_addr;
+    reg  [15:0] load_data;
 
-    // Test-vector storage
-    reg [23:0] tv_24bit [31:0];
+    reg        unload_en;
+    reg  [2:0]  unload_addr;
+    wire [15:0] unload_data;
 
-    // All integers at module scope
-    integer test_idx, sample_idx;
-    integer out_file;
-    integer received;
-    integer wait_cnt;
+    integer i, ti, out_file;
 
-    // DUT instantiation
-    fft_8_sol0_gen1_top #(
-        .MAX_N     (1024),
-        .ADDR_WIDTH(10)
-    ) dut (
-        .clk           (clk),
-        .rst           (rst),
-        .N             (10'd8),
-        .data_in_valid (data_in_valid),
-        .data_in       (data_in),
-        .fft_ready     (fft_ready),
-        .data_out_valid(data_out_valid),
-        .data_out      (data_out),
-        .done          (done),
-        .error         (error)
+    // Test vector storage: fp8 packed {real[7:0], imag[7:0]}
+    reg [15:0] tv [31:0];
+
+    // DUT
+    fft_8_sol0_gen1_top dut (
+        .clk        (clk),
+        .rst        (rst),
+        .start      (start),
+        .done       (done),
+        .load_en    (load_en),
+        .load_addr  (load_addr),
+        .load_data  (load_data),
+        .unload_en  (unload_en),
+        .unload_addr(unload_addr),
+        .unload_data(unload_data)
     );
 
+    // 100 MHz clock
     initial clk = 0;
     always  #5 clk = ~clk;
 
-    // Cycle counter for debugging
-    always @(posedge clk) begin
-        cycle_count <= cycle_count + 1;
-    end
-
-    initial begin : STIM
-        out_file = $fopen("/home/fftacc/FFT-Hardware/FFT-Processor-Design/sim/fft_8_sol0_gen1_output.txt", "w");
-        $readmemh("/home/fftacc/FFT-Hardware/FFT-Processor-Design/sim/test_vectors.hex", tv_24bit);
-        rst           = 0;
-        data_in_valid = 0;
-        data_in       = 0;
-        cycle_count   = 0;
-        repeat(8) @(posedge clk);
-        rst = 1;
-        repeat(10) @(posedge clk);
-        $display("INFO [%s]: reset released at cycle %0d", "fft_8_sol0_gen1", cycle_count);
-
-        for (test_idx = 0; test_idx < 4; test_idx = test_idx + 1) begin
-            $display("INFO [%s]: starting test %0d at cycle %0d", "fft_8_sol0_gen1", test_idx, cycle_count);
-            wait_cnt = 0;
-            while (!fft_ready && wait_cnt < 12000) begin
-                @(posedge clk); wait_cnt = wait_cnt + 1;
-                if (wait_cnt % 1000 == 0)
-                    $display("DEBUG [%s]: waiting for fft_ready... cycle %0d, fft_ready=%%b", "fft_8_sol0_gen1", cycle_count, fft_ready);
-            end
-            if (!fft_ready) begin
-                $display("ERROR [%s]: fft_ready stuck low after %%0d cycles test %%0d", "fft_8_sol0_gen1", wait_cnt, test_idx);
-                $display("DEBUG [%s]: done=%%b, error=%%b", "fft_8_sol0_gen1", done, error);
-                $fclose(out_file); $finish;
-            end
-            $display("INFO [%s]: fft_ready asserted at cycle %0d", "fft_8_sol0_gen1", cycle_count);
-
-            for (sample_idx = 0; sample_idx < 8; sample_idx = sample_idx + 1) begin
-                @(posedge clk);
-                data_in_valid = 1;
-                data_in = {tv_24bit[test_idx*8+sample_idx]};
-                if (sample_idx == 0)
-                    $display("INFO [%s]: first sample at cycle %0d: %%h", "fft_8_sol0_gen1", cycle_count, data_in);
-            end
-            @(posedge clk); data_in_valid = 0;
-            $display("INFO [%s]: finished feeding samples at cycle %0d", "fft_8_sol0_gen1", cycle_count);
-
-            received = 0; wait_cnt = 0;
-            while (received < 8 && wait_cnt < 360) begin
-                @(posedge clk);
-                if (data_out_valid) begin
-                    $fwrite(out_file, "%%06h\n", data_out);
-                    received = received + 1;
-                    if (received == 1)
-                        $display("INFO [%s]: first output at cycle %0d: %%h", "fft_8_sol0_gen1", cycle_count, data_out);
-                end
-                wait_cnt = wait_cnt + 1;
-            end
-            if (received < 8)
-                $display("WARN [%s]: got %%0d/%%0d outputs test %%0d", "fft_8_sol0_gen1", received, 8, test_idx);
-            else
-                $display("INFO [%s]: test %%0d complete, got %%0d outputs at cycle %0d", "fft_8_sol0_gen1", test_idx, received, cycle_count);
-        end
-        $fclose(out_file);
-        $display("INFO [%s]: all tests complete at cycle %0d", "fft_8_sol0_gen1", cycle_count);
+    // Watchdog
+    initial begin
+        #36240;
+        $display("WATCHDOG TIMEOUT for fft_8_sol0_gen1");
         $finish;
     end
 
-    initial begin
-        #29640;
-        $display("ERROR [%s]: watchdog! cycle count = %%0d", "fft_8_sol0_gen1", cycle_count);
+    initial begin : STIM
+        integer wait_cnt;
+
+        // Pre-load test vectors
+        tv[0] = 16'h3800;
+        tv[1] = 16'h0000;
+        tv[2] = 16'h0000;
+        tv[3] = 16'h0000;
+        tv[4] = 16'h0000;
+        tv[5] = 16'h0000;
+        tv[6] = 16'h0000;
+        tv[7] = 16'h0000;
+        tv[8] = 16'h3800;
+        tv[9] = 16'h3800;
+        tv[10] = 16'h3800;
+        tv[11] = 16'h3800;
+        tv[12] = 16'h3800;
+        tv[13] = 16'h3800;
+        tv[14] = 16'h3800;
+        tv[15] = 16'h3800;
+        tv[16] = 16'h3800;
+        tv[17] = 16'h3333;
+        tv[18] = 16'h0038;
+        tv[19] = 16'hb333;
+        tv[20] = 16'hb800;
+        tv[21] = 16'hb3b3;
+        tv[22] = 16'h80b8;
+        tv[23] = 16'h33b3;
+        tv[24] = 16'h3800;
+        tv[25] = 16'h0038;
+        tv[26] = 16'hb800;
+        tv[27] = 16'h80b8;
+        tv[28] = 16'h3880;
+        tv[29] = 16'h0038;
+        tv[30] = 16'hb800;
+        tv[31] = 16'h80b8;
+
+        // Open output file
+        out_file = $fopen("/home/fftacc/FFT-Hardware/FFT-Processor-Design/sim/fft_8_sol0_gen1_output.txt", "w");
+
+        // Initialise signals
+        rst        = 0;
+        start      = 0;
+        load_en    = 0;
+        load_addr  = 0;
+        load_data  = 0;
+        unload_en  = 0;
+        unload_addr= 0;
+
+        // Hold reset for 8 cycles then release
+        repeat(8) @(posedge clk);
+        rst = 1;
+        repeat(4) @(posedge clk);
+
+        // Run each test vector
+        for (ti = 0; ti < 4; ti = ti + 1) begin
+
+            // --- Load phase ---
+            @(posedge clk);
+            load_en = 1;
+            for (i = 0; i < 8; i = i + 1) begin
+                load_addr = i[2:0];
+                load_data = tv[ti*8 + i];
+                @(posedge clk);
+            end
+            load_en = 0;
+
+            @(posedge clk);
+
+            // --- Run FFT ---
+            start = 1;
+            @(posedge clk);
+            start = 0;
+
+            // Wait for done
+            wait_cnt = 0;
+            while (!done && wait_cnt < 1384) begin
+                @(posedge clk);
+                wait_cnt = wait_cnt + 1;
+            end
+            if (!done)
+                $display("WARN: done never asserted for test %0d, design fft_8_sol0_gen1", ti);
+
+            @(posedge clk);
+
+            // --- Unload phase ---
+            // Memory has 2-cycle read latency.
+            // For each sample: assert address, wait 3 posedge clk, sample data.
+            unload_en = 1;
+            for (i = 0; i < 8; i = i + 1) begin
+                unload_addr = i[2:0];
+                @(posedge clk);
+                @(posedge clk);
+                @(posedge clk);
+                $fwrite(out_file, "%04h\n", unload_data);
+            end
+            unload_en = 0;
+
+            @(posedge clk);
+            @(posedge clk);
+
+        end // for ti
+
+        $fclose(out_file);
+        $display("Simulation complete for fft_8_sol0_gen1. Results in /home/fftacc/FFT-Hardware/FFT-Processor-Design/sim/fft_8_sol0_gen1_output.txt");
         $finish;
     end
 
