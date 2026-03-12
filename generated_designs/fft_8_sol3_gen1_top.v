@@ -30,13 +30,14 @@ module fft_8_sol3_gen1_top #(
     wire [23:0]          rd_data;
     wire                 fft_done;
 
-    // Bit-reversal on write address
+    // Bit-reversal on write address (Updated to pass dynamic N)
     wire [ADDR_WIDTH-1:0] wr_addr_reversed;
     bit_reverse #(
-        .MAX_N(1024),
+        .MAX_N(MAX_N),
         .WIDTH(ADDR_WIDTH)
     ) bit_rev (
         .in (wr_addr),
+        .N  (N),
         .out(wr_addr_reversed)
     );
 
@@ -52,7 +53,7 @@ module fft_8_sol3_gen1_top #(
     reg                  fft_start, fft_start_issued;
     reg                  read_bank_sel;
     
-    // Wire definition fixes the 1-cycle latency mismatch in MEM_READ
+    // Combinational external read select
     wire                 ext_reading;
     assign ext_reading = (mem_state == MEM_READ);
 
@@ -164,9 +165,8 @@ module fft_8_sol3_gen1_top #(
                         rd_addr_count <= rd_addr_count + 1;
                     end
 
-                    // Phase 2: after 2-cycle pipeline delay, data becomes valid
-                    // rd_addr_count reaches 2 means addr 0 was issued 2 cycles ago
-                    if (rd_addr_count >= 2 && output_count < N) begin
+                    // Phase 2: Pipeline fix - Full pipeline depth evaluates to 3 latency cycles
+                    if (rd_addr_count >= 3 && output_count < N) begin
                         data_out       <= rd_data;
                         data_out_valid <= 1;
                         output_count   <= output_count + 1;

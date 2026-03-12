@@ -33,21 +33,19 @@ module fft_8_sol3_gen1_core #(
     localparam IDLE         = 4'd0;
     localparam INIT         = 4'd1;
     localparam READ_A       = 4'd2;
-    localparam WAIT_1       = 4'd3;
-    localparam WAIT_A       = 4'd4;
-    localparam READ_B       = 4'd5;
-    localparam WAIT_2       = 4'd6;
-    localparam WAIT_B       = 4'd7;
-    localparam COMPUTE_LOAD = 4'd8;
-    localparam COMPUTE_MATH = 4'd9;
-    localparam WRITE_X      = 4'd10;
-    localparam WRITE_Y      = 4'd11;
-    localparam DONE         = 4'd12;
+    localparam WAIT_A       = 4'd3;
+    localparam READ_B       = 4'd4;
+    localparam WAIT_B       = 4'd5;
+    localparam COMPUTE_LOAD = 4'd7;
+    localparam COMPUTE_MATH = 4'd8;
+    localparam WRITE_X      = 4'd9;
+    localparam WRITE_Y      = 4'd10;
+    localparam DONE         = 4'd11;
 
     reg [3:0] state, next_state;
 
     // ----------------------------------------------------------------
-    // Per-stage precision localparams (baked in from chromosome)
+    // Per-stage precision localparams
     // ----------------------------------------------------------------
     localparam STAGE0_MULT_PREC = 1;
     localparam STAGE0_ADD_PREC  = 1;
@@ -62,9 +60,6 @@ module fft_8_sol3_gen1_core #(
     localparam STAGE2_OUT_PREC  = 0;
     localparam STAGE2_RD_PREC   = 0;
 
-    // ----------------------------------------------------------------
-    // Runtime precision control registers
-    // ----------------------------------------------------------------
     reg current_mult_prec;
     reg current_add_prec;
     reg memory_read_prec;
@@ -79,11 +74,12 @@ module fft_8_sol3_gen1_core #(
     wire [10-1:0] curr_stage;
 
     dit_fft_agu_variable #(
-        .MAX_N     (1024),
+        .MAX_N     (MAX_N),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) agu_inst (
         .clk          (clk),
         .reset        (rst),
+        .start        (start), 
         .N            (N),
         .next_step    (agu_next_step),
         .idx_a        (idx_a),
@@ -95,9 +91,6 @@ module fft_8_sol3_gen1_core #(
         .twiddle_output()
     );
 
-    // ----------------------------------------------------------------
-    // Precision mux: drive *_prec regs from curr_stage
-    // ----------------------------------------------------------------
     always @(*) begin
         case (curr_stage)
             2'd0: begin
@@ -143,18 +136,15 @@ module fft_8_sol3_gen1_core #(
     wire [ADDR_WIDTH-1:0] final_rd_addr = ext_reading ? ext_rd_addr : int_rd_addr;
 
     reg fft_bank_sel;
-    
-    // Stage complete detect for bank flip
     reg prev_done_stage;
     wire stage_complete = agu_done_stage && !prev_done_stage;
     
-    // Eagerly combinationally select the bank so memory sees it on cycle 0 of READ_A
     wire active_bank_sel = ext_reading    ? ext_bank_sel :
                            (state == IDLE)? ext_bank_sel :
                            (stage_complete ? ~fft_bank_sel : fft_bank_sel);
 
     mixed_memory_unified #(
-        .n         (1024),
+        .n         (MAX_N),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) memory_inst (
         .clk         (clk),
@@ -173,16 +163,13 @@ module fft_8_sol3_gen1_core #(
                             : {16'h0000, int_rd_data_16[7:0]};
     assign rd_data_0 = int_rd_data_24;
 
-    // ----------------------------------------------------------------
-    // Expand 16-bit memory read to 24-bit butterfly input bus
-    // ----------------------------------------------------------------
     wire [15:0] mem_rd_16;
     assign mem_rd_16 = int_rd_data_16;
 
     wire [23:0] mem_rd_24;
     assign mem_rd_24 = memory_read_prec
-                       ? {mem_rd_16[15:0], 8'h00}   // FP8: [23:8]
-                       : {16'h0000, mem_rd_16[7:0]}; // FP4: [7:0]
+                       ? {mem_rd_16[15:0], 8'h00}   
+                       : {16'h0000, mem_rd_16[7:0]}; 
 
     reg [23:0] A_mem_24, B_mem_24;
 
@@ -212,7 +199,6 @@ module fft_8_sol3_gen1_core #(
     wire        fp8_out_stage2;
 
     generate
-        // Stage 0: mult=1 add=1
         butterfly_wrapper #(
             .MULT_PRECISION(1),
             .ADD_PRECISION (1)
@@ -225,7 +211,6 @@ module fft_8_sol3_gen1_core #(
             .output_is_fp8(fp8_out_stage0)
         );
 
-        // Stage 1: mult=0 add=0
         butterfly_wrapper #(
             .MULT_PRECISION(0),
             .ADD_PRECISION (0)
@@ -238,7 +223,6 @@ module fft_8_sol3_gen1_core #(
             .output_is_fp8(fp8_out_stage1)
         );
 
-        // Stage 2: mult=0 add=0
         butterfly_wrapper #(
             .MULT_PRECISION(0),
             .ADD_PRECISION (0)
@@ -250,10 +234,8 @@ module fft_8_sol3_gen1_core #(
             .Y            (Y_stage2),
             .output_is_fp8(fp8_out_stage2)
         );
-
     endgenerate
 
-    // Select active butterfly output based on curr_stage
     reg [15:0] X_bf, Y_bf;
     reg        bf_output_is_fp8;
     always @(*) begin
@@ -277,9 +259,6 @@ module fft_8_sol3_gen1_core #(
         endcase
     end
 
-    // ----------------------------------------------------------------
-    // FP4 ↔ FP8 conversion wires for write-back packing
-    // ----------------------------------------------------------------
     wire [7:0]  X_bf_fp4_conv, Y_bf_fp4_conv;
     wire [15:0] X_bf_fp8_expanded, Y_bf_fp8_expanded;
 
@@ -293,9 +272,6 @@ module fft_8_sol3_gen1_core #(
     fp4_to_fp8_converter conv_y_fp4r (.fp4_in(Y_bf[7:4]), .fp8_out(Y_bf_fp8_expanded[15:8]));
     fp4_to_fp8_converter conv_y_fp4i (.fp4_in(Y_bf[3:0]), .fp8_out(Y_bf_fp8_expanded[7:0]));
 
-    // ----------------------------------------------------------------
-    // Registered butterfly results
-    // ----------------------------------------------------------------
     reg [15:0] X_reg, Y_reg;
     reg        output_was_fp8;
 
@@ -325,7 +301,6 @@ module fft_8_sol3_gen1_core #(
             agu_next_step   <= 0;
             prev_done_stage <= agu_done_stage;
 
-            // Latch the bank flip so it persists through the stage
             if (stage_complete && state != IDLE && state != DONE)
                 fft_bank_sel <= ~fft_bank_sel;
 
@@ -344,25 +319,20 @@ module fft_8_sol3_gen1_core #(
                     int_rd_addr <= idx_a;
                 end
 
-                WAIT_1: begin end
-
                 WAIT_A: begin end
 
                 READ_B: begin
-                    A_mem_24    <= mem_rd_24; // A is ready
+                    A_mem_24    <= mem_rd_24; 
                     int_rd_addr <= idx_b;
                 end
-
-                WAIT_2: begin end
 
                 WAIT_B: begin end
 
                 COMPUTE_LOAD: begin
-                    B_mem_24 <= mem_rd_24;    // Load B so the butterfly unit can calculate
+                    B_mem_24 <= mem_rd_24;    
                 end
 
                 COMPUTE_MATH: begin
-                    // Wait 1 cycle for butterfly combinational logic to settle, then latch
                     X_reg          <= X_bf;
                     Y_reg          <= Y_bf;
                     output_was_fp8 <= bf_output_is_fp8;
@@ -375,6 +345,10 @@ module fft_8_sol3_gen1_core #(
                         int_wr_data <= {X_reg, X_bf_fp4_conv};
                     else
                         int_wr_data <= {X_bf_fp8_expanded, X_reg[7:0]};
+                        
+                    // CRITICAL FIX: Pulse AGU here so it updates at the loop boundary, 
+                    // preventing misaligned indices on the next READ_A
+                    agu_next_step <= 1; 
                 end
 
                 WRITE_Y: begin
@@ -384,8 +358,6 @@ module fft_8_sol3_gen1_core #(
                         int_wr_data <= {Y_reg, Y_bf_fp4_conv};
                     else
                         int_wr_data <= {Y_bf_fp8_expanded, Y_reg[7:0]};
-                        
-                    agu_next_step <= 1; // Tell AGU to advance
                 end
                 
                 DONE: begin
@@ -403,16 +375,14 @@ module fft_8_sol3_gen1_core #(
         case (state)
             IDLE         : if (start && !error) next_state = INIT;
             INIT         : next_state = READ_A;
-            READ_A       : next_state = WAIT_1;
-            WAIT_1       : next_state = WAIT_A;
+            READ_A       : next_state = agu_done_fft ? DONE : WAIT_A;
             WAIT_A       : next_state = READ_B;
-            READ_B       : next_state = WAIT_2;
-            WAIT_2       : next_state = WAIT_B;
+            READ_B       : next_state = WAIT_B;
             WAIT_B       : next_state = COMPUTE_LOAD;
             COMPUTE_LOAD : next_state = COMPUTE_MATH;
             COMPUTE_MATH : next_state = WRITE_X;
             WRITE_X      : next_state = WRITE_Y;
-            WRITE_Y      : next_state = agu_done_fft ? DONE : READ_A;
+            WRITE_Y      : next_state = READ_A;
             DONE         : next_state = IDLE;
             default      : next_state = IDLE;
         endcase
