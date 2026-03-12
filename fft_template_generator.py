@@ -178,17 +178,26 @@ class FFTTemplateGenerator:
                 f"                memory_write_prec  = STAGE{sn}_OUT_PREC;\n"
                 f"            end"
             )
+        
+        last_stage = ns - 1
         return (
             "    always @(*) begin\n"
-            "        case (curr_stage)\n"
+            "        if (ext_reading) begin\n"
+            "            current_mult_prec = 0;\n"
+            "            current_add_prec  = 0;\n"
+            f"            memory_read_prec  = STAGE{last_stage}_OUT_PREC;\n"
+            "            memory_write_prec = 0;\n"
+            "        end else begin\n"
+            "            case (curr_stage)\n"
             + '\n'.join(cases) + "\n"
-            "            default: begin\n"
-            "                current_mult_prec = 0;\n"
-            "                current_add_prec  = 0;\n"
-            "                memory_read_prec  = 0;\n"
-            "                memory_write_prec = 0;\n"
-            "            end\n"
-            "        endcase\n"
+            "                default: begin\n"
+            "                    current_mult_prec = 0;\n"
+            "                    current_add_prec  = 0;\n"
+            "                    memory_read_prec  = 0;\n"
+            "                    memory_write_prec = 0;\n"
+            "                end\n"
+            "            endcase\n"
+            "        end\n"
             "    end"
         )
 
@@ -332,20 +341,21 @@ module {core_module_name} #(
     // ----------------------------------------------------------------
     // State machine encoding
     // ----------------------------------------------------------------
-    localparam IDLE     = 4'd0;
-    localparam INIT     = 4'd1;
-    localparam READ_A   = 4'd2;
-    localparam WAIT_1   = 4'd3;
-    localparam WAIT_A   = 4'd4;
-    localparam READ_B   = 4'd5;
-    localparam WAIT_2   = 4'd6;
-    localparam WAIT_B   = 4'd7;
-    localparam COMPUTE  = 4'd8;
-    localparam WRITE_X  = 4'd9;
-    localparam WRITE_Y  = 4'd10;
-    localparam WAIT_AGU = 4'd11;
-    localparam EVAL_AGU = 4'd12;
-    localparam DONE     = 4'd13;
+    localparam IDLE      = 4'd0;
+    localparam INIT      = 4'd1;
+    localparam READ_A    = 4'd2;
+    localparam WAIT_1    = 4'd3;
+    localparam WAIT_A    = 4'd4;
+    localparam READ_B    = 4'd5;
+    localparam WAIT_2    = 4'd6;
+    localparam WAIT_B    = 4'd7;
+    localparam CAPTURE_B = 4'd8;
+    localparam COMPUTE   = 4'd9;
+    localparam WRITE_X   = 4'd10;
+    localparam WRITE_Y   = 4'd11;
+    localparam WAIT_AGU  = 4'd12;
+    localparam EVAL_AGU  = 4'd13;
+    localparam DONE      = 4'd14;
 
     reg [3:0] state, next_state;
 
@@ -366,6 +376,7 @@ module {core_module_name} #(
     // AGU
     // ----------------------------------------------------------------
     reg agu_next_step;
+    reg start_agu;
     wire [ADDR_WIDTH-1:0] idx_a, idx_b, k;
     wire agu_done_stage, agu_done_fft;
     wire [{stage_bits}-1:0] curr_stage;
@@ -376,6 +387,7 @@ module {core_module_name} #(
     ) agu_inst (
         .clk          (clk),
         .reset        (rst),
+        .start        (start_agu), // FIXED: Wire up AGU reset
         .N            (N),
         .next_step    (agu_next_step),
         .idx_a        (idx_a),
@@ -493,12 +505,14 @@ module {core_module_name} #(
             int_wr_addr     <= 0;
             int_wr_data     <= 0;
             agu_next_step   <= 0;
+            start_agu       <= 0;
             fft_bank_sel    <= 0;
             prev_done_stage <= 0;
         end else begin
             state           <= next_state;
             int_wr_en       <= 0;
             agu_next_step   <= 0;
+            start_agu       <= 0; // default to 0
             prev_done_stage <= agu_done_stage;
 
             if (stage_complete && state != IDLE && state != DONE)
@@ -513,14 +527,15 @@ module {core_module_name} #(
                         error <= 1;
                 end
 
-                INIT: begin end
+                INIT: begin
+                    start_agu <= 1; // Send initialization pulse to AGU
+                end
 
                 READ_A: begin
                     int_rd_addr <= idx_a;
                 end
 
                 WAIT_1: begin end
-
                 WAIT_A: begin end
 
                 READ_B: begin
@@ -529,11 +544,13 @@ module {core_module_name} #(
                 end
 
                 WAIT_2: begin end
-
                 WAIT_B: begin end
 
+                CAPTURE_B: begin
+                    B_mem_24 <= mem_rd_24; // Ensure stable B before COMPUTE state combinational evaluation
+                end
+
                 COMPUTE: begin
-                    B_mem_24       <= mem_rd_24;
                     X_reg          <= X_bf;
                     Y_reg          <= Y_bf;
                     output_was_fp8 <= bf_output_is_fp8;
@@ -558,15 +575,14 @@ module {core_module_name} #(
                     agu_next_step <= 1;
                 end
                 
-                WAIT_AGU: begin 
-                    // Do nothing wait for AGU to push done_fft flag correctly 
-                end 
+                WAIT_AGU: begin end 
                 
                 EVAL_AGU: begin 
+                    if (agu_done_fft) done <= 1'b1; // Trigger done signal safely
                 end 
 
                 DONE: begin
-                    done <= 1'b1;
+                    done <= 1'b0; // Create 1-clock length clear pulse for outer FSM
                 end
             endcase
         end
@@ -578,21 +594,22 @@ module {core_module_name} #(
     always @(*) begin
         next_state = state;
         case (state)
-            IDLE    : if (start && !error) next_state = INIT;
-            INIT    : next_state = READ_A;
-            READ_A  : next_state = WAIT_1;
-            WAIT_1  : next_state = WAIT_A;
-            WAIT_A  : next_state = READ_B;
-            READ_B  : next_state = WAIT_2;
-            WAIT_2  : next_state = WAIT_B;
-            WAIT_B  : next_state = COMPUTE;
-            COMPUTE : next_state = WRITE_X;
-            WRITE_X : next_state = WRITE_Y;
-            WRITE_Y : next_state = WAIT_AGU;
-            WAIT_AGU: next_state = EVAL_AGU;
-            EVAL_AGU: next_state = agu_done_fft ? DONE : READ_A;
-            DONE    : next_state = IDLE;
-            default : next_state = IDLE;
+            IDLE      : if (start && !error) next_state = INIT;
+            INIT      : next_state = READ_A;
+            READ_A    : next_state = WAIT_1;
+            WAIT_1    : next_state = WAIT_A;
+            WAIT_A    : next_state = READ_B;
+            READ_B    : next_state = WAIT_2;
+            WAIT_2    : next_state = WAIT_B;
+            WAIT_B    : next_state = CAPTURE_B;
+            CAPTURE_B : next_state = COMPUTE;
+            COMPUTE   : next_state = WRITE_X;
+            WRITE_X   : next_state = WRITE_Y;
+            WRITE_Y   : next_state = WAIT_AGU;
+            WAIT_AGU  : next_state = EVAL_AGU;
+            EVAL_AGU  : next_state = agu_done_fft ? DONE : READ_A;
+            DONE      : next_state = IDLE;
+            default   : next_state = IDLE;
         endcase
     end
 
@@ -653,7 +670,7 @@ module {top_module_name} #(
         .WIDTH(ADDR_WIDTH)
     ) bit_rev (
         .in (wr_addr),
-        .N  (N),     // FIXED: Wired up missing runtime N port
+        .N  (N),     
         .out(wr_addr_reversed)
     );
 
@@ -782,7 +799,7 @@ module {top_module_name} #(
                         rd_addr_count <= rd_addr_count + 1;
                     end
 
-                    // Phase 2: FIXED. Wait 3 cycles for the data to be fully stable in rd_data
+                    // Phase 2: Wait 3 cycles for the data to be fully stable in rd_data
                     //   (Cycle 1: address updates, Cycle 2: memory fetches data, Cycle 3: sliced to port)
                     if (rd_addr_count >= 3 && output_count < N) begin
                         data_out       <= rd_data;
