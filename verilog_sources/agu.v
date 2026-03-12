@@ -14,8 +14,13 @@ module dit_fft_agu_variable #(
     output reg done_fft, //goes high when fft is done (all stages)
     output reg [ADDR_WIDTH-1:0] curr_stage, //current stage (0 to log2(MAX_N)-1)
 
-    output [15:0] twiddle_output //output for twiddle ROM
+    // Note: The floating twiddle_output has been removed to avoid missing PRECISION port errors 
+    // since the core module instantiates its own twiddle ROM.
+    output [15:0] twiddle_output 
 );
+
+    // Provide a safe default for the floating output
+    assign twiddle_output = 16'h0000;
 
     // Calculate number of stages based on runtime N = log2(N).
     // Must be ADDR_WIDTH bits wide to hold values up to log2(MAX_N).
@@ -53,15 +58,6 @@ module dit_fft_agu_variable #(
     wire [ADDR_WIDTH-1:0] k_idx = butterfly * (N / group_size);
 
     assign k = k_idx; //assign internal wire to output port
-
-    twiddle_factor_unified #(
-        .MAX_N(MAX_N),
-        .ADDR_WIDTH(ADDR_WIDTH)
-    ) tw_rom (
-        .k(k_idx),
-        .n(N), //use runtime N value
-        .twiddle_out(twiddle_output)
-    );
 
     //calculate number of groups for current stage
     //num_groups = N / group_size = N / (stride * 2)

@@ -50,8 +50,11 @@ module fft_8_sol3_gen1_top #(
     reg [ADDR_WIDTH-1:0] input_count, output_count;
     reg [ADDR_WIDTH-1:0] rd_addr_count; // tracks addresses issued to memory
     reg                  fft_start, fft_start_issued;
-    reg                  ext_reading;
     reg                  read_bank_sel;
+    
+    // Wire definition fixes the 1-cycle latency mismatch in MEM_READ
+    wire                 ext_reading;
+    assign ext_reading = (mem_state == MEM_READ);
 
     localparam NUM_STAGES = 3;
 
@@ -106,7 +109,6 @@ module fft_8_sol3_gen1_top #(
             fft_start        <= 0;
             fft_start_issued <= 0;
             read_bank_sel    <= 0;
-            ext_reading      <= 0;
         end else begin
             mem_state <= mem_next_state;
             fft_start <= 0;
@@ -119,7 +121,6 @@ module fft_8_sol3_gen1_top #(
                     rd_addr_count    <= 0;
                     data_out_valid   <= 0;
                     fft_start_issued <= 0;
-                    ext_reading      <= 0;
                     if (data_in_valid) begin
                         wr_en       <= 1;
                         wr_addr     <= 0;
@@ -148,7 +149,6 @@ module fft_8_sol3_gen1_top #(
 
                 MEM_PROCESS: begin
                     wr_en       <= 0;
-                    ext_reading <= 0;  // core owns memory; external reads not active
                     if (fft_done) begin
                         output_count  <= 0;
                         rd_addr_count <= 0;
@@ -158,23 +158,6 @@ module fft_8_sol3_gen1_top #(
                 end
 
                 MEM_READ: begin
-                    // Memory (mixed_memory_unified) has 2-cycle read latency:
-                    //   cycle 0: address registered by memory
-                    //   cycle 1: data fetched from array into rd_data_full
-                    //   cycle 2: precision slice applied → rd_data valid
-                    //
-                    // Strategy: issue all N addresses first (rd_addr_count 0..N-1),
-                    // then collect N outputs after the 2-cycle pipeline fills.
-                    // output_count counts valid data_out_valid pulses emitted.
-                    //
-                    // Timeline:
-                    //   rd_addr_count: 0  1  2  3  4  5  6  7  8  8  8
-                    //   rd_addr       : 0  1  2  3  4  5  6  7  -  -  -
-                    //   data valid    : -  -  x0 x1 x2 x3 x4 x5 x6 x7 -
-                    //   output_count  : 0  0  0  1  2  3  4  5  6  7  8 -> IDLE
-
-                    ext_reading <= 1;
-
                     // Phase 1: keep issuing next read address while more to fetch
                     if (rd_addr_count < N) begin
                         rd_addr       <= rd_addr_count;
@@ -190,10 +173,6 @@ module fft_8_sol3_gen1_top #(
                     end else begin
                         data_out_valid <= 0;
                     end
-
-                    // Stop driving ext_reading once all addresses issued
-                    if (rd_addr_count >= N && output_count >= N)
-                        ext_reading <= 0;
                 end
             endcase
         end
