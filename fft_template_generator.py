@@ -75,21 +75,14 @@ class FFTTemplateGenerator:
         out_dir = os.path.dirname(os.path.abspath(output_file))
         os.makedirs(out_dir, exist_ok=True)
 
-        # Derive unique module names from the output filename stem.
-        # e.g. output_file = "./generated_designs/fft_8_sol3_gen2.v"
-        #      stem             = "fft_8_sol3_gen2"
-        #      core_module_name = "fft_8_sol3_gen2_core"
-        #      top_module_name  = "fft_8_sol3_gen2_top"
         stem             = os.path.splitext(os.path.basename(output_file))[0]
         core_module_name = f"{stem}_core"
         top_module_name  = f"{stem}_top"
 
-        # Write core file (path supplied by caller, e.g. generated_designs/fft_8_sol3_gen2.v)
         core_code = self._generate_core(config, core_module_name=core_module_name)
         with open(output_file, 'w') as f:
             f.write(core_code)
 
-        # Write top file alongside the core in the same directory
         top_file = os.path.join(out_dir, f"{stem}_top.v")
         top_code = self._generate_top(config,
                                        core_module_name=core_module_name,
@@ -130,7 +123,7 @@ class FFTTemplateGenerator:
 
     def analyze_chromosome_statistics(self, chromosome):
         """Return dict of precision distribution stats (used by objectiveEvaluationFFT)."""
-        config = self.chromosome_to_config(chromosome)   # ← was _chromosome_to_config (typo fixed)
+        config = self.chromosome_to_config(chromosome)
         fp8_mult = sum(s['mult_precision'] for s in config['stages'])
         fp8_add  = sum(s['add_precision']  for s in config['stages'])
         fp4_mult = self.num_stages - fp8_mult
@@ -249,7 +242,6 @@ class FFTTemplateGenerator:
             ]
         lines.append("    endgenerate")
 
-        # Runtime output mux
         lines += [
             "",
             "    // Select active butterfly output based on curr_stage",
@@ -340,18 +332,20 @@ module {core_module_name} #(
     // ----------------------------------------------------------------
     // State machine encoding
     // ----------------------------------------------------------------
-    localparam IDLE    = 4'd0;
-    localparam INIT    = 4'd1;
-    localparam READ_A  = 4'd2;
-    localparam WAIT_1  = 4'd3;
-    localparam WAIT_A  = 4'd4;
-    localparam READ_B  = 4'd5;
-    localparam WAIT_2  = 4'd6;
-    localparam WAIT_B  = 4'd7;
-    localparam COMPUTE = 4'd8;
-    localparam WRITE_X = 4'd9;
-    localparam WRITE_Y = 4'd10;
-    localparam DONE    = 4'd11;
+    localparam IDLE     = 4'd0;
+    localparam INIT     = 4'd1;
+    localparam READ_A   = 4'd2;
+    localparam WAIT_1   = 4'd3;
+    localparam WAIT_A   = 4'd4;
+    localparam READ_B   = 4'd5;
+    localparam WAIT_2   = 4'd6;
+    localparam WAIT_B   = 4'd7;
+    localparam COMPUTE  = 4'd8;
+    localparam WRITE_X  = 4'd9;
+    localparam WRITE_Y  = 4'd10;
+    localparam WAIT_AGU = 4'd11;
+    localparam EVAL_AGU = 4'd12;
+    localparam DONE     = 4'd13;
 
     reg [3:0] state, next_state;
 
@@ -563,6 +557,14 @@ module {core_module_name} #(
                         int_wr_data <= {{Y_bf_fp8_expanded, Y_reg[7:0]}};
                     agu_next_step <= 1;
                 end
+                
+                WAIT_AGU: begin 
+                    // Do nothing wait for AGU to push done_fft flag correctly 
+                end 
+                
+                EVAL_AGU: begin 
+                end 
+
                 DONE: begin
                     done <= 1'b1;
                 end
@@ -576,19 +578,21 @@ module {core_module_name} #(
     always @(*) begin
         next_state = state;
         case (state)
-            IDLE   : if (start && !error) next_state = INIT;
-            INIT   : next_state = READ_A;
-            READ_A : next_state = WAIT_1;
-            WAIT_1 : next_state = WAIT_A;
-            WAIT_A : next_state = READ_B;
-            READ_B : next_state = WAIT_2;
-            WAIT_2 : next_state = WAIT_B;
-            WAIT_B : next_state = COMPUTE;
-            COMPUTE: next_state = WRITE_X;
-            WRITE_X: next_state = WRITE_Y;
-            WRITE_Y: next_state = agu_done_fft ? DONE : READ_A;
-            DONE   : next_state = IDLE;
-            default: next_state = IDLE;
+            IDLE    : if (start && !error) next_state = INIT;
+            INIT    : next_state = READ_A;
+            READ_A  : next_state = WAIT_1;
+            WAIT_1  : next_state = WAIT_A;
+            WAIT_A  : next_state = READ_B;
+            READ_B  : next_state = WAIT_2;
+            WAIT_2  : next_state = WAIT_B;
+            WAIT_B  : next_state = COMPUTE;
+            COMPUTE : next_state = WRITE_X;
+            WRITE_X : next_state = WRITE_Y;
+            WRITE_Y : next_state = WAIT_AGU;
+            WAIT_AGU: next_state = EVAL_AGU;
+            EVAL_AGU: next_state = agu_done_fft ? DONE : READ_A;
+            DONE    : next_state = IDLE;
+            default : next_state = IDLE;
         endcase
     end
 
@@ -602,6 +606,7 @@ endmodule
     def _generate_top(self, config, core_module_name=None, top_module_name=None):
         n  = config['fft_size']
         aw = config['addr_width']
+        MAXn = config['MAX_N_HW']
 
         if core_module_name is None:
             core_module_name = f"mixed_fft_{n}_core"
@@ -616,7 +621,7 @@ endmodule
 `timescale 1ns/1ps
 
 module {top_module_name} #(
-    parameter MAX_N      = {1024},
+    parameter MAX_N      = {MAXn},
     parameter ADDR_WIDTH = {aw}
 )(
     input  wire        clk,
@@ -644,10 +649,11 @@ module {top_module_name} #(
     // Bit-reversal on write address
     wire [ADDR_WIDTH-1:0] wr_addr_reversed;
     bit_reverse #(
-        .MAX_N({1024}),
+        .MAX_N({MAXn}),
         .WIDTH(ADDR_WIDTH)
     ) bit_rev (
         .in (wr_addr),
+        .N  (N),     // FIXED: Wired up missing runtime N port
         .out(wr_addr_reversed)
     );
 
@@ -697,7 +703,6 @@ module {top_module_name} #(
             MEM_IDLE:    if (data_in_valid)                          mem_next_state = MEM_WRITE;
             MEM_WRITE:   if (input_count >= N)                       mem_next_state = MEM_PROCESS;
             MEM_PROCESS: if (fft_done)                               mem_next_state = MEM_READ;
-            // Transition only after all N outputs have been emitted
             MEM_READ:    if (output_count >= N && rd_addr_count >= N) mem_next_state = MEM_IDLE;
         endcase
     end
@@ -769,21 +774,6 @@ module {top_module_name} #(
                 end
 
                 MEM_READ: begin
-                    // Memory (mixed_memory_unified) has 2-cycle read latency:
-                    //   cycle 0: address registered by memory
-                    //   cycle 1: data fetched from array into rd_data_full
-                    //   cycle 2: precision slice applied → rd_data valid
-                    //
-                    // Strategy: issue all N addresses first (rd_addr_count 0..N-1),
-                    // then collect N outputs after the 2-cycle pipeline fills.
-                    // output_count counts valid data_out_valid pulses emitted.
-                    //
-                    // Timeline:
-                    //   rd_addr_count: 0  1  2  3  4  5  6  7  8  8  8
-                    //   rd_addr       : 0  1  2  3  4  5  6  7  -  -  -
-                    //   data valid    : -  -  x0 x1 x2 x3 x4 x5 x6 x7 -
-                    //   output_count  : 0  0  0  1  2  3  4  5  6  7  8 -> IDLE
-
                     ext_reading <= 1;
 
                     // Phase 1: keep issuing next read address while more to fetch
@@ -792,9 +782,9 @@ module {top_module_name} #(
                         rd_addr_count <= rd_addr_count + 1;
                     end
 
-                    // Phase 2: after 2-cycle pipeline delay, data becomes valid
-                    // rd_addr_count reaches 2 means addr 0 was issued 2 cycles ago
-                    if (rd_addr_count >= 2 && output_count < N) begin
+                    // Phase 2: FIXED. Wait 3 cycles for the data to be fully stable in rd_data
+                    //   (Cycle 1: address updates, Cycle 2: memory fetches data, Cycle 3: sliced to port)
+                    if (rd_addr_count >= 3 && output_count < N) begin
                         data_out       <= rd_data;
                         data_out_valid <= 1;
                         output_count   <= output_count + 1;
