@@ -27,7 +27,7 @@ puts "INFO: clock_period = $clock_period ns"
 # ---------------------------------------------------------------------------
 # Create in-memory project
 # ---------------------------------------------------------------------------
-create_project -in_memory -part xc7a35tcpg236-1
+create_project -in_memory -part xc7z020clg484-1
 
 # ---------------------------------------------------------------------------
 # Add sources
@@ -47,7 +47,7 @@ update_compile_order -fileset sources_1
 # ---------------------------------------------------------------------------
 synth_design \
     -top  $top_module \
-    -part xc7a35tcpg236-1 \
+    -part xc7z020clg484-1 \
     -mode out_of_context
 
 create_clock -period $clock_period -name clk [get_ports clk]
