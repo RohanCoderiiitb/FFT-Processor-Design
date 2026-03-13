@@ -6,44 +6,38 @@ Population: 6
 Generations: 3
 Objectives: 3
 
-*** WARNING: No feasible solutions found. ***
-All solutions violated at least one constraint.
-Results below are the least-infeasible solutions from the final population.
-Root cause: check Verilog simulation (iverilog/vvp) and SQNR evaluation — SQNR=-100 dB indicates simulation failure.
+Pareto Front Solutions: 5
 
-Fallback Front Solutions: 6
-
-Fallback Front (Objectives):
+Pareto Front (Objectives):
 ID    Power(W)     Area(LUTs)   Perf Error  
 --------------------------------------------------
-0     0.266000     16847        2.000000    
-1     0.243000     16874        2.000000    
-2     0.310000     16876        2.382944    
-3     0.280000     16996        4.799123    
-4     0.249000     17045        2.000000    
-5     0.266000     17168        2.000000    
+0     0.117000     1663         2.000000    
+1     0.129000     1773         0.052811    
+2     0.121000     1345         2.382944    
+3     0.116000     1999         2.000000    
+4     0.128000     1969         1.944565    
 
 
 Best Solutions by Objective:
 --------------------------------------------------
 
 Best Power:
-  Solution ID  : 1
-  Power        : 0.243000 W
-  Area         : 16874 LUTs
+  Solution ID  : 3
+  Power        : 0.116000 W
+  Area         : 1999 LUTs
   Perf Error   : 2.000000
-  Chromosome   : [0 0 0 0 0 0]
+  Chromosome   : [0 0 0 0 1 0]
 
 Best Area:
-  Solution ID  : 0
-  Power        : 0.266000 W
-  Area         : 16847 LUTs
-  Perf Error   : 2.000000
-  Chromosome   : [0 1 0 1 0 0]
+  Solution ID  : 2
+  Power        : 0.121000 W
+  Area         : 1345 LUTs
+  Perf Error   : 2.382944
+  Chromosome   : [0 1 0 1 0 1]
 
 Best Performance:
-  Solution ID  : 0
-  Power        : 0.266000 W
-  Area         : 16847 LUTs
-  Perf Error   : 2.000000
-  Chromosome   : [0 1 0 1 0 0]
+  Solution ID  : 1
+  Power        : 0.129000 W
+  Area         : 1773 LUTs
+  Perf Error   : 0.052811
+  Chromosome   : [1 1 1 1 1 1]

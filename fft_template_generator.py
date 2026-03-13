@@ -343,11 +343,12 @@ module {core_module_name} #(
                READ_B         = 4'd4,
                WAIT_A         = 4'd5,
                WAIT_B         = 4'd6,
-               WRITE_X        = 4'd7,
-               WRITE_Y        = 4'd8,
-               WAIT_AGU       = 4'd9,
-               EVAL_AGU       = 4'd10,
-               DONE_STATE     = 4'd11;
+               COMPUTE        = 4'd7,
+               WRITE_X        = 4'd8,
+               WRITE_Y        = 4'd9,
+               WAIT_AGU       = 4'd10,
+               EVAL_AGU       = 4'd11,
+               DONE_STATE     = 4'd12;
 
     reg [3:0] state;
 
@@ -540,6 +541,10 @@ module {core_module_name} #(
                 WAIT_B: begin
                     // B data is now stable on rd_data_16
                     B_24        <= mem_rd_24;
+                    state       <= COMPUTE;
+                end
+
+                COMPUTE: begin
                     // Capture butterfly outputs (combinational from A_24/B_24)
                     X_reg       <= X_bf;
                     Y_reg       <= Y_bf;
