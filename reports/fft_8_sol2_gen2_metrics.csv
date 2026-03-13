@@ -1,7 +1,7 @@
 Metric,Value
 design_name,fft_8_sol2_gen2
 top_module,fft_8_sol2_gen2_top
-lut_count,17547
-total_power_w,0.282
-wns_ns,-23.825
+lut_count,2004
+total_power_w,0.119
+wns_ns,-24.601
 clock_period_ns,10.0
