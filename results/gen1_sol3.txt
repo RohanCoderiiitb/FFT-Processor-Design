@@ -6,8 +6,8 @@ Chromosome Length : 6
 Chromosome        : [1, 1, 0, 0, 0, 0]
 
 Results:
-  Power  : 0.124000 W
-  Area   : 2310 LUTs
+  Power  : 0.119000 W
+  Area   : 2309 LUTs
   SQNR   : 0.00 dB
   MAE    : 1.500070
 

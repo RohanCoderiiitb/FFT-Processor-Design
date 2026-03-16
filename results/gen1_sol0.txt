@@ -7,7 +7,7 @@ Chromosome        : [0, 0, 0, 0, 0, 0]
 
 Results:
   Power  : 0.117000 W
-  Area   : 1664 LUTs
+  Area   : 1669 LUTs
   SQNR   : 0.00 dB
   MAE    : 1.500070
 
