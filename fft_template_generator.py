@@ -61,7 +61,7 @@ class FFTTemplateGenerator:
             idx       = stage * 2
             mult_prec = int(chromosome[idx])     if idx     < len(chromosome) else 0
             add_prec  = int(chromosome[idx + 1]) if idx + 1 < len(chromosome) else 0
-            out_prec  = max(mult_prec, add_prec)   # result precision = max of both
+            out_prec  = add_prec   
 
             config['stages'].append({
                 'stage_num'       : stage,
@@ -187,7 +187,7 @@ class FFTTemplateGenerator:
             "        if (ext_reading) begin\n"
             f"            cur_mult_prec = 1'b0;\n"
             f"            cur_add_prec  = 1'b0;\n"
-            f"            cur_rd_prec   = 1'b1;  // Read FFT result at final-stage precision ({last_out_prec}=FP{'8' if last_out_prec else '4'})\n"
+            f"            cur_rd_prec   = 1'b{last_out_prec};  // Read FFT result at final-stage precision ({last_out_prec}=FP{'8' if last_out_prec else '4'})\n"
             f"            cur_wr_prec   = 1'b0;\n"
             "        end else begin\n"
             "            case (curr_stage)\n"
