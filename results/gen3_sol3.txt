@@ -3,13 +3,13 @@ Generation        : 3
 Solution ID       : 3
 Num Stages        : 3
 Chromosome Length : 6
-Chromosome        : [1, 0, 0, 1, 0, 1]
+Chromosome        : [0, 0, 0, 1, 1, 1]
 
 Results:
-  Power  : 0.122000 W
-  Area   : 2260 LUTs
-  SQNR   : 0.07 dB
-  MAE    : 1.423421
+  Power  : 0.126000 W
+  Area   : 2655 LUTs
+  SQNR   : 1.32 dB
+  MAE    : 1.646812
 
 Overall Precision Distribution:
   FP4 Multipliers: 2 (66.7%)
@@ -20,6 +20,6 @@ Overall Precision Distribution:
 Per-Stage Breakdown:
 Stage    FP4 Mult     FP8 Mult     FP4 Add      FP8 Add     
 ------------------------------------------------------------
-0        0            1            1            0           
+0        1            0            1            0           
 1        1            0            0            1           
-2        1            0            0            1           
+2        0            1            0            1           
