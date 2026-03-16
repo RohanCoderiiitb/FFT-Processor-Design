@@ -67,6 +67,9 @@ def run_optimization_for_fft_size(fft_size):
     Returns:
         result: Optimization result object
     """
+    import globalVariablesMixedFFT
+    globalVariablesMixedFFT.CURRENT_FFT_SIZE = fft_size  # ← add this
+
     log_message(f"\n{'='*60}")
     log_message(f"Starting optimization for {fft_size}-point FFT")
     log_message(f"{'='*60}\n")
@@ -313,7 +316,7 @@ def quick_test():
     """
     Quick test with a single small FFT size
     """
-    log_message("Running quick test with 8-point FFT")
+    log_message("Running quick test with 32-point FFT")
     
     setup_verilog_sources()
     
