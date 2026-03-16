@@ -197,14 +197,29 @@ module fft_8_sol1_gen1_core #(
     // =========================================================================
     // Expand 16-bit memory read to 24-bit butterfly inputs
     // =========================================================================
-    // Expand 16-bit memory read to 24-bit butterfly input
-    // For FP8 reads: rd_data = {fp8_real[7:0], fp8_imag[7:0]} → place at [23:8]
-    // For FP4 reads: rd_data = {8'h00, fp4_real[7:4], fp4_imag[3:0]} → place at [7:0]
-    // butterfly_wrapper selects the correct slice based on MULT_PRECISION.
+    // Expand 16-bit memory read to full 24-bit unified format
+    // [23:8] = FP8 complex, [7:0] = FP4 complex
+    // Both slots must always be populated so any butterfly_wrapper
+    // configuration can read the correct slice.
+
+    // Cross-convert: FP8 read → downconvert to fill FP4 slot
+    wire [7:0]  rd_fp8_as_fp4;
+    complex_fp8_to_fp4 rd_conv_down (
+        .complex_fp8(rd_data_16),
+        .complex_fp4(rd_fp8_as_fp4)
+    );
+
+    // Cross-convert: FP4 read → upconvert to fill FP8 slot
+    wire [15:0] rd_fp4_as_fp8;
+    complex_fp4_to_fp8 rd_conv_up (
+        .complex_fp4(rd_data_16[7:0]),
+        .complex_fp8(rd_fp4_as_fp8)
+    );
+
     wire [23:0] mem_rd_24;
     assign mem_rd_24 = cur_rd_prec
-                       ? {rd_data_16, 8'h00}    // FP8: move to [23:8]
-                       : {16'h0000, rd_data_16[7:0]};  // FP4: at [7:0]
+                       ? {rd_data_16,    rd_fp8_as_fp4}   // FP8 primary + FP4 downconverted
+                       : {rd_fp4_as_fp8, rd_data_16[7:0]};// FP8 upconverted + FP4 primary
 
     reg [23:0] A_24, B_24;
 
