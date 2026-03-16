@@ -73,7 +73,7 @@ class FFTTemplateGenerator:
 
     # ------------------------------------------------------------------
     # File generation helpers
-    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------~
     def generate_verilog(self, chromosome, output_file):
         """
         Generate core + top into the directory of output_file.
