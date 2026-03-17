@@ -328,10 +328,10 @@ def quick_test():
     original_pop = POPULATION
     original_gen = GENERATIONS
     
-    POPULATION = 60
-    GENERATIONS = 80
+    POPULATION = 6
+    GENERATIONS = 3
     
-    result = run_optimization_for_fft_size(fft_size=512)
+    result = run_optimization_for_fft_size(fft_size=1024)
     
     # Restore parameters
     POPULATION = original_pop

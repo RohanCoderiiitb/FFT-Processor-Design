@@ -1,6 +1,6 @@
 module bit_reverse #(
     parameter MAX_N = 1024,
-    parameter WIDTH = $clog2(MAX_N)
+    parameter WIDTH = $clog2(MAX_N) + 1
 )(
     input  [WIDTH-1:0] in,
     input  [WIDTH-1:0] N,  // runtime N value needed to shift bits

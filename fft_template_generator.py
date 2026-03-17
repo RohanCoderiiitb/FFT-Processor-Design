@@ -31,7 +31,7 @@ class FFTTemplateGenerator:
     def __init__(self, fft_size):
         self.fft_size          = fft_size
         self.num_stages        = int(math.log2(fft_size))
-        self.addr_width        = 10          # fixed 10-bit address (matches AGU/memory)
+        self.addr_width        = 11          # fixed 10-bit address (matches AGU/memory)
         self.butterflies_per_stage = fft_size // 2
         self.total_butterflies = self.butterflies_per_stage * self.num_stages
         self.chromosome_length = self.num_stages * 2
