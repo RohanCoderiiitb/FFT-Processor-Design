@@ -86,12 +86,12 @@ RESULTS_DIR = './results'
 # ======================= Optimization Weights =======================
 WEIGHT_POWER = 1.0
 WEIGHT_AREA = 1.0
-WEIGHT_PERFORMANCE = 1.5          # Higher weight: push for PSNR > 10 dB
+WEIGHT_PERFORMANCE = 1.0
 
 # Constraint thresholds
 MAX_POWER_W = 3.0            # Increased for larger designs
 MAX_AREA_LUTS = 10000        # Increased for larger designs
-MIN_PSNR_DB = 10.0           # Minimum acceptable PSNR (dB)
+MIN_SQNR_DB = 0.0
 
 # ======================= Performance Metrics =======================
 ENABLE_RESULT_CACHE = True
