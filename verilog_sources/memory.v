@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------------
 module mixed_memory_unified #(
     parameter n          = 1024,
-    parameter ADDR_WIDTH = $clog2(n)
+    parameter ADDR_WIDTH = $clog2(n) + 1
 )(
     input  wire                  clk,
     input  wire                  rst,        // active-low; used only for output FF

@@ -2,7 +2,7 @@
 // Format: [23:16] FP8 Real, [15:8] FP8 Imag, [7:4] FP4 Real, [3:0] FP4 Imag
 module twiddle_factor_unified#(
     parameter MAX_N = 1024,
-    parameter ADDR_WIDTH = 10 // $clog2(1024)
+    parameter ADDR_WIDTH = $clog2(MAX_N) + 1
 )(
     input [ADDR_WIDTH-1:0] k,   // Index k
     input [ADDR_WIDTH-1:0] n,     // Current FFT size N
