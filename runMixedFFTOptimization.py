@@ -196,15 +196,10 @@ def save_optimization_results(result, callback, fft_size):
             return
 
         f.write(f"{'Pareto' if feasible else 'Fallback'} Front (Objectives):\n")
-        f.write(f"{'ID':<5} {'Power(W)':<12} {'Area(LUTs)':<12} {'Perf Error':<12} {'PSNR(dB)':<12}\n")
-        f.write('-' * 55 + '\n')
+        f.write(f"{'ID':<5} {'Power(W)':<12} {'Area(LUTs)':<12} {'Perf Error':<12}\n")
+        f.write('-' * 50 + '\n')
         for i, obj in enumerate(pareto_objectives):
-            # Invert performance_error back to PSNR for readability:
-            #   perf_error = WEIGHT_PERFORMANCE / (psnr + 1)
-            #   => psnr = WEIGHT_PERFORMANCE / perf_error - 1
-            raw_pe = obj[2] / WEIGHT_PERFORMANCE
-            psnr_approx = (1.0 / raw_pe - 1.0) if raw_pe > 0 else float('inf')
-            f.write(f"{i:<5} {obj[0]:<12.6f} {obj[1]:<12.0f} {obj[2]:<12.6f} {psnr_approx:<12.2f}\n")
+            f.write(f"{i:<5} {obj[0]:<12.6f} {obj[1]:<12.0f} {obj[2]:<12.6f}\n")
 
         f.write("\n\nBest Solutions by Objective:\n")
         f.write('-' * 50 + '\n')
