@@ -31,7 +31,7 @@ CROSSOVER_RATE = 0.9         # Higher crossover for exploration
 OBJECTIVES = 3               # Power, Area, Performance
 
 CURRENT_GEN = 0
-SOLUTION_THREADS = 4         # Parallel Vivado syntheses
+SOLUTION_THREADS = 6        # Parallel Vivado syntheses
 
 FITNESS = 'fitness.npy'
 DPI = 200
