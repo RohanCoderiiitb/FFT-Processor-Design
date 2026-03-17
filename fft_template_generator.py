@@ -737,6 +737,7 @@ module {top_module_name} (
                 bank_sel <= 1'b{ns % 2};  // Result in bank {ns % 2} after {ns} stage flips
             end else if (!start && done) begin
                 done <= 1'b0;
+                bank_sel <= 1'b1; // Back to default for next load
             end
         end
     end
