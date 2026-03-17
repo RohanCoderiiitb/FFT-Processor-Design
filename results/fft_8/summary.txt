@@ -6,17 +6,16 @@ Population: 6
 Generations: 3
 Objectives: 3
 
-Pareto Front Solutions: 6
+Pareto Front Solutions: 5
 
 Pareto Front (Objectives):
 ID    Power(W)     Area(LUTs)   Perf Error  
 --------------------------------------------------
-0     0.126000     1596         4.520907    
-1     0.131000     1879         0.588585    
-2     0.128000     2507         3.676664    
-3     0.121000     2174         6.235528    
-4     0.125000     2375         5.329909    
-5     0.130000     2501         3.676664    
+0     0.133000     1776         0.196195    
+1     0.125000     1502         1.506969    
+2     0.131000     2119         1.376768    
+3     0.121000     2147         2.078509    
+4     0.124000     2272         1.399070    
 
 
 Best Solutions by Objective:
@@ -25,20 +24,20 @@ Best Solutions by Objective:
 Best Power:
   Solution ID  : 3
   Power        : 0.121000 W
-  Area         : 2174 LUTs
-  Perf Error   : 6.235528
+  Area         : 2147 LUTs
+  Perf Error   : 2.078509
   Chromosome   : [0 0 0 1 0 1]
 
 Best Area:
-  Solution ID  : 0
-  Power        : 0.126000 W
-  Area         : 1596 LUTs
-  Perf Error   : 4.520907
+  Solution ID  : 1
+  Power        : 0.125000 W
+  Area         : 1502 LUTs
+  Perf Error   : 1.506969
   Chromosome   : [0 1 0 1 0 1]
 
 Best Performance:
-  Solution ID  : 1
-  Power        : 0.131000 W
-  Area         : 1879 LUTs
-  Perf Error   : 0.588585
+  Solution ID  : 0
+  Power        : 0.133000 W
+  Area         : 1776 LUTs
+  Perf Error   : 0.196195
   Chromosome   : [1 1 1 1 1 1]
