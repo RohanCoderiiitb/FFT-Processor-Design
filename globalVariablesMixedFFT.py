@@ -86,7 +86,7 @@ RESULTS_DIR = './results'
 # ======================= Optimization Weights =======================
 WEIGHT_POWER = 1.0
 WEIGHT_AREA = 1.0
-WEIGHT_PERFORMANCE = 3
+WEIGHT_PERFORMANCE = 1.0
 
 # Constraint thresholds
 MAX_POWER_W = 3.0            # Increased for larger designs
