@@ -27,12 +27,12 @@ class MixedPrecisionFFTProblem(Problem):
     Objectives  (all minimised):
         1. Power       (W)
         2. Area        (LUTs)
-        3. Perf error  1/(SQNR+1) + MAE
+        3. Perf error  1/(PSNR+1)  [higher PSNR → lower error → better]
 
     Constraints (≤0 → feasible):
         1. power  − MAX_POWER_W
         2. area   − MAX_AREA_LUTS
-        3. MIN_SQNR_DB − SQNR
+        3. MIN_PSNR_DB − PSNR
     """
 
     def __init__(self, fft_size=8, **kwargs):
@@ -84,7 +84,7 @@ class MixedPrecisionFFTProblem(Problem):
                 except Exception as e:
                     log_message(f"Solution {idx} failed: {e}", level='ERROR')
                     F[idx] = [MAX_POWER_W * 2, MAX_AREA_LUTS * 2, 1e6]
-                    G[idx] = [MAX_POWER_W, MAX_AREA_LUTS, -MIN_SQNR_DB]
+                    G[idx] = [MAX_POWER_W, MAX_AREA_LUTS, MIN_PSNR_DB]
 
         out["F"] = np.array(F)
         out["G"] = np.array(G)
@@ -112,9 +112,9 @@ class MixedPrecisionFFTProblem(Problem):
         power, area = self._run_vivado_synthesis(design_name, core_file, top_file)
 
         # ── Step 3: performance evaluation ────────────────────────────
-        sqnr, mae = self._run_performance_evaluation(core_file, design_name)
+        psnr = self._run_performance_evaluation(core_file, design_name)
 
-        results = {'power': power, 'area': area, 'sqnr': sqnr, 'mae': mae}
+        results = {'power': power, 'area': area, 'psnr': psnr}
         RESULT_CACHE[chrom_hash] = results
         self._save_solution_result(sol_id, chromosome, results)
 
@@ -122,7 +122,7 @@ class MixedPrecisionFFTProblem(Problem):
         num_stages = self.template_gen.num_stages
         log_message(
             f"Solution {sol_id}: Power={power:.4f}W, Area={area} LUTs, "
-            f"SQNR={sqnr:.2f}dB, MAE={mae:.6f} | "
+            f"PSNR={psnr:.2f}dB | "
             f"FP8_mult={stats['fp8_mult']}/{num_stages} "
             f"({stats['fp8_mult']/num_stages*100:.1f}%), "
             f"FP8_add={stats['fp8_add']}/{num_stages} "
@@ -215,17 +215,18 @@ class MixedPrecisionFFTProblem(Problem):
                 f"Performance evaluation failed for {design_name}: {e}",
                 level='ERROR'
             )
-            return -100.0, 1e6
+            return -100.0
 
     # ------------------------------------------------------------------
     def _compute_objectives_and_constraints(self, results):
         power = results['power']
         area  = results['area']
-        sqnr  = results['sqnr']
-        mae   = results['mae']
+        psnr  = results['psnr']
 
-        sqnr_clamped      = max(sqnr, 0.0)
-        performance_error = (1.0 / (sqnr_clamped + 1.0)) + mae
+        # Higher PSNR is better; invert so NSGA-II minimises it.
+        # Clamp at 0 to avoid negative division; add 1 to avoid div-by-zero.
+        psnr_clamped      = max(psnr, 0.0)
+        performance_error = 1.0 / (psnr_clamped + 1.0)
 
         objectives = [
             power * WEIGHT_POWER,
@@ -235,7 +236,7 @@ class MixedPrecisionFFTProblem(Problem):
         constraints = [
             power - MAX_POWER_W,
             area  - MAX_AREA_LUTS,
-            MIN_SQNR_DB - sqnr
+            MIN_PSNR_DB - psnr       # feasible when psnr >= MIN_PSNR_DB
         ]
         return objectives, constraints
 
@@ -255,8 +256,7 @@ class MixedPrecisionFFTProblem(Problem):
             f.write(f"\nResults:\n")
             f.write(f"  Power  : {results['power']:.6f} W\n")
             f.write(f"  Area   : {results['area']} LUTs\n")
-            f.write(f"  SQNR   : {results['sqnr']:.2f} dB\n")
-            f.write(f"  MAE    : {results['mae']:.6f}\n")
+            f.write(f"  PSNR   : {results['psnr']:.2f} dB\n")
             f.write(f"\nOverall Precision Distribution:\n")
             f.write(f"  FP4 Multipliers: {stats['fp4_mult']} ({stats['fp4_mult']/num_stages*100:.1f}%)\n")
             f.write(f"  FP8 Multipliers: {stats['fp8_mult']} ({stats['fp8_mult']/num_stages*100:.1f}%)\n")

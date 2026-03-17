@@ -533,23 +533,28 @@ endmodule
     # ==================================================================
     # Metrics
     # ==================================================================
-    def calculate_sqnr(self, golden, approximate):
-        sig_power   = np.mean(np.abs(golden) ** 2)
-        noise_power = np.mean(np.abs(golden - approximate) ** 2)
-        if noise_power == 0:
+    def calculate_psnr(self, golden, approximate):
+        """
+        Peak Signal-to-Noise Ratio (dB).
+        PSNR = 10 * log10(PEAK^2 / MSE)
+        where PEAK is the maximum absolute value in the golden output
+        and MSE is the mean squared error between golden and approximate.
+        """
+        mse = np.mean(np.abs(golden - approximate) ** 2)
+        if mse == 0:
             return float('inf')
-        return 10 * np.log10(sig_power / noise_power)
-
-    def calculate_mean_error(self, golden, approximate):
-        return float(np.mean(np.abs(golden - approximate)))
+        peak = np.max(np.abs(golden))
+        if peak == 0:
+            return 0.0
+        return 10 * np.log10((peak ** 2) / mse)
 
     # ==================================================================
     # Top-level entry point
     # ==================================================================
     def evaluate_design(self, verilog_file, design_name, chromosome=None):
         """
-        Run simulation and return (avg_sqnr_dB, avg_mae).
-        On failure returns (-100.0, 1e6).
+        Run simulation and return avg_psnr_dB (single float).
+        On failure returns -100.0.
 
         chromosome: the precision chromosome for this design.
                     Last gene (chromosome[-1]) determines final stage
@@ -567,33 +572,30 @@ endmodule
 
         output_file = self.run_verilog_simulation(verilog_file, design_name)
         if output_file is None:
-            return -100.0, 1e6
+            return -100.0
 
         sim_outputs = self._parse_simulation_output(output_file, final_stage_is_fp8)
         if sim_outputs is None or len(sim_outputs) == 0:
-            return -100.0, 1e6
+            return -100.0
 
         n          = self.fft_size
         num_tests  = len(self.test_vectors)
-        total_sqnr = 0.0
-        total_mae  = 0.0
+        total_psnr = 0.0
         valid      = 0
 
         for i in range(min(num_tests, len(sim_outputs) // n)):
             approx = sim_outputs[i * n : (i + 1) * n]
             golden = self.golden_outputs[i]
 
-            sqnr = self.calculate_sqnr(golden, approx)
-            mae  = self.calculate_mean_error(golden, approx)
+            psnr = self.calculate_psnr(golden, approx)
 
-            if not (math.isinf(sqnr) or math.isnan(sqnr)):
-                total_sqnr += sqnr
-                total_mae  += mae
+            if not (math.isinf(psnr) or math.isnan(psnr)):
+                total_psnr += psnr
                 valid      += 1
 
         if valid == 0:
-            return -100.0, 1e6
-        return total_sqnr / valid, total_mae / valid
+            return -100.0
+        return total_psnr / valid
 
 
 # =============================================================================
