@@ -86,7 +86,7 @@ RESULTS_DIR = './results'
 # ======================= Optimization Weights =======================
 WEIGHT_POWER = 1.0
 WEIGHT_AREA = 1.0
-WEIGHT_PERFORMANCE = 1.5          # Higher weight: push for PSNR > 10 dB
+WEIGHT_PERFORMANCE = 5.0          # Higher weight: push for PSNR > 10 dB
 
 # Constraint thresholds
 MAX_POWER_W = 3.0            # Increased for larger designs
