@@ -61,7 +61,7 @@ class FFTTemplateGenerator:
             idx       = stage * 2
             mult_prec = int(chromosome[idx])     if idx     < len(chromosome) else 0
             add_prec  = int(chromosome[idx + 1]) if idx + 1 < len(chromosome) else 0
-            out_prec  = max(mult_prec, add_prec)   # result precision = max of both
+            out_prec  = add_prec   
 
             config['stages'].append({
                 'stage_num'       : stage,
@@ -73,7 +73,7 @@ class FFTTemplateGenerator:
 
     # ------------------------------------------------------------------
     # File generation helpers
-    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------~
     def generate_verilog(self, chromosome, output_file):
         """
         Generate core + top into the directory of output_file.
@@ -187,7 +187,7 @@ class FFTTemplateGenerator:
             "        if (ext_reading) begin\n"
             f"            cur_mult_prec = 1'b0;\n"
             f"            cur_add_prec  = 1'b0;\n"
-            f"            cur_rd_prec   = 1'b1;  // Read FFT result at final-stage precision ({last_out_prec}=FP{'8' if last_out_prec else '4'})\n"
+            f"            cur_rd_prec   = 1'b{last_out_prec};  // Read FFT result at final-stage precision ({last_out_prec}=FP{'8' if last_out_prec else '4'})\n"
             f"            cur_wr_prec   = 1'b0;\n"
             "        end else begin\n"
             "            case (curr_stage)\n"
@@ -256,14 +256,29 @@ class FFTTemplateGenerator:
         # butterfly_wrapper expects 24-bit unified format:
         #   [23:16]=FP8_real, [15:8]=FP8_imag, [7:4]=FP4_real, [3:0]=FP4_imag
         mem_expand = (
-            "    // Expand 16-bit memory read to 24-bit butterfly input\n"
-            "    // For FP8 reads: rd_data = {fp8_real[7:0], fp8_imag[7:0]} → place at [23:8]\n"
-            "    // For FP4 reads: rd_data = {8'h00, fp4_real[7:4], fp4_imag[3:0]} → place at [7:0]\n"
-            "    // butterfly_wrapper selects the correct slice based on MULT_PRECISION.\n"
+            "    // Expand 16-bit memory read to full 24-bit unified format\n"
+            "    // [23:8] = FP8 complex, [7:0] = FP4 complex\n"
+            "    // Both slots must always be populated so any butterfly_wrapper\n"
+            "    // configuration can read the correct slice.\n"
+            "\n"
+            "    // Cross-convert: FP8 read → downconvert to fill FP4 slot\n"
+            "    wire [7:0]  rd_fp8_as_fp4;\n"
+            "    complex_fp8_to_fp4 rd_conv_down (\n"
+            "        .complex_fp8(rd_data_16),\n"
+            "        .complex_fp4(rd_fp8_as_fp4)\n"
+            "    );\n"
+            "\n"
+            "    // Cross-convert: FP4 read → upconvert to fill FP8 slot\n"
+            "    wire [15:0] rd_fp4_as_fp8;\n"
+            "    complex_fp4_to_fp8 rd_conv_up (\n"
+            "        .complex_fp4(rd_data_16[7:0]),\n"
+            "        .complex_fp8(rd_fp4_as_fp8)\n"
+            "    );\n"
+            "\n"
             "    wire [23:0] mem_rd_24;\n"
             "    assign mem_rd_24 = cur_rd_prec\n"
-            "                       ? {rd_data_16, 8'h00}    // FP8: move to [23:8]\n"
-            "                       : {16'h0000, rd_data_16[7:0]};  // FP4: at [7:0]\n"
+            "                       ? {rd_data_16,    rd_fp8_as_fp4}   // FP8 primary + FP4 downconverted\n"
+            "                       : {rd_fp4_as_fp8, rd_data_16[7:0]};// FP8 upconverted + FP4 primary\n"
             "\n"
             "    reg [23:0] A_24, B_24;"
         )
@@ -343,11 +358,12 @@ module {core_module_name} #(
                READ_B         = 4'd4,
                WAIT_A         = 4'd5,
                WAIT_B         = 4'd6,
-               WRITE_X        = 4'd7,
-               WRITE_Y        = 4'd8,
-               WAIT_AGU       = 4'd9,
-               EVAL_AGU       = 4'd10,
-               DONE_STATE     = 4'd11;
+               COMPUTE        = 4'd7,
+               WRITE_X        = 4'd8,
+               WRITE_Y        = 4'd9,
+               WAIT_AGU       = 4'd10,
+               EVAL_AGU       = 4'd11,
+               DONE_STATE     = 4'd12;
 
     reg [3:0] state;
 
@@ -540,6 +556,10 @@ module {core_module_name} #(
                 WAIT_B: begin
                     // B data is now stable on rd_data_16
                     B_24        <= mem_rd_24;
+                    state       <= COMPUTE;
+                end
+
+                COMPUTE: begin
                     // Capture butterfly outputs (combinational from A_24/B_24)
                     X_reg       <= X_bf;
                     Y_reg       <= Y_bf;
