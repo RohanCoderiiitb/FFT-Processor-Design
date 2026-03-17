@@ -1,0 +1,40 @@
+Mixed-Precision FFT Optimization Results
+============================================================
+
+FFT Size: 16
+Population: 6
+Generations: 3
+Objectives: 3
+
+Pareto Front Solutions: 2
+
+Pareto Front (Objectives):
+ID    Power(W)     Area(LUTs)   Perf Error  
+--------------------------------------------------
+0     0.127000     2487         9.338052    
+1     0.128000     2479         9.338052    
+
+
+Best Solutions by Objective:
+--------------------------------------------------
+
+Best Power:
+  Solution ID  : 0
+  Power        : 0.127000 W
+  Area         : 2487 LUTs
+  Perf Error   : 9.338052
+  Chromosome   : [1 0 1 0 1 0 1 1]
+
+Best Area:
+  Solution ID  : 1
+  Power        : 0.128000 W
+  Area         : 2479 LUTs
+  Perf Error   : 9.338052
+  Chromosome   : [1 0 1 1 1 0 1 1]
+
+Best Performance:
+  Solution ID  : 0
+  Power        : 0.127000 W
+  Area         : 2487 LUTs
+  Perf Error   : 9.338052
+  Chromosome   : [1 0 1 0 1 0 1 1]
