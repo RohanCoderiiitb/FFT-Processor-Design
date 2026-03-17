@@ -77,12 +77,14 @@ module fp4_add_sub(
             end
         end
         else if (sig_result_raw[0]) begin
-            if (exp_l == 2'b01) begin
-                sig_norm = {1'b0, sig_result_raw[1:0]};  //keep as 00.1x
-                exp_norm = 2'b00;                         //subnormal exponent
+            if (exp_l <= 2'b01) begin
+                // stays subnormal — place in correct subnormal slot
+                sig_norm = {2'b00, sig_result_raw[0]};
+                exp_norm = 2'b00;
             end else begin
-                sig_norm = {sig_result_raw[0], 2'b00};   //shift left: 00.1x -> 10.0x
-                exp_norm = exp_l - 2'd1;
+                // normalize: 0001 → 1.0 × 2^(exp_l - 3)
+                sig_norm = {1'b0, sig_result_raw[0], 1'b0};  // hidden bit position
+                exp_norm = exp_l - 2'd3;
             end
         end
         else begin
@@ -258,18 +260,25 @@ module fp8_add_sub(
     end
     
     // sig_norm map: [ov:2][hidden:1][mant:3][guard:1]
-    wire [2:0] mant_out = sig_norm[3:1];
+    wire guard      = sig_norm[0];
+    wire round_up   = guard & sig_norm[1];  // round-to-nearest-even
+    wire [2:0] mant_rounded = sig_norm[3:1] + round_up;
+    
+    // Handle overflow: if mantissa wraps, increment exponent
+    wire mant_ovf = &sig_norm[3:1] & round_up;  // all 1s + 1 = overflow
+    wire [3:0] exp_final  = mant_ovf ? exp_norm + 1 : exp_norm;
+    wire [2:0] mant_out = mant_rounded;  // wraps naturally to 000 on overflow
     
     reg [7:0] result;
     always @(*) begin
         if (sig_norm == 7'd0) begin
             result = 8'b00000000;
         end
-        else if (exp_norm >= 4'd15) begin
+        else if (exp_final >= 4'd15) begin
             result = {sign_out, 4'd15, 3'd6};  // E4M3 saturation (0_1111_110)
         end
         else begin
-            result = {sign_out, exp_norm, mant_out};
+            result = {sign_out, exp_final, mant_out};
         end
     end
     

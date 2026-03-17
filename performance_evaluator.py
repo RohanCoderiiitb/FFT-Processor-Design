@@ -17,8 +17,14 @@ Key design decisions
 * 2-cycle memory read latency: unload loop waits 3 @posedge per sample
   (address issued → 2 register stages → data stable).
 * Input packed as FP8: load_data = {fp8_real[7:0], fp8_imag[7:0]}.
-* Output parsed as FP8 from unload_data[15:0].
+* Output parsed as FP8 or FP4 depending on final stage precision.
 * One twiddles file is generated per simulation run in ./sim/.
+
+Key fixes
+---------
+* Golden reference now computed from FP8-quantized inputs (same as hardware).
+* Output parsing respects final stage precision (FP8 or FP4).
+* Test vectors use broadband signals for meaningful SQNR measurement.
 """
 
 import numpy as np
@@ -30,37 +36,74 @@ import math
 
 class PerformanceEvaluator:
     def __init__(self, fft_size):
-        self.fft_size          = fft_size
-        self.num_stages        = int(math.log2(fft_size))
+        self.fft_size            = fft_size
+        self.num_stages          = int(math.log2(fft_size))
         self.verilog_sources_dir = './verilog_sources'
-        self.test_vectors      = self._generate_test_vectors()
-        self.golden_outputs    = self._compute_golden_outputs()
+        self.test_vectors        = self._generate_test_vectors()
+        self.golden_outputs      = self._compute_golden_outputs()
 
     # ==================================================================
     # Test vectors
     # ==================================================================
     def _generate_test_vectors(self):
+        """
+        Generate test vectors that exercise the full FFT computation.
+        All vectors are scaled to use the FP8 dynamic range efficiently.
+        Broadband signals give more meaningful SQNR than single-bin inputs.
+        """
         n     = self.fft_size
         n_arr = np.arange(n)
         vecs  = []
 
-        # 1. Impulse at index 0  → FFT = all-ones
-        v = np.zeros(n, dtype=complex); v[0] = 1.0
+        # 1. Impulse at index 0 — FFT = all-ones, well within FP8 range
+        v = np.zeros(n, dtype=complex)
+        v[0] = 1.0
         vecs.append(v)
 
-        # 2. DC constant (all ones) → FFT = N at bin 0, else 0
-        vecs.append(np.ones(n, dtype=complex))
+        # 2. Multi-tone — energy spread across multiple bins, amplitude controlled
+        v = np.zeros(n, dtype=complex)
+        for k in [1, 3, 5, 7]:
+            v += 0.25 * np.exp(2j * np.pi * k * n_arr / n)
+        vecs.append(v)
 
-        # 3. Single frequency k=1
-        vecs.append(np.exp(2j * np.pi * 1 * n_arr / n))
+        # 3. Broadband random — exercises all bins, fixed seed for reproducibility
+        rng = np.random.default_rng(42)
+        v   = rng.standard_normal(n) + 1j * rng.standard_normal(n)
+        v   = v / np.max(np.abs(v)) * 0.9   # scale to just below FP8 max
+        vecs.append(v)
 
-        # 4. Single frequency k=2
-        vecs.append(np.exp(2j * np.pi * 2 * n_arr / n))
+        # 4. Chirp — frequency content spread across all bins
+        v = np.exp(1j * np.pi * n_arr**2 / n)
+        v = v / np.max(np.abs(v)) * 0.9
+        vecs.append(v)
 
         return vecs
 
     def _compute_golden_outputs(self):
-        return [np.fft.fft(v) for v in self.test_vectors]
+        """
+        Compute golden FFT outputs using FP8-quantized inputs.
+
+        The hardware receives FP8-quantized inputs, not the original float64
+        values. The golden reference must start from the same quantized values
+        so that SQNR measures only FFT arithmetic error, not input quantization
+        error.
+
+        Flow:
+            float64 input
+                → quantize to FP8   (float_to_fp8_e4m3)
+                → dequantize to float64  (fp8_to_float)
+                → np.fft.fft()
+                → golden output
+        """
+        goldens = []
+        for v in self.test_vectors:
+            v_quantized = np.array([
+                self.fp8_to_float(self.float_to_fp8_e4m3(x.real)) +
+                1j * self.fp8_to_float(self.float_to_fp8_e4m3(x.imag))
+                for x in v
+            ])
+            goldens.append(np.fft.fft(v_quantized))
+        return goldens
 
     # ==================================================================
     # Float ↔ FP conversion helpers
@@ -205,15 +248,14 @@ class PerformanceEvaluator:
         # Timing budgets
         butterflies     = (n // 2) * self.num_stages
         cycles_per_fft  = n + butterflies * 10 + n * 4 + 200
-        ready_timeout   = 1024 + cycles_per_fft   # wait-for-done budget
-        unload_cycles   = n * 5                    # 3 cycles latency + margin
+        ready_timeout   = 1024 + cycles_per_fft
+        unload_cycles   = n * 5
         watchdog_ns     = (1024 + num_tests * (cycles_per_fft + n * 5) + 1000) * 10
 
         sim_dir  = os.path.abspath('./sim')
         out_path = os.path.join(sim_dir, f'{design_name}_output.txt').replace('\\', '/')
 
-        # Build per-test input load lines and expected-output comments
-        # Encode all test vectors as Verilog parameter arrays
+        # Build per-test input load lines
         vec_hex_lines = []
         for ti, vec in enumerate(self.test_vectors):
             for si, sample in enumerate(vec):
@@ -378,14 +420,10 @@ endmodule
         sim_dir = os.path.abspath('./sim')
         os.makedirs(sim_dir, exist_ok=True)
 
-        # Write twiddle ROM file into sim dir so $readmemb finds it
         self._write_twiddle_file(sim_dir)
 
         tb_file = self._generate_testbench(verilog_file, design_name)
 
-        # Expand glob for RTL library sources.
-        # Exclude fft_test.v and tb_fft_test.v — these are reference designs
-        # with conflicting module names, not library primitives.
         _exclude = {'fft_test.v', 'tb_fft_test.v'}
         lib_sources = sorted(
             f for f in glob_module.glob(
@@ -397,7 +435,6 @@ endmodule
             print(f"ERROR: No .v files found in {self.verilog_sources_dir}")
             return None
 
-        # Top file lives next to the core file
         top_file = verilog_file.replace('.v', '_top.v')
         extra    = [top_file] if os.path.exists(top_file) else []
 
@@ -426,7 +463,7 @@ endmodule
                 ['vvp', vvp_path],
                 capture_output=True, text=True,
                 timeout=300,
-                cwd=sim_dir   # run from sim dir so $fopen relative paths work
+                cwd=sim_dir
             )
             if sim_result.returncode != 0:
                 print(f"vvp FAILED for {design_name}:\n"
@@ -434,14 +471,11 @@ endmodule
                       f"  stderr: {sim_result.stderr[-3000:]}")
                 return None
 
-            # Print notable simulation messages
             for line in sim_result.stdout.splitlines():
                 if any(kw in line for kw in ('ERROR', 'WARN', 'WATCHDOG', 'TIMEOUT')):
                     print(f"SIM [{design_name}]: {line}")
 
-            return self._parse_simulation_output(
-                os.path.join(sim_dir, f'{design_name}_output.txt')
-            )
+            return os.path.join(sim_dir, f'{design_name}_output.txt')
 
         except FileNotFoundError as e:
             print(f"Simulator not found: {e}\n  Ensure iverilog/vvp are on PATH.")
@@ -456,10 +490,17 @@ endmodule
     # ==================================================================
     # Output parser
     # ==================================================================
-    def _parse_simulation_output(self, output_file):
+    def _parse_simulation_output(self, output_file, final_stage_is_fp8=True):
         """
         Parse 4-hex-digit lines written by the testbench.
-        Each line is: {fp8_real[7:0], fp8_imag[7:0]}  (16-bit = 4 hex chars).
+
+        If final stage is FP8:
+            Each line is {fp8_real[7:0], fp8_imag[7:0]} — upper 8 bits real,
+            lower 8 bits imag.
+
+        If final stage is FP4:
+            Each line is {8'h00, fp4_real[3:0], fp4_imag[3:0]} — bits [7:4]
+            real, bits [3:0] imag.
         """
         outputs = []
         try:
@@ -468,12 +509,19 @@ endmodule
                     line = line.strip()
                     if not line:
                         continue
-                    word     = int(line, 16) & 0xFFFF
-                    fp8_real = (word >> 8) & 0xFF
-                    fp8_imag =  word       & 0xFF
-                    outputs.append(
-                        self.fp8_to_float(fp8_real) + 1j * self.fp8_to_float(fp8_imag)
-                    )
+                    word = int(line, 16) & 0xFFFF
+                    if final_stage_is_fp8:
+                        fp8_real = (word >> 8) & 0xFF
+                        fp8_imag =  word       & 0xFF
+                        real = self.fp8_to_float(fp8_real)
+                        imag = self.fp8_to_float(fp8_imag)
+                    else:
+                        # FP4 output packed as {8'h00, fp4_real[3:0], fp4_imag[3:0]}
+                        fp4_real = (word >> 4) & 0xF
+                        fp4_imag =  word       & 0xF
+                        real = self.fp4_to_float(fp4_real)
+                        imag = self.fp4_to_float(fp4_imag)
+                    outputs.append(real + 1j * imag)
         except FileNotFoundError:
             print(f"Simulation output file not found: {output_file}")
             return None
@@ -498,13 +546,30 @@ endmodule
     # ==================================================================
     # Top-level entry point
     # ==================================================================
-    def evaluate_design(self, verilog_file, design_name):
+    def evaluate_design(self, verilog_file, design_name, chromosome=None):
         """
         Run simulation and return (avg_sqnr_dB, avg_mae).
         On failure returns (-100.0, 1e6).
+
+        chromosome: the precision chromosome for this design.
+                    Last gene (chromosome[-1]) determines final stage
+                    adder precision: 1=FP8, 0=FP4.
+                    If None, defaults to FP8 output parsing.
         """
         design_name = self._sanitize_name(design_name)
-        sim_outputs = self.run_verilog_simulation(verilog_file, design_name)
+
+        # Determine final stage output precision from chromosome
+        # Chromosome format: [s0_mult, s0_add, s1_mult, s1_add, ..., sN_mult, sN_add]
+        # Last gene is final stage adder precision: 1=FP8, 0=FP4
+        final_stage_is_fp8 = True
+        if chromosome is not None:
+            final_stage_is_fp8 = bool(chromosome[-1])
+
+        output_file = self.run_verilog_simulation(verilog_file, design_name)
+        if output_file is None:
+            return -100.0, 1e6
+
+        sim_outputs = self._parse_simulation_output(output_file, final_stage_is_fp8)
         if sim_outputs is None or len(sim_outputs) == 0:
             return -100.0, 1e6
 
