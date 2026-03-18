@@ -40,7 +40,7 @@ random.seed(SEED)
 
 # ======================= FFT Configuration =======================
 # Start with smaller sizes due to large chromosome dimensions
-FFT_SIZES = [8, 16, 32, 64, 128, 256]  # Removed 512, 1024 for initial testing
+FFT_SIZES = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]  # Full sweep from 2 to 1024
 CURRENT_FFT_SIZE = 8         # Start with 8-point FFT
 
 # ======================= Chromosome Size Calculation =======================
@@ -85,13 +85,13 @@ RESULTS_DIR = './results'
 
 # ======================= Optimization Weights =======================
 WEIGHT_POWER = 1.0
-WEIGHT_AREA = 0.001
-WEIGHT_PERFORMANCE = 50.0          # Higher weight: push for PSNR > 10 dB
+WEIGHT_AREA = 1.0
+WEIGHT_PERFORMANCE = 5.0          # Higher weight: push for PSNR > 10 dB
 
 # Constraint thresholds
 MAX_POWER_W = 3.0            # Increased for larger designs
 MAX_AREA_LUTS = 10000        # Increased for larger designs
-MIN_PSNR_DB = -10.0           # Minimum acceptable PSNR (dB)
+MIN_PSNR_DB = 0.0           # Minimum acceptable PSNR (dB)
 
 # ======================= Performance Metrics =======================
 ENABLE_RESULT_CACHE = True
@@ -108,7 +108,7 @@ def generate_smart_initial_population(fft_size, pop_size):
     Strategies:
     1. All FP4 (minimum power / area)
     2. All FP8 (maximum accuracy)
-    3. Progressive: FP8 early stages, FP4 later stages (errors accumulate)
+    3. Progressive: FP4 early stages, FP8 later stages (errors accumulate)
     4. Progressive inverse: FP8 early, FP4 later
     5. Multipliers FP8, Adders FP4
     6. Multipliers FP4, Adders FP8
@@ -127,17 +127,19 @@ def generate_smart_initial_population(fft_size, pop_size):
     # Strategy 2: All FP8
     population.append([1] * chrom_length)
 
-    # Strategy 3 — FP8 for EARLY stages (error-sensitive), FP4 for late
+    # Strategy 3: Progressive — FP4 for first half of stages, FP8 for second half
     progressive = []
     for stage in range(gen.num_stages):
-        prec = 1 if stage < gen.num_stages // 2 else 0  # was: >= , change to 
+        prec = 1 if stage >= gen.num_stages // 2 else 0
         progressive.extend([prec, prec])
+    population.append(progressive)
 
-    # Strategy 4 — inverse: FP4 early, FP8 late (keep as contrast)
+    # Strategy 4: Progressive inverse
     progressive_inv = []
     for stage in range(gen.num_stages):
-        prec = 0 if stage < gen.num_stages // 2 else 1  # was: >= , flip
+        prec = 0 if stage >= gen.num_stages // 2 else 1
         progressive_inv.extend([prec, prec])
+    population.append(progressive_inv)
 
     # Strategy 5: Multipliers FP8, Adders FP4
     mult_fp8 = []
@@ -162,17 +164,6 @@ def generate_smart_initial_population(fft_size, pop_size):
         population.append([random.randint(0, 1) for _ in range(chrom_length)])
 
     return population[:pop_size]
-
-    # Strategy 9: FP8 first 2 stages, FP4 rest (best for 4-stage FFT)
-    strat9 = []
-    for stage in range(gen.num_stages):
-        prec = 1 if stage < 2 else 0
-        strat9.extend([prec, prec])
-    population.append(strat9)
-
-    # Strategy 10: FP8 mult everywhere, FP4 add everywhere  
-    strat10 = [1, 0] * gen.num_stages
-    population.append(strat10)
 
 ENABLE_SMART_INITIALIZATION = True
 
