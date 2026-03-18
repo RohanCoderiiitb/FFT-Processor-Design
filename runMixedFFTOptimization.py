@@ -1,11 +1,27 @@
 """
 Main Script for Mixed-Precision FFT Optimization
-Orchestrates the complete NSGA-II optimization flow with Vivado integration
+Orchestrates the complete NSGA-II optimization flow with Vivado integration.
+
+Changes vs original:
+  - RTL .v files in results are zipped into rtl_fft{N}.zip and originals deleted
+  - Per-run CSV of all evaluated solutions (chromosome, power, area, PSNR)
+  - 2-D and 3-D Pareto front plots saved as PNG per FFT size
+  - Combined CSV + comparison plot across all FFT sizes
+  - main() / default mode runs the full sweep from FFT-2 to FFT-1024
 """
 
 import numpy as np
 import os
 import shutil
+import zipfile
+import csv
+import glob
+
+import matplotlib
+matplotlib.use('Agg')           # non-interactive — safe on headless servers
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.operators.sampling.rnd import IntegerRandomSampling
 from pymoo.termination import get_termination
@@ -17,27 +33,17 @@ from optimizationUtils import (
     MyCallback,
     SmartInitialSampling,
     BlockwiseMutation,
-    StagewiseCrossover
+    StagewiseCrossover,
 )
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
 def setup_verilog_sources():
-    """
-    Copy Verilog source files to the working directory
-    """
+    """Copy Verilog source files to the working directory."""
     log_message("Setting up Verilog source files")
-
-    # Source files to copy
-    source_files = [
-        '../verilog_sources/adder.v',
-        '../verilog_sources/multiplier.v',
-        '../verilog_sources/mixed_precision_wrappers.v',
-        '../verilog_sources/twiddle_rom.v',
-        '../verilog_sources/agu.v',
-        '../verilog_sources/memory.v'
-    ]
-
-    # Copy wrapper file from current directory
     wrapper_src = '../verilog_sources/mixed_precision_wrappers.v'
     wrapper_dst = os.path.join(VERILOG_SOURCES_DIR, 'mixed_precision_wrappers.v')
     if os.path.exists(wrapper_src):
@@ -45,124 +51,222 @@ def setup_verilog_sources():
         log_message("Copied wrapper file")
 
 
-def run_optimization_for_fft_size(fft_size):
+def _psnr_from_perf_error(perf_error):
     """
-    Run NSGA-II optimization for a specific FFT size
-
-    Args:
-        fft_size: FFT size (power of 2)
-
-    Returns:
-        result: Optimization result object
+    Invert  perf_error = WEIGHT_PERFORMANCE / (psnr + 1)  back to PSNR (dB).
+    Returns inf when perf_error == 0.
     """
-    import globalVariablesMixedFFT
-    globalVariablesMixedFFT.CURRENT_FFT_SIZE = fft_size
+    raw_pe = perf_error / WEIGHT_PERFORMANCE
+    if raw_pe <= 0:
+        return float('inf')
+    return 1.0 / raw_pe - 1.0
 
-    log_message(f"\n{'='*60}")
-    log_message(f"Starting optimization for {fft_size}-point FFT")
-    log_message(f"{'='*60}\n")
 
-    # Create problem instance
-    problem = MixedPrecisionFFTProblem(fft_size=fft_size)
+# ---------------------------------------------------------------------------
+# RTL compression
+# ---------------------------------------------------------------------------
 
-    # Create callback for tracking evolution
-    callback = MyCallback()
+def compress_rtl_files(results_subdir, fft_size):
+    """
+    Zip all Verilog (.v) files inside results_subdir **and** any per-solution
+    generated RTL in GENERATED_DESIGNS_DIR matching fft_{fft_size}_*.v.
+    Deletes the original files after successful compression.
+    """
+    zip_path = os.path.join(results_subdir, f"rtl_fft{fft_size}.zip")
+    zipped_files = []
 
-    # Configure NSGA-II algorithm with structure-aware operators
-    algorithm = NSGA2(
-        pop_size=POPULATION,
-        sampling=SmartInitialSampling(),
-        crossover=StagewiseCrossover(fft_size=fft_size, prob=CROSSOVER_RATE),
-        mutation=BlockwiseMutation(fft_size=fft_size)
+    with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        # 1. .v files already inside the results sub-directory
+        for vfile in glob.glob(os.path.join(results_subdir, '**', '*.v'),
+                               recursive=True):
+            arcname = os.path.relpath(vfile, results_subdir)
+            zf.write(vfile, arcname)
+            zipped_files.append(vfile)
+
+        # 2. Per-solution RTL from the shared generated_designs directory
+        pattern = os.path.join(GENERATED_DESIGNS_DIR, f"fft_{fft_size}_*.v")
+        for vfile in glob.glob(pattern):
+            arcname = os.path.join('generated_designs', os.path.basename(vfile))
+            zf.write(vfile, arcname)
+            zipped_files.append(vfile)
+
+    if os.path.exists(zip_path):
+        for vfile in zipped_files:
+            try:
+                os.remove(vfile)
+            except OSError as e:
+                log_message(f"  Warning: could not remove {vfile}: {e}", level='WARN')
+        log_message(f"Compressed {len(zipped_files)} RTL file(s) → {zip_path}")
+    else:
+        log_message("Zip creation failed — RTL cleanup skipped.", level='WARN')
+
+
+# ---------------------------------------------------------------------------
+# CSV export of all evaluated solutions
+# ---------------------------------------------------------------------------
+
+def export_solutions_csv(result, fft_size, results_subdir):
+    """
+    Write every solution from the final population (plus the Pareto front)
+    to  all_solutions_fft{fft_size}.csv.
+
+    Columns:
+        solution_id, fft_size,
+        s0_mult, s0_add, s1_mult, s1_add, ...,
+        power_W, area_LUTs, psnr_dB, on_pareto_front
+    """
+    from fft_template_generator import FFTTemplateGenerator
+    num_stages = FFTTemplateGenerator(fft_size).num_stages
+
+    gene_headers = []
+    for s in range(num_stages):
+        gene_headers += [f"s{s}_mult", f"s{s}_add"]
+
+    csv_path = os.path.join(results_subdir, f"all_solutions_fft{fft_size}.csv")
+
+    # Build a set of Pareto-front chromosomes for quick membership test
+    pareto_set = set()
+    if result.X is not None:
+        for row in result.X:
+            pareto_set.add(tuple(int(v) for v in row))
+
+    # Gather population arrays
+    pop   = result.pop
+    all_X = pop.get("X") if pop is not None else np.empty((0, len(gene_headers)))
+    all_F = pop.get("F") if pop is not None else np.empty((0, OBJECTIVES))
+
+    # Prepend Pareto front rows and de-duplicate
+    if result.X is not None and result.F is not None:
+        combined_X = np.vstack([result.X, all_X])
+        combined_F = np.vstack([result.F, all_F])
+    else:
+        combined_X = all_X
+        combined_F = all_F
+
+    if len(combined_X) > 0:
+        _, unique_idx = np.unique(combined_X, axis=0, return_index=True)
+        combined_X = combined_X[unique_idx]
+        combined_F = combined_F[unique_idx]
+
+    with open(csv_path, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(
+            ['solution_id', 'fft_size'] + gene_headers +
+            ['power_W', 'area_LUTs', 'psnr_dB', 'on_pareto_front']
+        )
+        for idx, (x_row, f_row) in enumerate(zip(combined_X, combined_F)):
+            power  = f_row[0] / WEIGHT_POWER
+            area   = f_row[1] / WEIGHT_AREA
+            psnr   = _psnr_from_perf_error(f_row[2])
+            on_pf  = int(tuple(int(v) for v in x_row) in pareto_set)
+            writer.writerow(
+                [idx, fft_size] +
+                [int(v) for v in x_row] +
+                [f"{power:.6f}", int(area), f"{psnr:.4f}", on_pf]
+            )
+
+    log_message(f"Solution CSV saved → {csv_path}  ({len(combined_X)} rows)")
+    return csv_path
+
+
+# ---------------------------------------------------------------------------
+# Pareto front visualisation
+# ---------------------------------------------------------------------------
+
+def plot_pareto_front(pareto_objectives, fft_size, results_subdir, feasible=True):
+    """
+    Save two PNG files per FFT run:
+      pareto_2d_fft{N}.png  — three pairwise 2-D scatter plots
+      pareto_3d_fft{N}.png  — 3-D scatter (Power vs Area vs PSNR)
+    """
+    if pareto_objectives is None or len(pareto_objectives) == 0:
+        log_message("No objectives to plot — Pareto plots skipped.", level='WARN')
+        return
+
+    obj   = np.array(pareto_objectives)
+    power = obj[:, 0] / WEIGHT_POWER
+    area  = obj[:, 1] / WEIGHT_AREA
+    psnr  = np.array([_psnr_from_perf_error(pe) for pe in obj[:, 2]])
+    psnr  = np.where(np.isinf(psnr), np.nan, psnr)
+
+    status_label = "Pareto Front" if feasible else "Least-Infeasible Solutions"
+    color        = "#1f77b4"    if feasible else "#d62728"
+
+    # ── 2-D pairwise plots ───────────────────────────────────────────────
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig.suptitle(
+        f"FFT-{fft_size}  |  {status_label}  ({len(obj)} solutions)",
+        fontsize=13, fontweight='bold'
     )
+    pairs = [
+        (power, area,  "Power (W)",   "Area (LUTs)"),
+        (power, psnr,  "Power (W)",   "PSNR (dB)"),
+        (area,  psnr,  "Area (LUTs)", "PSNR (dB)"),
+    ]
+    for ax, (xd, yd, xl, yl) in zip(axes, pairs):
+        ax.scatter(xd, yd, c=color, alpha=0.75, edgecolors='k',
+                   linewidths=0.5, s=60)
+        ax.set_xlabel(xl, fontsize=10)
+        ax.set_ylabel(yl, fontsize=10)
+        ax.set_title(f"{xl} vs {yl}", fontsize=10)
+        ax.grid(True, linestyle='--', alpha=0.4)
 
-    # Define termination criterion
-    termination = get_termination("n_gen", GENERATIONS)
+    plt.tight_layout()
+    path_2d = os.path.join(results_subdir, f"pareto_2d_fft{fft_size}.png")
+    fig.savefig(path_2d, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    log_message(f"2-D Pareto plot saved → {path_2d}")
 
-    log_message(f"NSGA-II Configuration:")
-    log_message(f"  Population size: {POPULATION}")
-    log_message(f"  Generations: {GENERATIONS}")
-    log_message(f"  Crossover rate: {CROSSOVER_RATE}")
-    log_message(f"  Mutation rate: {MUTATION_RATE}")
-    log_message(f"  Objectives: {OBJECTIVES}")
-    log_message(f"  Parallel threads: {SOLUTION_THREADS}")
-
-    # Run optimization
-    log_message("Starting NSGA-II evolution...")
-    result = minimize(
-        problem,
-        algorithm,
-        termination,
-        save_history=False,
-        callback=callback,
-        seed=SEED,
-        verbose=VERBOSE
+    # ── 3-D scatter ──────────────────────────────────────────────────────
+    fig3d = plt.figure(figsize=(9, 7))
+    ax3d  = fig3d.add_subplot(111, projection='3d')
+    sc = ax3d.scatter(
+        power, area, psnr,
+        c=obj[:, 2], cmap='plasma_r',
+        alpha=0.85, edgecolors='k', linewidths=0.4, s=60
     )
+    ax3d.set_xlabel("Power (W)",   fontsize=9)
+    ax3d.set_ylabel("Area (LUTs)", fontsize=9)
+    ax3d.set_zlabel("PSNR (dB)",   fontsize=9)
+    ax3d.set_title(
+        f"FFT-{fft_size}  |  {status_label}\n(colour = performance error)",
+        fontsize=11
+    )
+    fig3d.colorbar(sc, ax=ax3d, pad=0.1, label='Perf Error')
+    path_3d = os.path.join(results_subdir, f"pareto_3d_fft{fft_size}.png")
+    fig3d.savefig(path_3d, dpi=150, bbox_inches='tight')
+    plt.close(fig3d)
+    log_message(f"3-D Pareto plot saved → {path_3d}")
 
-    log_message(f"Optimization complete for {fft_size}-point FFT")
 
-    # Save results
-    save_optimization_results(result, callback, fft_size)
-
-    return result
-
-
-def _unscale_objectives(pareto_objectives):
-    """
-    Convert weighted objective values back to raw hardware metrics.
-
-    NSGA-II minimises:
-        obj[0] = power_W  * WEIGHT_POWER
-        obj[1] = lut_count * WEIGHT_AREA
-        obj[2] = (1/(psnr+1)) * WEIGHT_PERFORMANCE
-
-    This function inverts those multiplications so that the summary
-    report shows the actual hardware numbers, not the optimizer-internal
-    scaled values.
-
-    Returns:
-        raw_power  : ndarray (n,)  – power in Watts
-        raw_area   : ndarray (n,)  – area in LUTs
-        raw_perf   : ndarray (n,)  – performance error 1/(psnr+1)
-        psnr_approx: ndarray (n,)  – PSNR in dB (re-derived from raw_perf)
-    """
-    raw_power = pareto_objectives[:, 0] / WEIGHT_POWER
-    raw_area  = pareto_objectives[:, 1] / WEIGHT_AREA
-    raw_perf  = pareto_objectives[:, 2] / WEIGHT_PERFORMANCE
-
-    # Invert  perf_error = 1/(psnr+1)  →  psnr = 1/perf_error - 1
-    psnr_approx = np.where(raw_perf > 0, 1.0 / raw_perf - 1.0, np.inf)
-
-    return raw_power, raw_area, raw_perf, psnr_approx
-
+# ---------------------------------------------------------------------------
+# Per-FFT-size results saving
+# ---------------------------------------------------------------------------
 
 def save_optimization_results(result, callback, fft_size):
     """
-    Save optimization results to files.
-
-    Handles the case where all solutions violated constraints and pymoo
-    returns result.X = None / result.F = None (no feasible Pareto front).
-    In that case we fall back to the least-infeasible solutions from the
-    final population (result.pop), so the run still produces useful output
-    and does not crash.
-
-    NOTE: result.F contains *weighted* objectives.  All values written to
-    the summary are unscaled back to real hardware units via _unscale_objectives().
+    Persist all artefacts for one FFT run:
+      • pareto_objectives.npy / pareto_solutions.npy
+      • fitness_history.npz
+      • summary.txt
+      • all_solutions_fft{N}.csv   ← NEW
+      • pareto_2d_fft{N}.png       ← NEW
+      • pareto_3d_fft{N}.png       ← NEW
+      • rtl_fft{N}.zip             ← NEW  (original .v files deleted)
     """
     log_message("Saving optimization results...")
 
     results_subdir = os.path.join(RESULTS_DIR, f"fft_{fft_size}")
     os.makedirs(results_subdir, exist_ok=True)
 
-    # ── Determine Pareto front (or fallback to least-infeasible pop) ──
-    pareto_objectives = result.F   # None when no feasible solution exists
-    pareto_solutions  = result.X   # None when no feasible solution exists
+    # ── Determine Pareto front (or least-infeasible fallback) ────────────
+    pareto_objectives = result.F
+    pareto_solutions  = result.X
     feasible = pareto_solutions is not None
 
     if not feasible:
         log_message(
-            "WARNING: No feasible solutions found — all solutions violated "
-            "constraints. Saving least-infeasible population as fallback.",
+            "WARNING: No feasible solutions — saving least-infeasible fallback.",
             level='WARN'
         )
         pop = result.pop
@@ -171,226 +275,276 @@ def save_optimization_results(result, callback, fft_size):
             pareto_solutions  = pop.get("X")
             cv_vals           = pop.get("CV")
             if cv_vals is not None:
-                order = np.argsort(cv_vals.ravel())
+                order             = np.argsort(cv_vals.ravel())
                 pareto_objectives = pareto_objectives[order]
                 pareto_solutions  = pareto_solutions[order]
         else:
             pareto_objectives = np.empty((0, OBJECTIVES))
             pareto_solutions  = np.empty((0,), dtype=int)
 
-    # ── Persist raw weighted arrays (for downstream analysis) ───────────
+    # ── Persist arrays ───────────────────────────────────────────────────
     np.save(os.path.join(results_subdir, 'pareto_objectives.npy'), pareto_objectives)
     np.save(os.path.join(results_subdir, 'pareto_solutions.npy'),  pareto_solutions)
+    np.savez(os.path.join(results_subdir, 'fitness_history.npz'), *callback.data)
 
-    fitness_data = callback.data
-    np.savez(os.path.join(results_subdir, 'fitness_history.npz'), *fitness_data)
-
-    # ── Unscale objectives for human-readable reporting ──────────────────
-    if len(pareto_objectives) > 0:
-        raw_power, raw_area, raw_perf, psnr_approx = _unscale_objectives(pareto_objectives)
-    else:
-        raw_power = raw_area = raw_perf = psnr_approx = np.array([])
-
-    # ── Summary report ──────────────────────────────────────────────────
+    # ── Summary text ─────────────────────────────────────────────────────
+    front_label = "Pareto" if feasible else "Fallback"
     summary_file = os.path.join(results_subdir, 'summary.txt')
     with open(summary_file, 'w') as f:
         f.write("Mixed-Precision FFT Optimization Results\n")
         f.write(f"{'='*60}\n\n")
-        f.write(f"FFT Size: {fft_size}\n")
-        f.write(f"Population: {POPULATION}\n")
-        f.write(f"Generations: {GENERATIONS}\n")
-        f.write(f"Objectives: {OBJECTIVES}\n")
-        f.write(f"Weights: Power={WEIGHT_POWER}, Area={WEIGHT_AREA}, "
-                f"Performance={WEIGHT_PERFORMANCE}\n\n")
+        f.write(f"FFT Size     : {fft_size}\n")
+        f.write(f"Population   : {POPULATION}\n")
+        f.write(f"Generations  : {GENERATIONS}\n")
+        f.write(f"Objectives   : {OBJECTIVES}\n\n")
 
         if not feasible:
             f.write("*** WARNING: No feasible solutions found. ***\n")
-            f.write("All solutions violated at least one constraint.\n")
-            f.write("Results below are the least-infeasible solutions from the "
-                    "final population.\n")
-            f.write("Root cause: check Verilog simulation (iverilog/vvp) and "
-                    "SQNR evaluation — SQNR=-100 dB indicates simulation failure.\n\n")
+            f.write("Showing least-infeasible solutions from the final population.\n\n")
 
-        f.write(f"{'Pareto' if feasible else 'Fallback'} Front Solutions: "
-                f"{len(pareto_solutions)}\n\n")
+        f.write(f"{front_label} Front Solutions: {len(pareto_solutions)}\n\n")
 
         if len(pareto_solutions) == 0:
             f.write("No solutions to report.\n")
-            log_message(f"Results saved to {results_subdir} (no solutions)")
-            return
+        else:
+            f.write(f"{'ID':<5} {'Power(W)':<12} {'Area(LUTs)':<12} "
+                    f"{'Perf Error':<14} {'PSNR(dB)':<12}\n")
+            f.write('-' * 55 + '\n')
+            for i, obj in enumerate(pareto_objectives):
+                psnr_approx = _psnr_from_perf_error(obj[2])
+                f.write(f"{i:<5} {obj[0]:<12.6f} {obj[1]:<12.0f} "
+                        f"{obj[2]:<14.6f} {psnr_approx:<12.2f}\n")
 
-        # ── Pareto front table (raw hardware units) ──────────────────────
-        f.write(f"{'Pareto' if feasible else 'Fallback'} Front (Objectives):\n")
-        f.write(f"{'ID':<5} {'Power(W)':<12} {'Area(LUTs)':<12} "
-                f"{'Perf Error':<12} {'PSNR(dB)':<12}\n")
-        f.write('-' * 55 + '\n')
-        for i in range(len(pareto_objectives)):
-            f.write(f"{i:<5} "
-                    f"{raw_power[i]:<12.6f} "
-                    f"{raw_area[i]:<12.0f} "
-                    f"{raw_perf[i]:<12.6f} "
-                    f"{psnr_approx[i]:<12.2f}\n")
+            f.write("\n\nBest Solutions by Objective:\n")
+            f.write('-' * 50 + '\n')
+            for label, col in [
+                ("Best Power",       0),
+                ("Best Area",        1),
+                ("Best Performance", 2),
+            ]:
+                idx = np.argmin(pareto_objectives[:, col])
+                f.write(f"\n{label}:\n")
+                f.write(f"  Solution ID : {idx}\n")
+                f.write(f"  Power       : {pareto_objectives[idx, 0]:.6f} W\n")
+                f.write(f"  Area        : {pareto_objectives[idx, 1]:.0f} LUTs\n")
+                f.write(f"  Perf Error  : {pareto_objectives[idx, 2]:.6f}\n")
+                f.write(f"  PSNR        : "
+                        f"{_psnr_from_perf_error(pareto_objectives[idx, 2]):.2f} dB\n")
+                f.write(f"  Chromosome  : {list(pareto_solutions[idx])}\n")
 
-        f.write("\n\nBest Solutions by Objective:\n")
-        f.write('-' * 50 + '\n')
+    # ── CSV of all evaluated solutions ───────────────────────────────────
+    export_solutions_csv(result, fft_size, results_subdir)
 
-        # Best power (lowest raw power)
-        best_power_idx = np.argmin(raw_power)
-        f.write(f"\nBest Power:\n")
-        f.write(f"  Solution ID  : {best_power_idx}\n")
-        f.write(f"  Power        : {raw_power[best_power_idx]:.6f} W\n")
-        f.write(f"  Area         : {raw_area[best_power_idx]:.0f} LUTs\n")
-        f.write(f"  Perf Error   : {raw_perf[best_power_idx]:.6f}\n")
-        f.write(f"  PSNR         : {psnr_approx[best_power_idx]:.2f} dB\n")
-        f.write(f"  Chromosome   : {pareto_solutions[best_power_idx]}\n")
+    # ── Pareto front plots ───────────────────────────────────────────────
+    plot_pareto_front(pareto_objectives, fft_size, results_subdir, feasible)
 
-        # Best area (lowest raw LUT count)
-        best_area_idx = np.argmin(raw_area)
-        f.write(f"\nBest Area:\n")
-        f.write(f"  Solution ID  : {best_area_idx}\n")
-        f.write(f"  Power        : {raw_power[best_area_idx]:.6f} W\n")
-        f.write(f"  Area         : {raw_area[best_area_idx]:.0f} LUTs\n")
-        f.write(f"  Perf Error   : {raw_perf[best_area_idx]:.6f}\n")
-        f.write(f"  PSNR         : {psnr_approx[best_area_idx]:.2f} dB\n")
-        f.write(f"  Chromosome   : {pareto_solutions[best_area_idx]}\n")
+    # ── Compress RTL files and remove originals ──────────────────────────
+    compress_rtl_files(results_subdir, fft_size)
 
-        # Best performance (lowest perf error = highest PSNR)
-        best_perf_idx = np.argmin(raw_perf)
-        f.write(f"\nBest Performance:\n")
-        f.write(f"  Solution ID  : {best_perf_idx}\n")
-        f.write(f"  Power        : {raw_power[best_perf_idx]:.6f} W\n")
-        f.write(f"  Area         : {raw_area[best_perf_idx]:.0f} LUTs\n")
-        f.write(f"  Perf Error   : {raw_perf[best_perf_idx]:.6f}\n")
-        f.write(f"  PSNR         : {psnr_approx[best_perf_idx]:.2f} dB\n")
-        f.write(f"  Chromosome   : {pareto_solutions[best_perf_idx]}\n")
+    log_message(
+        f"Results saved to {results_subdir}  "
+        f"({front_label} front: {len(pareto_solutions)} solutions)"
+    )
 
-        # Best balanced (lowest sum of normalised raw objectives)
-        # Normalise each axis to [0,1] across the Pareto front before summing
-        # so no single axis dominates the balance score.
-        norm_power = (raw_power - raw_power.min()) / (raw_power.ptp() + 1e-12)
-        norm_area  = (raw_area  - raw_area.min())  / (raw_area.ptp()  + 1e-12)
-        norm_perf  = (raw_perf  - raw_perf.min())  / (raw_perf.ptp()  + 1e-12)
-        best_bal_idx = np.argmin(norm_power + norm_area + norm_perf)
-        f.write(f"\nBest Balanced (equal-weight normalised):\n")
-        f.write(f"  Solution ID  : {best_bal_idx}\n")
-        f.write(f"  Power        : {raw_power[best_bal_idx]:.6f} W\n")
-        f.write(f"  Area         : {raw_area[best_bal_idx]:.0f} LUTs\n")
-        f.write(f"  Perf Error   : {raw_perf[best_bal_idx]:.6f}\n")
-        f.write(f"  PSNR         : {psnr_approx[best_bal_idx]:.2f} dB\n")
-        f.write(f"  Chromosome   : {pareto_solutions[best_bal_idx]}\n")
 
-    log_message(f"Results saved to {results_subdir}")
-    log_message(f"{'Pareto' if feasible else 'Fallback'} front has "
-                f"{len(pareto_solutions)} solutions")
+# ---------------------------------------------------------------------------
+# Per-size optimisation runner
+# ---------------------------------------------------------------------------
+
+def run_optimization_for_fft_size(fft_size):
+    """Run NSGA-II optimisation for a specific FFT size; returns pymoo result."""
+    import globalVariablesMixedFFT
+    globalVariablesMixedFFT.CURRENT_FFT_SIZE = fft_size
+
+    log_message(f"\n{'='*60}")
+    log_message(f"Starting optimisation for {fft_size}-point FFT")
+    log_message(f"{'='*60}\n")
+
+    problem  = MixedPrecisionFFTProblem(fft_size=fft_size)
+    callback = MyCallback()
+
+    algorithm = NSGA2(
+        pop_size=POPULATION,
+        sampling=SmartInitialSampling(),
+        crossover=StagewiseCrossover(fft_size=fft_size, prob=CROSSOVER_RATE),
+        mutation=BlockwiseMutation(fft_size=fft_size),
+    )
+    termination = get_termination("n_gen", GENERATIONS)
+
+    log_message("NSGA-II Configuration:")
+    log_message(f"  Population size : {POPULATION}")
+    log_message(f"  Generations     : {GENERATIONS}")
+    log_message(f"  Crossover rate  : {CROSSOVER_RATE}")
+    log_message(f"  Mutation rate   : {MUTATION_RATE}")
+    log_message(f"  Objectives      : {OBJECTIVES}")
+    log_message(f"  Parallel threads: {SOLUTION_THREADS}")
+
+    result = minimize(
+        problem,
+        algorithm,
+        termination,
+        save_history=False,
+        callback=callback,
+        seed=SEED,
+        verbose=VERBOSE,
+    )
+
+    log_message(f"Optimisation complete for {fft_size}-point FFT")
+    save_optimization_results(result, callback, fft_size)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Full sweep + cross-FFT summary outputs
+# ---------------------------------------------------------------------------
+
+def generate_comprehensive_summary(all_results):
+    """
+    After the full sweep write:
+      results/comprehensive_summary.txt
+      results/all_pareto_solutions.csv   — combined Pareto rows from all runs
+      results/comparison_all_fft_sizes.png
+    """
+    # ── Text summary ─────────────────────────────────────────────────────
+    summary_file = os.path.join(RESULTS_DIR, 'comprehensive_summary.txt')
+    with open(summary_file, 'w') as f:
+        f.write("Mixed-Precision FFT Optimization — Comprehensive Summary\n")
+        f.write("=" * 70 + "\n\n")
+        for fft_size, result in sorted(all_results.items()):
+            f.write(f"\nFFT Size: {fft_size}\n")
+            f.write("-" * 70 + "\n")
+            if result is None:
+                f.write("  Optimisation failed\n")
+                continue
+            pf = result.F if result.F is not None else np.empty((0, OBJECTIVES))
+            f.write(f"  Pareto front size : {len(pf)}\n")
+            if len(pf):
+                f.write(f"  Power range       : "
+                        f"{pf[:,0].min():.6f} – {pf[:,0].max():.6f} W\n")
+                f.write(f"  Area range        : "
+                        f"{pf[:,1].min():.0f} – {pf[:,1].max():.0f} LUTs\n")
+                f.write(f"  Perf error range  : "
+                        f"{pf[:,2].min():.6f} – {pf[:,2].max():.6f}\n")
+    log_message(f"Comprehensive summary → {summary_file}")
+
+    # ── Combined CSV across all FFT sizes ────────────────────────────────
+    combined_csv = os.path.join(RESULTS_DIR, 'all_pareto_solutions.csv')
+    with open(combined_csv, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['fft_size', 'solution_id',
+                         'power_W', 'area_LUTs', 'psnr_dB', 'perf_error'])
+        for fft_size, result in sorted(all_results.items()):
+            if result is None or result.F is None:
+                continue
+            for i, obj in enumerate(result.F):
+                writer.writerow([
+                    fft_size, i,
+                    f"{obj[0]/WEIGHT_POWER:.6f}",
+                    int(obj[1] / WEIGHT_AREA),
+                    f"{_psnr_from_perf_error(obj[2]):.4f}",
+                    f"{obj[2]:.6f}",
+                ])
+    log_message(f"Combined Pareto CSV   → {combined_csv}")
+
+    # ── Comparison plot: best metric per FFT size ────────────────────────
+    sizes, best_power, best_area, best_psnr = [], [], [], []
+    for fft_size, result in sorted(all_results.items()):
+        if result is None or result.F is None or len(result.F) == 0:
+            continue
+        pf = result.F
+        sizes.append(fft_size)
+        best_power.append(pf[:, 0].min() / WEIGHT_POWER)
+        best_area.append(pf[:, 1].min()  / WEIGHT_AREA)
+        psnr_vals = [_psnr_from_perf_error(pe) for pe in pf[:, 2]]
+        finite_psnr = [v for v in psnr_vals if not (np.isinf(v) or np.isnan(v))]
+        best_psnr.append(max(finite_psnr) if finite_psnr else 0.0)
+
+    if sizes:
+        fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+        fig.suptitle("Best Achievable Metrics vs FFT Size",
+                     fontsize=13, fontweight='bold')
+        for ax, ydata, ylabel, color in zip(
+            axes,
+            [best_power, best_area, best_psnr],
+            ["Min Power (W)", "Min Area (LUTs)", "Max PSNR (dB)"],
+            ["#2196F3",       "#FF9800",         "#4CAF50"],
+        ):
+            ax.plot(sizes, ydata, 'o-', color=color, linewidth=2,
+                    markersize=7, markeredgecolor='k', markeredgewidth=0.5)
+            ax.set_xlabel("FFT Size (points)", fontsize=10)
+            ax.set_ylabel(ylabel, fontsize=10)
+            ax.set_title(ylabel, fontsize=11)
+            ax.set_xscale('log', base=2)
+            ax.set_xticks(sizes)
+            ax.set_xticklabels([str(s) for s in sizes], rotation=45, ha='right')
+            ax.grid(True, linestyle='--', alpha=0.4)
+
+        plt.tight_layout()
+        comp_plot = os.path.join(RESULTS_DIR, 'comparison_all_fft_sizes.png')
+        fig.savefig(comp_plot, dpi=150, bbox_inches='tight')
+        plt.close(fig)
+        log_message(f"Comparison plot       → {comp_plot}")
 
 
 def run_full_optimization_sweep():
-    """
-    Run optimization for all FFT sizes defined in FFT_SIZES
-    """
-    log_message("\n" + "="*60)
+    """Run optimisation for every FFT size in FFT_SIZES (2 – 1024)."""
+    log_message("\n" + "=" * 60)
     log_message("Mixed-Precision FFT Optimization Framework")
-    log_message("="*60 + "\n")
+    log_message("=" * 60 + "\n")
 
     setup_verilog_sources()
-
     all_results = {}
 
     for fft_size in FFT_SIZES:
         try:
             global CURRENT_GEN
-            CURRENT_GEN = 0
-
+            CURRENT_GEN = 0       # reset generation counter per FFT size
             result = run_optimization_for_fft_size(fft_size)
             all_results[fft_size] = result
-
         except Exception as e:
             log_message(
-                f"ERROR: Optimization failed for {fft_size}-point FFT: {e}",
+                f"ERROR: Optimisation failed for {fft_size}-point FFT: {e}",
                 level='ERROR'
             )
-            continue
+            all_results[fft_size] = None
 
     generate_comprehensive_summary(all_results)
 
-    log_message("\n" + "="*60)
-    log_message("Optimization sweep complete!")
-    log_message("="*60)
+    log_message("\n" + "=" * 60)
+    log_message("Optimisation sweep complete!")
+    log_message("=" * 60)
 
 
-def generate_comprehensive_summary(all_results):
-    """
-    Generate a comprehensive summary across all FFT sizes.
-    All values are unscaled back to raw hardware units.
-    """
-    summary_file = os.path.join(RESULTS_DIR, 'comprehensive_summary.txt')
-
-    with open(summary_file, 'w') as f:
-        f.write("Mixed-Precision FFT Optimization - Comprehensive Summary\n")
-        f.write("="*70 + "\n\n")
-
-        for fft_size, result in all_results.items():
-            f.write(f"\nFFT Size: {fft_size}\n")
-            f.write("-" * 70 + "\n")
-
-            if result is None:
-                f.write("  Optimization failed\n")
-                continue
-
-            pareto_front = result.F
-            if pareto_front is None or len(pareto_front) == 0:
-                f.write("  No Pareto front available\n")
-                continue
-
-            # Unscale to raw hardware units
-            raw_power, raw_area, raw_perf, psnr_approx = _unscale_objectives(pareto_front)
-
-            f.write(f"  Pareto front size: {len(pareto_front)}\n")
-            f.write(f"  Power range  : {raw_power.min():.6f} – {raw_power.max():.6f} W\n")
-            f.write(f"  Area range   : {raw_area.min():.0f} – {raw_area.max():.0f} LUTs\n")
-            f.write(f"  PSNR range   : {psnr_approx.min():.2f} – {psnr_approx.max():.2f} dB\n")
-
-            # Best balanced solution using normalised equal-weight score
-            norm_power = (raw_power - raw_power.min()) / (raw_power.ptp() + 1e-12)
-            norm_area  = (raw_area  - raw_area.min())  / (raw_area.ptp()  + 1e-12)
-            norm_perf  = (raw_perf  - raw_perf.min())  / (raw_perf.ptp()  + 1e-12)
-            best_idx   = np.argmin(norm_power + norm_area + norm_perf)
-
-            f.write(f"\n  Best balanced solution:\n")
-            f.write(f"    Power      : {raw_power[best_idx]:.6f} W\n")
-            f.write(f"    Area       : {raw_area[best_idx]:.0f} LUTs\n")
-            f.write(f"    PSNR       : {psnr_approx[best_idx]:.2f} dB\n")
-            f.write(f"    Perf Error : {raw_perf[best_idx]:.6f}\n")
-
-    log_message(f"Comprehensive summary saved to {summary_file}")
-
+# ---------------------------------------------------------------------------
+# Legacy helper (kept for backward compatibility)
+# ---------------------------------------------------------------------------
 
 def quick_test():
-    """
-    Quick test with a single small FFT size
-    """
-    log_message("Running quick test with 32-point FFT")
-
+    """Quick smoke-test: 16-point FFT with reduced pop/gen."""
+    log_message("Running quick test with 16-point FFT")
     setup_verilog_sources()
 
-    global CURRENT_GEN
+    global CURRENT_GEN, POPULATION, GENERATIONS
     CURRENT_GEN = 0
+    orig_pop, orig_gen = POPULATION, GENERATIONS
+    POPULATION, GENERATIONS = 6, 3
 
-    # Reduce parameters for quick test
-    global POPULATION, GENERATIONS
-    original_pop = POPULATION
-    original_gen = GENERATIONS
+    run_optimization_for_fft_size(fft_size=16)
 
-    POPULATION = 60
-    GENERATIONS = 80
-
-    result = run_optimization_for_fft_size(fft_size=512)
-
-    # Restore parameters
-    POPULATION = original_pop
-    GENERATIONS = original_gen
-
+    POPULATION, GENERATIONS = orig_pop, orig_gen
     log_message("Quick test complete")
+
+
+# ---------------------------------------------------------------------------
+# Entry-points
+# ---------------------------------------------------------------------------
+
+def main():
+    """
+    Default entry-point: full sweep across all FFT sizes (2 → 1024).
+    Equivalent to  python runMixedFFTOptimization.py --mode full
+    """
+    run_full_optimization_sweep()
 
 
 if __name__ == "__main__":
@@ -402,15 +556,19 @@ if __name__ == "__main__":
     parser.add_argument(
         '--mode',
         choices=['test', 'single', 'full'],
-        default='test',
-        help='Optimization mode: test (quick), single (one size), full (all sizes)'
+        default='full',
+        help=(
+            'test   – quick 16-pt smoke test | '
+            'single – one FFT size (--fft-size) | '
+            'full   – complete sweep 2→1024 (default)'
+        ),
     )
     parser.add_argument(
         '--fft-size',
         type=int,
         default=8,
         choices=[2, 4, 8, 16, 32, 64, 128, 256, 512, 1024],
-        help='FFT size for single mode'
+        help='FFT size for --mode single',
     )
 
     args = parser.parse_args()
@@ -420,5 +578,5 @@ if __name__ == "__main__":
     elif args.mode == 'single':
         setup_verilog_sources()
         run_optimization_for_fft_size(args.fft_size)
-    elif args.mode == 'full':
-        run_full_optimization_sweep()
+    else:
+        main()
