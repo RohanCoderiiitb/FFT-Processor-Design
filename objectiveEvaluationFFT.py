@@ -112,7 +112,7 @@ class MixedPrecisionFFTProblem(Problem):
         power, area = self._run_vivado_synthesis(design_name, core_file, top_file)
 
         # ── Step 3: performance evaluation ────────────────────────────
-        psnr = self._run_performance_evaluation(core_file, design_name)
+        psnr = self._run_performance_evaluation(core_file, design_name, chromosome)
 
         results = {'power': power, 'area': area, 'psnr': psnr}
         RESULT_CACHE[chrom_hash] = results
@@ -206,10 +206,10 @@ class MixedPrecisionFFTProblem(Problem):
         return power, area
 
     # ------------------------------------------------------------------
-    def _run_performance_evaluation(self, verilog_file, design_name):
+    def _run_performance_evaluation(self, verilog_file, design_name, chromosome=None):
         log_message(f"Running performance evaluation for {design_name}")
         try:
-            return self.perf_eval.evaluate_design(verilog_file, design_name)
+            return self.perf_eval.evaluate_design(verilog_file, design_name, chromosome=chromosome)
         except Exception as e:
             log_message(
                 f"Performance evaluation failed for {design_name}: {e}",

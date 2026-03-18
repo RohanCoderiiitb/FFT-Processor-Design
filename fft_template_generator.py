@@ -719,25 +719,45 @@ module {top_module_name} (
     assign unload_data = core_rd_data;
 
     // -------------------------------------------------------------------------
-    // done register – mirrors fft_test.v behaviour
+    // done register and bank_sel management
+    //
+    // bank_sel state machine:
+    //   Loading phase : 1'b1  → memory writes go to bank0 (stage 0 reads bank0)
+    //   FFT running   : managed by core internally
+    //   FFT done      : ns%2  → holds result-bank pointer for unload
+    //   Next load     : restored to 1'b1 when load_en fires (before start),
+    //                   so new data always lands in bank0.
+    //
+    // CRITICAL: bank_sel must NOT be restored until load_en actually fires.
+    // Restoring it in the done-clear cycle (one cycle after core_done) clobbers
+    // the result-bank pointer before the testbench finishes reading, causing
+    // even-stage FFTs (ns%2==0, e.g. N=16,64) to read the wrong bank.
     // -------------------------------------------------------------------------
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
             done     <= 1'b0;
             bank_sel <= 1'b1;
         end else begin
+            // Restore bank_sel for loading as soon as load_en fires.
+            // This is before start, so it is safe to overwrite whatever
+            // ns%2 value was left from the previous FFT.
+            if (load_en && !start)
+                bank_sel <= 1'b1;
+
             if (start) begin
                 done     <= 1'b0;
-                bank_sel <= 1'b1; // Core will manage bank during FFT
+                bank_sel <= 1'b1;
             end else if (core_done) begin
                 done     <= 1'b1;
-                // Result bank after {ns} stages (each stage flips):
-                //   odd  num_stages → result in bank 1 (bank_sel=1 to read from bank 1)
-                //   even num_stages → result in bank 0 (bank_sel=0 to read from bank 0)
-                bank_sel <= 1'b{ns % 2};  // Result in bank {ns % 2} after {ns} stage flips
+                // Point at the bank that holds the FFT result:
+                //   odd  num_stages → bank 1  (bank_sel=1)
+                //   even num_stages → bank 0  (bank_sel=0)
+                bank_sel <= 1'b{ns % 2};
             end else if (!start && done) begin
+                // Clear done flag. bank_sel intentionally left at ns%2
+                // so the testbench can still read the result after done deasserts.
+                // The load_en branch above will restore it before the next FFT.
                 done <= 1'b0;
-                bank_sel <= 1'b1; // Back to default for next load
             end
         end
     end
