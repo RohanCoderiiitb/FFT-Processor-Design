@@ -63,42 +63,349 @@ def _psnr_from_perf_error(perf_error):
 
 
 # ---------------------------------------------------------------------------
+# Solution .txt parsing → CSV
+# ---------------------------------------------------------------------------
+
+def parse_solution_txts_to_csv(fft_size, results_subdir):
+    """
+    Parse every  gen{G}_sol{S}.txt  file in RESULTS_DIR that belongs to
+    this FFT size (identified by the 'FFT Size' field inside the file) and
+    write a single  all_generations_fft{N}.csv  into results_subdir.
+
+    Columns:
+        generation, solution_id, fft_size,
+        s0_mult, s0_add, s1_mult, s1_add, ...,
+        power_W, area_LUTs, psnr_dB,
+        fp4_mult, fp8_mult, fp4_add, fp8_add
+    """
+    import math, ast as _ast
+
+    num_stages   = int(math.log2(fft_size))
+    gene_headers = []
+    for s in range(num_stages):
+        gene_headers += [f"s{s}_mult", f"s{s}_add"]
+
+    csv_path = os.path.join(results_subdir,
+                            f"all_generations_fft{fft_size}.csv")
+
+    pattern  = os.path.join(RESULTS_DIR, "gen*_sol*.txt")
+    txt_files = sorted(glob.glob(pattern))
+
+    rows = []
+    for fpath in txt_files:
+        try:
+            data = {}
+            with open(fpath) as f:
+                for line in f:
+                    line = line.strip()
+                    # Key : Value lines
+                    if ' : ' in line:
+                        key, _, val = line.partition(' : ')
+                        data[key.strip()] = val.strip()
+
+            # Filter to only files belonging to this FFT size
+            if int(data.get('FFT Size', -1)) != fft_size:
+                continue
+
+            generation  = int(data['Generation'])
+            solution_id = int(data['Solution ID'])
+            chrom_raw   = data['Chromosome']          # e.g. "[0, 1, 0, 1, 1, 0]"
+            chromosome  = _ast.literal_eval(chrom_raw)
+            power       = float(data['Power  '].replace(' W', '').strip())
+            area        = int(  data['Area   '].replace(' LUTs', '').strip())
+            psnr        = float(data['PSNR   '].replace(' dB', '').strip())
+            fp4_mult    = int(  data.get('FP4 Multipliers', '0').split()[0])
+            fp8_mult    = int(  data.get('FP8 Multipliers', '0').split()[0])
+            fp4_add     = int(  data.get('FP4 Adders',      '0').split()[0])
+            fp8_add     = int(  data.get('FP8 Adders',      '0').split()[0])
+
+            rows.append({
+                'generation':  generation,
+                'solution_id': solution_id,
+                'fft_size':    fft_size,
+                'chromosome':  chromosome,
+                'power_W':     power,
+                'area_LUTs':   area,
+                'psnr_dB':     psnr,
+                'fp4_mult':    fp4_mult,
+                'fp8_mult':    fp8_mult,
+                'fp4_add':     fp4_add,
+                'fp8_add':     fp8_add,
+            })
+        except Exception as e:
+            log_message(f"  Could not parse {fpath}: {e}", level='WARN')
+
+    rows.sort(key=lambda r: (r['generation'], r['solution_id']))
+
+    with open(csv_path, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(
+            ['generation', 'solution_id', 'fft_size'] +
+            gene_headers +
+            ['power_W', 'area_LUTs', 'psnr_dB',
+             'fp4_mult', 'fp8_mult', 'fp4_add', 'fp8_add']
+        )
+        for r in rows:
+            chrom = r['chromosome']
+            # Pad or truncate chromosome to match expected gene count
+            n = num_stages * 2
+            chrom = (chrom + [0] * n)[:n]
+            writer.writerow(
+                [r['generation'], r['solution_id'], r['fft_size']] +
+                chrom +
+                [f"{r['power_W']:.6f}", r['area_LUTs'],
+                 f"{r['psnr_dB']:.4f}",
+                 r['fp4_mult'], r['fp8_mult'],
+                 r['fp4_add'],  r['fp8_add']]
+            )
+
+    log_message(
+        f"All-generations CSV saved → {csv_path}  ({len(rows)} solutions)"
+    )
+    return txt_files   # return list so caller can pass to the zip function
+
+
+# ---------------------------------------------------------------------------
+# Solution .txt compression (separate zip from RTL)
+# ---------------------------------------------------------------------------
+
+def compress_solution_txt_files(fft_size, results_subdir, txt_files):
+    """
+    Zip the gen*_sol*.txt files that belong to this FFT size into
+    solution_logs_fft{N}.zip  inside results_subdir, then delete the originals.
+
+    Kept deliberately separate from rtl_fft{N}.zip so the two archives are
+    easy to tell apart.
+    """
+    if not txt_files:
+        log_message("No solution .txt files to compress.", level='WARN')
+        return
+
+    zip_path = os.path.join(results_subdir,
+                            f"solution_logs_fft{fft_size}.zip")
+
+    with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        for fpath in txt_files:
+            zf.write(fpath, os.path.basename(fpath))
+
+    if os.path.exists(zip_path):
+        deleted = 0
+        for fpath in txt_files:
+            try:
+                os.remove(fpath)
+                deleted += 1
+            except OSError as e:
+                log_message(
+                    f"  Warning: could not remove {fpath}: {e}", level='WARN'
+                )
+        log_message(
+            f"Compressed {len(txt_files)} solution log(s) → {zip_path} "
+            f"({deleted} deleted)"
+        )
+    else:
+        log_message("solution_logs zip failed — cleanup skipped.", level='WARN')
+
+
+# ---------------------------------------------------------------------------
 # RTL compression
 # ---------------------------------------------------------------------------
 
 def compress_rtl_files(results_subdir, fft_size):
     """
-    Zip all Verilog (.v) files inside results_subdir **and** any per-solution
-    generated RTL in GENERATED_DESIGNS_DIR matching fft_{fft_size}_*.v.
-    Deletes the original files after successful compression.
+    Zip all generated RTL and simulation files for this FFT size into
+    ``rtl_fft{N}.zip``, then delete the originals.
+
+      generated_designs/fft_{N}_*.v    — per-solution RTL cores
+      results/fft_{N}/*.v              — any .v copied into results
+      sim/tb_fft_{N}_*.v               — auto-generated testbenches
+      sim/fft_{N}_*_output.txt         — simulation output vectors
+      sim/fft_{N}_*.vvp                — compiled iverilog binaries
+      sim/twiddles_1024.txt            — twiddle ROM (included but NOT deleted)
     """
     zip_path = os.path.join(results_subdir, f"rtl_fft{fft_size}.zip")
     zipped_files = []
+    sim_dir = os.path.abspath('./sim')
 
     with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
-        # 1. .v files already inside the results sub-directory
-        for vfile in glob.glob(os.path.join(results_subdir, '**', '*.v'),
-                               recursive=True):
-            arcname = os.path.relpath(vfile, results_subdir)
-            zf.write(vfile, arcname)
-            zipped_files.append(vfile)
 
-        # 2. Per-solution RTL from the shared generated_designs directory
-        pattern = os.path.join(GENERATED_DESIGNS_DIR, f"fft_{fft_size}_*.v")
-        for vfile in glob.glob(pattern):
-            arcname = os.path.join('generated_designs', os.path.basename(vfile))
-            zf.write(vfile, arcname)
-            zipped_files.append(vfile)
+        def _add(filepath, arcdir):
+            arcname = os.path.join(arcdir, os.path.basename(filepath))
+            zf.write(filepath, arcname)
+            zipped_files.append(filepath)
+
+        for f in glob.glob(os.path.join(GENERATED_DESIGNS_DIR,
+                                        f"fft_{fft_size}_*.v")):
+            _add(f, 'generated_designs')
+
+        for f in glob.glob(os.path.join(results_subdir, '**', '*.v'),
+                           recursive=True):
+            arcname = os.path.relpath(f, results_subdir)
+            zf.write(f, arcname)
+            zipped_files.append(f)
+
+        for f in glob.glob(os.path.join(sim_dir, f"tb_fft_{fft_size}_*.v")):
+            _add(f, 'sim')
+
+        for f in glob.glob(os.path.join(sim_dir,
+                                        f"fft_{fft_size}_*_output.txt")):
+            _add(f, 'sim')
+
+        for f in glob.glob(os.path.join(sim_dir, f"fft_{fft_size}_*.vvp")):
+            _add(f, 'sim')
+
+        twiddle_file = os.path.join(sim_dir, 'twiddles_1024.txt')
+        if os.path.exists(twiddle_file):
+            zf.write(twiddle_file, os.path.join('sim', 'twiddles_1024.txt'))
+            # shared across runs — do NOT delete
 
     if os.path.exists(zip_path):
-        for vfile in zipped_files:
-            try:
-                os.remove(vfile)
-            except OSError as e:
-                log_message(f"  Warning: could not remove {vfile}: {e}", level='WARN')
-        log_message(f"Compressed {len(zipped_files)} RTL file(s) → {zip_path}")
+        deleted = sum(1 for f in zipped_files
+                      if not (lambda: (os.remove(f), False)[1])())
+        log_message(
+            f"RTL zip: {len(zipped_files)} file(s) → {zip_path} "
+            f"(originals deleted)"
+        )
     else:
-        log_message("Zip creation failed — RTL cleanup skipped.", level='WARN')
+        log_message("RTL zip creation failed — cleanup skipped.", level='WARN')
+
+
+def compress_solution_txts(results_subdir, fft_size):
+    """
+    Parse every ``gen*_sol*.txt`` in RESULTS_DIR that belongs to this FFT run,
+    write them all into ``solution_logs_fft{N}.zip`` (kept separate from the
+    RTL zip), then delete the originals.
+
+    Also writes ``all_evaluated_solutions_fft{N}.csv`` with one row per file:
+        generation, solution_id, fft_size,
+        s0_mult, s0_add, ...,
+        power_W, area_LUTs, psnr_dB,
+        fp4_mult_pct, fp8_mult_pct, fp4_add_pct, fp8_add_pct
+    """
+    import re
+
+    txt_files = sorted(glob.glob(os.path.join(RESULTS_DIR, 'gen*_sol*.txt')))
+    if not txt_files:
+        log_message("No gen*_sol*.txt files found — skipping solution log processing.",
+                    level='WARN')
+        return
+
+    # ── Parse each file ──────────────────────────────────────────────────
+    rows = []
+    for path in txt_files:
+        try:
+            with open(path) as f:
+                content = f.read()
+
+            def _field(label):
+                m = re.search(rf'^{label}\s*:\s*(.+)$', content, re.MULTILINE)
+                return m.group(1).strip() if m else None
+
+            # Only include files that belong to this FFT size
+            file_fft = _field('FFT Size')
+            if file_fft is None or int(file_fft) != fft_size:
+                continue
+
+            generation  = int(_field('Generation') or -1)
+            solution_id = int(_field('Solution ID') or -1)
+            chromosome_raw = _field('Chromosome')
+            chromosome = [int(x) for x in
+                          re.findall(r'\d+', chromosome_raw)] if chromosome_raw else []
+
+            power_m = re.search(r'Power\s*:\s*([\d.]+)\s*W',  content)
+            area_m  = re.search(r'Area\s*:\s*([\d]+)\s*LUTs', content)
+            psnr_m  = re.search(r'PSNR\s*:\s*([\d.\-]+)\s*dB', content)
+
+            power = float(power_m.group(1)) if power_m else float('nan')
+            area  = int(area_m.group(1))    if area_m  else -1
+            psnr  = float(psnr_m.group(1))  if psnr_m  else float('nan')
+
+            fp4_mult_m = re.search(r'FP4 Multipliers:\s*\d+\s*\(([\d.]+)%\)', content)
+            fp8_mult_m = re.search(r'FP8 Multipliers:\s*\d+\s*\(([\d.]+)%\)', content)
+            fp4_add_m  = re.search(r'FP4 Adders\s*:\s*\d+\s*\(([\d.]+)%\)', content)
+            fp8_add_m  = re.search(r'FP8 Adders\s*:\s*\d+\s*\(([\d.]+)%\)', content)
+
+            rows.append({
+                'generation':   generation,
+                'solution_id':  solution_id,
+                'fft_size':     fft_size,
+                'chromosome':   chromosome,
+                'power_W':      power,
+                'area_LUTs':    area,
+                'psnr_dB':      psnr,
+                'fp4_mult_pct': float(fp4_mult_m.group(1)) if fp4_mult_m else float('nan'),
+                'fp8_mult_pct': float(fp8_mult_m.group(1)) if fp8_mult_m else float('nan'),
+                'fp4_add_pct':  float(fp4_add_m.group(1))  if fp4_add_m  else float('nan'),
+                'fp8_add_pct':  float(fp8_add_m.group(1))  if fp8_add_m  else float('nan'),
+            })
+
+        except Exception as e:
+            log_message(f"  Warning: could not parse {path}: {e}", level='WARN')
+
+    # ── Write CSV ────────────────────────────────────────────────────────
+    if rows:
+        # Build gene column names from the longest chromosome seen
+        max_chrom = max(len(r['chromosome']) for r in rows)
+        num_stages = max_chrom // 2
+        gene_headers = []
+        for s in range(num_stages):
+            gene_headers += [f"s{s}_mult", f"s{s}_add"]
+
+        csv_path = os.path.join(
+            results_subdir, f"all_evaluated_solutions_fft{fft_size}.csv"
+        )
+        with open(csv_path, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(
+                ['generation', 'solution_id', 'fft_size'] +
+                gene_headers +
+                ['power_W', 'area_LUTs', 'psnr_dB',
+                 'fp4_mult_pct', 'fp8_mult_pct',
+                 'fp4_add_pct',  'fp8_add_pct']
+            )
+            rows.sort(key=lambda r: (r['generation'], r['solution_id']))
+            for r in rows:
+                # Pad chromosome to full width in case of short entries
+                chrom = r['chromosome'] + [0] * (max_chrom - len(r['chromosome']))
+                writer.writerow(
+                    [r['generation'], r['solution_id'], r['fft_size']] +
+                    chrom +
+                    [f"{r['power_W']:.6f}", r['area_LUTs'], f"{r['psnr_dB']:.4f}",
+                     f"{r['fp4_mult_pct']:.1f}", f"{r['fp8_mult_pct']:.1f}",
+                     f"{r['fp4_add_pct']:.1f}",  f"{r['fp8_add_pct']:.1f}"]
+                )
+        log_message(
+            f"Evaluated-solutions CSV → {csv_path}  ({len(rows)} rows)"
+        )
+
+    # ── Zip the txt files ────────────────────────────────────────────────
+    zip_path = os.path.join(results_subdir, f"solution_logs_fft{fft_size}.zip")
+    zipped = []
+    with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        for path in txt_files:
+            try:
+                # Only zip files that belong to this FFT size
+                with open(path) as f:
+                    content = f.read()
+                m = re.search(r'^FFT Size\s*:\s*(\d+)', content, re.MULTILINE)
+                if m and int(m.group(1)) == fft_size:
+                    zf.write(path, os.path.basename(path))
+                    zipped.append(path)
+            except Exception as e:
+                log_message(f"  Warning: could not zip {path}: {e}", level='WARN')
+
+    if os.path.exists(zip_path):
+        for path in zipped:
+            try:
+                os.remove(path)
+            except OSError as e:
+                log_message(f"  Warning: could not remove {path}: {e}", level='WARN')
+        log_message(
+            f"Solution-log zip: {len(zipped)} txt file(s) → {zip_path} "
+            f"(originals deleted)"
+        )
+    else:
+        log_message("Solution-log zip creation failed — cleanup skipped.",
+                    level='WARN')
 
 
 # ---------------------------------------------------------------------------
@@ -338,7 +645,11 @@ def save_optimization_results(result, callback, fft_size):
     # ── Pareto front plots ───────────────────────────────────────────────
     plot_pareto_front(pareto_objectives, fft_size, results_subdir, feasible)
 
-    # ── Compress RTL files and remove originals ──────────────────────────
+    # ── Parse gen*_sol*.txt → all_generations CSV, then zip+delete them ──
+    txt_files = parse_solution_txts_to_csv(fft_size, results_subdir)
+    compress_solution_txt_files(fft_size, results_subdir, txt_files)
+
+    # ── Compress RTL files (rtl_fft{N}.zip) — separate from logs ─────────
     compress_rtl_files(results_subdir, fft_size)
 
     log_message(
