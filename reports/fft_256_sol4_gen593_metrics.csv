@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_256_sol4_gen593
+top_module,fft_256_sol4_gen593_top
+lut_count,3070
+total_power_w,0.130
+wns_ns,-43.596
+clock_period_ns,10.0

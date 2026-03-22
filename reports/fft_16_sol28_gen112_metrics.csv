@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_16_sol28_gen112
+top_module,fft_16_sol28_gen112_top
+lut_count,2408
+total_power_w,0.125
+wns_ns,-34.703
+clock_period_ns,10.0

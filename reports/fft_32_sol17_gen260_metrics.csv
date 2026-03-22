@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_32_sol17_gen260
+top_module,fft_32_sol17_gen260_top
+lut_count,2454
+total_power_w,0.121
+wns_ns,-35.523
+clock_period_ns,10.0

@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_512_sol25_gen650
+top_module,fft_512_sol25_gen650_top
+lut_count,2406
+total_power_w,0.129
+wns_ns,-42.301
+clock_period_ns,10.0

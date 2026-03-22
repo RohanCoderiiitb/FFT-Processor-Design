@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_128_sol15_gen482
+top_module,fft_128_sol15_gen482_top
+lut_count,2996
+total_power_w,0.127
+wns_ns,-43.632
+clock_period_ns,10.0

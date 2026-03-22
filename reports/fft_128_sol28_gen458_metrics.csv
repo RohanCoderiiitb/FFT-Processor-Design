@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_128_sol28_gen458
+top_module,fft_128_sol28_gen458_top
+lut_count,2715
+total_power_w,0.127
+wns_ns,-42.325
+clock_period_ns,10.0

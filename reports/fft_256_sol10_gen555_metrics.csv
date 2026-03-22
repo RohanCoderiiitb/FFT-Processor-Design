@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_256_sol10_gen555
+top_module,fft_256_sol10_gen555_top
+lut_count,3012
+total_power_w,0.128
+wns_ns,-44.549
+clock_period_ns,10.0

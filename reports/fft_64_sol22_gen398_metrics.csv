@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_64_sol22_gen398
+top_module,fft_64_sol22_gen398_top
+lut_count,3098
+total_power_w,0.127
+wns_ns,-43.669
+clock_period_ns,10.0
