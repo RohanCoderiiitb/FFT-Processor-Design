@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_128_sol1_gen407
+top_module,fft_128_sol1_gen407_top
+lut_count,2725
+total_power_w,0.131
+wns_ns,-43.822
+clock_period_ns,10.0

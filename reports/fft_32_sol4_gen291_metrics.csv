@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_32_sol4_gen291
+top_module,fft_32_sol4_gen291_top
+lut_count,2461
+total_power_w,0.121
+wns_ns,-36.318
+clock_period_ns,10.0

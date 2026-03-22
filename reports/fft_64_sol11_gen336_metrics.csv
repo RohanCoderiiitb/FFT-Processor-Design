@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_64_sol11_gen336
+top_module,fft_64_sol11_gen336_top
+lut_count,2737
+total_power_w,0.130
+wns_ns,-43.809
+clock_period_ns,10.0
