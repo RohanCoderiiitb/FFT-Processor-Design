@@ -196,5 +196,5 @@ def initialize_directories():
         os.makedirs(d, exist_ok=True)
     log_message("Initialized directory structure")
 
-# Initialize at import time
+# Initialize at import time~
 initialize_directories()
