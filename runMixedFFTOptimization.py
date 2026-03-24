@@ -111,9 +111,9 @@ def parse_solution_txts_to_csv(fft_size, results_subdir):
             solution_id = int(data['Solution ID'])
             chrom_raw   = data['Chromosome']          # e.g. "[0, 1, 0, 1, 1, 0]"
             chromosome  = _ast.literal_eval(chrom_raw)
-            power       = float(data['Power  '].replace(' W', '').strip())
-            area        = int(  data['Area   '].replace(' LUTs', '').strip())
-            psnr        = float(data['PSNR   '].replace(' dB', '').strip())
+            power = float(data['Power'].replace(' W', '').strip())
+            area  = int(  data['Area'].replace(' LUTs', '').strip())
+            psnr  = float(data['PSNR'].replace(' dB', '').strip())
             fp4_mult    = int(  data.get('FP4 Multipliers', '0').split()[0])
             fp8_mult    = int(  data.get('FP8 Multipliers', '0').split()[0])
             fp4_add     = int(  data.get('FP4 Adders',      '0').split()[0])
@@ -840,7 +840,7 @@ def quick_test():
     orig_pop, orig_gen = POPULATION, GENERATIONS
     POPULATION, GENERATIONS = 6, 3
 
-    run_optimization_for_fft_size(fft_size=16)
+    run_optimization_for_fft_size(fft_size=1024)
 
     POPULATION, GENERATIONS = orig_pop, orig_gen
     log_message("Quick test complete")
@@ -856,6 +856,7 @@ def main():
     Equivalent to  python runMixedFFTOptimization.py --mode full
     """
     run_full_optimization_sweep()
+    # quick_test()
 
 
 if __name__ == "__main__":

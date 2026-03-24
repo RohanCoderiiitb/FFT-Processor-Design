@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_32_sol29_gen225
-top_module,fft_32_sol29_gen225_top
-lut_count,2952
-total_power_w,0.136
-wns_ns,-43.766
-clock_period_ns,10.0

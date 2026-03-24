@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_64_sol19_gen311
-top_module,fft_64_sol19_gen311_top
-lut_count,2487
-total_power_w,0.123
-wns_ns,-34.800
-clock_period_ns,10.0

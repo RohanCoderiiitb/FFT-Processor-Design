@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_1024_sol25_gen770
-top_module,fft_1024_sol25_gen770_top
-lut_count,2155
-total_power_w,0.120
-wns_ns,-35.197
-clock_period_ns,10.0

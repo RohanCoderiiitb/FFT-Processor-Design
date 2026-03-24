@@ -1,0 +1,15 @@
+#
+# An unexpected error has occurred (11)
+#
+Stack:
+/lib/x86_64-linux-gnu/libc.so.6(+0x43090) [0x7f86056ba090]
+/tools/Xilinx/Vivado/2021.1/lib/lnx64.o/librdi_psta.so(sta::Search::deratedDelays(sta::Vertex*, sta::TimingArc*, sta::Edge*, bool, bool const*, sta::DelayVsta<float>*)+0xce) [0x7f85c5cf35ae]
+/tools/Xilinx/Vivado/2021.1/lib/lnx64.o/librdi_psta.so(sta::VisitContext::fetchDeratedDelays(sta::Vertex*, sta::TimingArc*, sta::Edge*, bool, bool const*)+0x75) [0x7f85c5cf3725]
+/tools/Xilinx/Vivado/2021.1/lib/lnx64.o/librdi_psta.so(sta::SearchPathVisitor::visitFromPaths(sta::Vertex*, sta::Tag*, sta::TransRiseFall const*, sta::Edge*, sta::TimingArc*, sta::Vertex*, sta::TransRiseFall const*, sta::VisitContext&)+0x18f) [0x7f85c5d2d6af]
+/tools/Xilinx/Vivado/2021.1/lib/lnx64.o/librdi_psta.so(sta::PathVisitor::visitEdge(sta::Pin const*, sta::Vertex*, sta::Edge*, sta::Pin const*, sta::Vertex*)+0x37d) [0x7f85c5d1617d]
+/tools/Xilinx/Vivado/2021.1/lib/lnx64.o/librdi_psta.so(+0x488f6f) [0x7f85c5cedf6f]
+/tools/Xilinx/Vivado/2021.1/lib/lnx64.o/librdi_psta.so(sta::ArrivalVisitor::visit(sta::Vertex*)+0x126) [0x7f85c5d296e6]
+/tools/Xilinx/Vivado/2021.1/lib/lnx64.o/librdi_psta.so(void sta::forEachBeginNoLock<sta::BfsListIterator, sta::VertexVisitor, sta::Vertex*>(void*)+0x26) [0x7f85c5c9d9e6]
+/tools/Xilinx/Vivado/2021.1/lib/lnx64.o/librdi_psta.so(sta::ThreadWorker::threadBegin(void*)+0x6c) [0x7f85c5d77a8c]
+/lib/x86_64-linux-gnu/libpthread.so.0(+0x8609) [0x7f860565c609]
+/lib/x86_64-linux-gnu/libc.so.6(clone+0x43) [0x7f8605796353]

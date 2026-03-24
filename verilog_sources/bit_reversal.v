@@ -12,17 +12,17 @@ module bit_reverse #(
     
     // Explicit 10-bit matching to prevent simulator case/shift evaluation bugs
     always @(*) begin
-        if      (N == 10'd1024 || N == 10'd0) log2_N = 10'd10;
-        else if (N == 10'd512) log2_N = 10'd9;
-        else if (N == 10'd256) log2_N = 10'd8;
-        else if (N == 10'd128) log2_N = 10'd7;
-        else if (N == 10'd64)  log2_N = 10'd6;
-        else if (N == 10'd32)  log2_N = 10'd5;
-        else if (N == 10'd16)  log2_N = 10'd4;
-        else if (N == 10'd8)   log2_N = 10'd3;
-        else if (N == 10'd4)   log2_N = 10'd2;
-        else if (N == 10'd2)   log2_N = 10'd1;
-        else                   log2_N = 10'd3; // Failsafe
+        if      (N == 11'd1024 || N == 11'd0) log2_N = 11'd10;
+        else if (N == 11'd512) log2_N = 11'd9;
+        else if (N == 11'd256) log2_N = 11'd8;
+        else if (N == 11'd128) log2_N = 11'd7;
+        else if (N == 11'd64)  log2_N = 11'd6;
+        else if (N == 11'd32)  log2_N = 11'd5;
+        else if (N == 11'd16)  log2_N = 11'd4;
+        else if (N == 11'd8)   log2_N = 11'd3;
+        else if (N == 11'd4)   log2_N = 11'd2;
+        else if (N == 11'd2)   log2_N = 11'd1;
+        else                   log2_N = 11'd3; // Failsafe
         
         // Full width bit reversal using a temporary variable
         temp_out = 0;

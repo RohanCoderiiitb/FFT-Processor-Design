@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_256_sol22_gen515
-top_module,fft_256_sol22_gen515_top
-lut_count,2159
-total_power_w,0.124
-wns_ns,-23.151
-clock_period_ns,10.0
