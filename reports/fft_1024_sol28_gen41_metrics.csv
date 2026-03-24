@@ -1,0 +1,7 @@
+Metric,Value
+design_name,fft_1024_sol28_gen41
+top_module,fft_1024_sol28_gen41_top
+lut_count,3106
+total_power_w,0.127
+wns_ns,-44.605
+clock_period_ns,10.0

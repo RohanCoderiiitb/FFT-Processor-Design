@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_32_sol28_gen216
-top_module,fft_32_sol28_gen216_top
-lut_count,3058
-total_power_w,0.133
-wns_ns,-43.874
-clock_period_ns,10.0

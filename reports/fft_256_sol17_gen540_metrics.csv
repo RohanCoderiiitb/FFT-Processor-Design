@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_256_sol17_gen540
-top_module,fft_256_sol17_gen540_top
-lut_count,2166
-total_power_w,0.122
-wns_ns,-23.152
-clock_period_ns,10.0

@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_128_sol8_gen452
-top_module,fft_128_sol8_gen452_top
-lut_count,2745
-total_power_w,0.130
-wns_ns,-42.350
-clock_period_ns,10.0

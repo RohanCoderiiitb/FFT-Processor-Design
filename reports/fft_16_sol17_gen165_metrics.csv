@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_16_sol17_gen165
-top_module,fft_16_sol17_gen165_top
-lut_count,2812
-total_power_w,0.123
-wns_ns,-32.086
-clock_period_ns,10.0

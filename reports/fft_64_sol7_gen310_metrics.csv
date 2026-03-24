@@ -1,7 +1,0 @@
-Metric,Value
-design_name,fft_64_sol7_gen310
-top_module,fft_64_sol7_gen310_top
-lut_count,2590
-total_power_w,0.132
-wns_ns,-34.018
-clock_period_ns,10.0

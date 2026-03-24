@@ -38,7 +38,7 @@ module twiddle_factor_unified#(
             8:    scaled_k = {k, 7'b0000000};// k * 128
             4:    scaled_k = {k, 8'b00000000};// k * 256
             2:    scaled_k = {k, 9'b000000000};// k * 512
-            default: scaled_k = 10'd0;
+            default: scaled_k = 11'd0;
         endcase
     end
 

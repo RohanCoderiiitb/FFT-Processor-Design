@@ -25,19 +25,18 @@ module dit_fft_agu_variable #(
     
     // Explicit 10-bit matching to prevent simulator case/shift underflow bugs
     always @(*) begin
-        if      (N == 10'd1024 || N == 10'd0) total_stages = 10'd10;
-        else if (N == 10'd512) total_stages = 10'd9;
-        else if (N == 10'd256) total_stages = 10'd8;
-        else if (N == 10'd128) total_stages = 10'd7;
-        else if (N == 10'd64)  total_stages = 10'd6;
-        else if (N == 10'd32)  total_stages = 10'd5;
-        else if (N == 10'd16)  total_stages = 10'd4;
-        else if (N == 10'd8)   total_stages = 10'd3;
-        else if (N == 10'd4)   total_stages = 10'd2;
-        else if (N == 10'd2)   total_stages = 10'd1;
-        else                   total_stages = 10'd3; // Failsafe
+        if      (N == 11'd1024 || N == 11'd0) total_stages = 10'd10;
+        else if (N == 11'd512)  total_stages = 10'd9;
+        else if (N == 11'd256)  total_stages = 10'd8;
+        else if (N == 11'd128)  total_stages = 10'd7;
+        else if (N == 11'd64)   total_stages = 10'd6;
+        else if (N == 11'd32)   total_stages = 10'd5;
+        else if (N == 11'd16)   total_stages = 10'd4;
+        else if (N == 11'd8)    total_stages = 10'd3;
+        else if (N == 11'd4)    total_stages = 10'd2;
+        else if (N == 11'd2)    total_stages = 10'd1;
+        else                    total_stages = 10'd3;
     end
-
     //implementing decimation in time (DIT) algorithm
     reg [ADDR_WIDTH-1:0] group;      
     reg [ADDR_WIDTH-1:0] butterfly;  
