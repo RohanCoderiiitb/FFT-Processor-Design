@@ -855,7 +855,8 @@ def main():
     Default entry-point: full sweep across all FFT sizes (2 → 1024).
     Equivalent to  python runMixedFFTOptimization.py --mode full
     """
-    run_full_optimization_sweep()
+    # run_full_optimization_sweep()
+    quick_test()
 
 
 if __name__ == "__main__":

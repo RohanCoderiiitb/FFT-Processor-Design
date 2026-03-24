@@ -85,13 +85,13 @@ RESULTS_DIR = './results'
 
 # ======================= Optimization Weights =======================
 WEIGHT_POWER = 1.0
-WEIGHT_AREA = 1.0
-WEIGHT_PERFORMANCE = 5.0          # Higher weight: push for SQNR > 10 dB
+WEIGHT_AREA = 0.001
+WEIGHT_PERFORMANCE = 50.0          # Higher weight: push for SQNR > 10 dB
 
 # Constraint thresholds
 MAX_POWER_W = 3.0            # Increased for larger designs
 MAX_AREA_LUTS = 10000        # Increased for larger designs
-MIN_SQNR_DB = 0.0           # Minimum acceptable SQNR (dB)
+MIN_SQNR_DB = -10.0           # Minimum acceptable SQNR (dB)
 
 # ======================= Performance Metrics =======================
 ENABLE_RESULT_CACHE = True
@@ -104,21 +104,11 @@ def generate_smart_initial_population(fft_size, pop_size):
     """
     Generate initial population with domain-knowledge strategies.
     Stage-level encoding: chromosome = [s0_mult, s0_add, s1_mult, s1_add, ...]
-
-    Strategies:
-    1. All FP4 (minimum power / area)
-    2. All FP8 (maximum accuracy)
-    3. Progressive: FP4 early stages, FP8 later stages (errors accumulate)
-    4. Progressive inverse: FP8 early, FP4 later
-    5. Multipliers FP8, Adders FP4
-    6. Multipliers FP4, Adders FP8
-    7. Random 70% FP4
-    8. Random 30% FP4
     """
     from fft_template_generator import FFTTemplateGenerator
 
     gen = FFTTemplateGenerator(fft_size)
-    chrom_length = gen.get_chromosome_length()  # = num_stages * 2
+    chrom_length = gen.get_chromosome_length()
     population = []
 
     # Strategy 1: All FP4
@@ -127,37 +117,57 @@ def generate_smart_initial_population(fft_size, pop_size):
     # Strategy 2: All FP8
     population.append([1] * chrom_length)
 
-    # Strategy 3: Progressive — FP4 for first half of stages, FP8 for second half
+    # Strategy 3: FP8 early stages, FP4 late stages.
+    # Errors in early stages propagate through all downstream stages,
+    # so FP8 budget is most valuable at the beginning of the pipeline.
     progressive = []
     for stage in range(gen.num_stages):
-        prec = 1 if stage >= gen.num_stages // 2 else 0
+        prec = 1 if stage < gen.num_stages // 2 else 0
         progressive.extend([prec, prec])
     population.append(progressive)
 
-    # Strategy 4: Progressive inverse
+    # Strategy 4: FP4 early, FP8 late (contrast / inverse)
     progressive_inv = []
     for stage in range(gen.num_stages):
-        prec = 0 if stage >= gen.num_stages // 2 else 1
+        prec = 0 if stage < gen.num_stages // 2 else 1
         progressive_inv.extend([prec, prec])
     population.append(progressive_inv)
 
-    # Strategy 5: Multipliers FP8, Adders FP4
+    # Strategy 5: FP8 multipliers everywhere, FP4 adders everywhere
     mult_fp8 = []
     for _ in range(gen.num_stages):
         mult_fp8.extend([1, 0])
     population.append(mult_fp8)
 
-    # Strategy 6: Multipliers FP4, Adders FP8
+    # Strategy 6: FP4 multipliers everywhere, FP8 adders everywhere
     mult_fp4 = []
     for _ in range(gen.num_stages):
         mult_fp4.extend([0, 1])
     population.append(mult_fp4)
 
-    # Strategy 7-8: Random with bias
+    # Strategies 7-8: Random with bias
     for fp4_prob in [0.7, 0.3]:
         individual = [0 if random.random() < fp4_prob else 1
                       for _ in range(chrom_length)]
         population.append(individual)
+
+    # Strategy 9: FP8 first 2 stages only, FP4 rest.
+    # Stages 0 and 1 have the highest error-propagation multiplier,
+    # so this gives the best PSNR-per-FP8-stage ratio.
+    strat9 = []
+    for stage in range(gen.num_stages):
+        prec = 1 if stage < 2 else 0
+        strat9.extend([prec, prec])
+    population.append(strat9)
+
+    # Strategy 10: FP8 mult + FP4 add at every stage.
+    # Multiply errors scale with both operand magnitudes; adder errors are
+    # bounded by the larger operand. FP8 multiply gives more PSNR per LUT
+    # than FP8 add.
+    strat10 = []
+    for _ in range(gen.num_stages):
+        strat10.extend([1, 0])
+    population.append(strat10)
 
     # Fill remainder with pure random
     while len(population) < pop_size:
