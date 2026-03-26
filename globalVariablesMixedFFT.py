@@ -68,27 +68,46 @@ SIMULATION_DIR = './sim'
 RESULTS_DIR = './results'
 
 # ======================= Optimization Weights =======================
-# Rebalanced so all three objectives are the same order of magnitude.
-# Old weights (1,1,5) let area (~2000) dominate power (~0.12) by 16000x,
-# making NSGA-II effectively a single-objective LUT minimiser.
-WEIGHT_POWER       = 10.0    # 0.12 W    x 10    -> ~1.2
-WEIGHT_AREA        = 0.001   # 2000 LUTs x 0.001 -> ~2.0
-WEIGHT_PERFORMANCE = 50.0    # 1/(P+1)   x 50    -> ~1-4
+WEIGHT_POWER = 1.0
+WEIGHT_AREA = 0.001
+WEIGHT_PERFORMANCE = 50.0
+# WEIGHT_LATENCY = 1.0         # Normalised latency objective weight
 
-# Constraint thresholds
-MAX_POWER_W   = 3.0
+# ======================= Constraint Thresholds =======================
+MAX_POWER_W = 3.0
 MAX_AREA_LUTS = 10000
-# Relaxed from 0.0 to -10.0 so mixed-precision solutions are not immediately
-# infeasible in early generations. WEIGHT_PERFORMANCE drives PSNR up through
-# the objective; the constraint only rejects genuine failures (-100 dB).
-MIN_PSNR_DB = -10.0
+MIN_SQNR_DB = -10.0
+
+# Maximum acceptable latency in normalised units.
+# 2.0 means the design may be at most 2× the all-FP4 reference latency.
+# MAX_LATENCY_NORM = 2.0
+
+# Minimum clock frequency after Vivado place-and-route (MHz).
+# Designs that fail timing closure at this frequency are infeasible.
+# MIN_FREQ_MHZ = 80.0
+
+# ======================= Latency Model Parameters =======================
+# Combinational delay (ns) for each arithmetic unit type.
+# Values are calibrated against Vivado timing reports for xc7a35t;
+# adjust if you retarget to a different device or speed grade.
+#
+# In the radix-2 butterfly, the multiplier feeds the adder (serial critical
+# path), so per-stage delay = mult_delay + add_delay + overhead.
+#
+# FP8_MULT_DELAY_NS = 6.5      # FP8 E4M3 complex multiplier
+# FP4_MULT_DELAY_NS = 3.5      # FP4 E2M1 complex multiplier
+# FP8_ADD_DELAY_NS  = 4.0      # FP8 E4M3 complex adder
+# FP4_ADD_DELAY_NS  = 2.0      # FP4 E2M1 complex adder
+
+# Fixed overhead per stage: memory read address setup + write arbitration
+# + AGU pipeline register + routing congestion margin (ns).
+# STAGE_OVERHEAD_NS = 2.0
 
 # ======================= Performance Metrics =======================
 ENABLE_RESULT_CACHE = True
 RESULT_CACHE = {}
 
 # ======================= Optimization Strategies =======================
-
 def generate_smart_initial_population(fft_size, pop_size):
     """
     Generate initial population with domain-knowledge strategies.
@@ -141,8 +160,6 @@ def generate_smart_initial_population(fft_size, pop_size):
         population.append(individual)
 
     # Strategy 9: FP8 first 2 stages only, FP4 rest.
-    # Stages 0 and 1 have the highest error-propagation multiplier,
-    # so this gives the best PSNR-per-FP8-stage ratio.
     strat9 = []
     for stage in range(gen.num_stages):
         prec = 1 if stage < 2 else 0
@@ -164,7 +181,6 @@ def generate_smart_initial_population(fft_size, pop_size):
 
     return population[:pop_size]
 
-
 ENABLE_SMART_INITIALIZATION = True
 
 # ======================= Logging =======================
@@ -174,11 +190,14 @@ SAVE_ALL_DESIGNS = False
 
 # ======================= Helper Functions =======================
 def log_message(message, level='INFO'):
+    """Log message to file and console"""
     import datetime
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     log_line = f"[{timestamp}] [{level}] {message}"
+
     if VERBOSE:
         print(log_line)
+
     with open(LOG_FILE, 'a') as f:
         f.write(log_line + '\n')
 
@@ -196,5 +215,35 @@ def initialize_directories():
         os.makedirs(d, exist_ok=True)
     log_message("Initialized directory structure")
 
-# Initialize at import time~
+# ======================= Chromosome Encoding Notes =======================
+"""
+CHROMOSOME ENCODING (Stage-Level Precision — Option A):
+
+For an N-point FFT using Radix-2 DIT:
+- Stages: log₂(N)
+- Hardware: one butterfly_wrapper instance per stage
+
+Chromosome format (length = num_stages × 2):
+  [s0_mult, s0_add, s1_mult, s1_add, ..., sₙ_mult, sₙ_add]
+
+Where:
+  sᵢ_mult: Multiplier precision for stage i (0=FP4, 1=FP8)
+  sᵢ_add : Adder precision for stage i     (0=FP4, 1=FP8)
+
+LATENCY MODEL:
+  For each stage i:
+    stage_critical_path = mult_delay[i] + add_delay[i] + STAGE_OVERHEAD_NS
+      (mult and add are serial in the butterfly critical path)
+    stage_pipeline_cycles = ceil(stage_critical_path / CLOCK_PERIOD)
+
+  Total latency (cycles) = N (load) + Σ stage_pipeline_cycles + N (unload)
+
+  Normalised latency = total_cycles / reference_cycles
+    where reference_cycles uses all-FP8 delays.
+
+  The 4th NSGA-II objective minimises normalised latency × WEIGHT_LATENCY.
+  The 4th constraint enforces timing closure: WNS ≥ CLOCK_PERIOD − (1000/MIN_FREQ_MHZ).
+"""
+
+# Initialize at import time
 initialize_directories()
