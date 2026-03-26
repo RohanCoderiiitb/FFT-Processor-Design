@@ -111,9 +111,9 @@ def parse_solution_txts_to_csv(fft_size, results_subdir):
             solution_id = int(data['Solution ID'])
             chrom_raw   = data['Chromosome']          # e.g. "[0, 1, 0, 1, 1, 0]"
             chromosome  = _ast.literal_eval(chrom_raw)
-            power       = float(data['Power  '].replace(' W', '').strip())
-            area        = int(  data['Area   '].replace(' LUTs', '').strip())
-            sqnr        = float(data['SQNR   '].replace(' dB', '').strip())
+            power       = float(data['Power'].replace(' W', '').strip())
+            area        = int(  data['Area'].replace(' LUTs', '').strip())
+            sqnr        = float(data['SQNR'].replace(' dB', '').strip())
             fp4_mult    = int(  data.get('FP4 Multipliers', '0').split()[0])
             fp8_mult    = int(  data.get('FP8 Multipliers', '0').split()[0])
             fp4_add     = int(  data.get('FP4 Adders',      '0').split()[0])
