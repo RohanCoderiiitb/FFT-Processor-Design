@@ -1,30 +1,45 @@
 """
 Performance Evaluation Module
 ==============================
-Calculates SQNR and MAE by running iverilog/vvp simulation of generated
-mixed-precision FFT designs and comparing against an FP32 NumPy reference.
+Calculates SQNR (Signal-to-Quantisation-Noise Ratio) and MAE by running
+iverilog/vvp simulation of generated mixed-precision FFT designs and
+comparing against an FP32 NumPy reference.
+
+SQNR is used instead of PSNR because it is the standard metric for
+quantisation-noise analysis:
+
+    SQNR = 10 * log10( signal_power / noise_power )
+
+where
+    signal_power = mean( |golden|^2 )
+    noise_power  = mean( |golden - approximate|^2 )
+
+This is reported per test signal and averaged across all signals.
 
 Testbench interface matches the generated top module:
   - load_en / load_addr / load_data   (input loading, FP8 16-bit)
   - start / done                      (FFT trigger / completion)
   - unload_en / unload_addr / unload_data (result readout, 16-bit)
 
-This mirrors fft_test.v / tb_fft_test.v exactly.
+Test signals
+------------
+  1. Impulse              – all energy in DC bin; deterministic worst-case
+  2. Single Tone          – one real sinusoid; narrow-band stress test
+  3. Multi-Tone           – several tones; moderate bandwidth
+  4. Chirp (LFM)          – linear frequency sweep; broadband, envelope ≈1
+  5. Sinusoid (complex)   – full-scale complex exponential at Nyquist/4
+  6. White Noise          – broadband random; statistical average behaviour
+  7. Step Function        – time-domain discontinuity; tests Gibbs artefacts
+  8. Gaussian Pulse       – smooth broadband; tests small out-of-band values
 
 Key design decisions
 --------------------
 * Active-low async reset: tb drives rst=0 for reset, rst=1 to release.
-* 2-cycle memory read latency: unload loop waits 3 @posedge per sample
-  (address issued → 2 register stages → data stable).
+* 2-cycle memory read latency: unload loop waits 3 @posedge per sample.
 * Input packed as FP8: load_data = {fp8_real[7:0], fp8_imag[7:0]}.
 * Output parsed as FP8 or FP4 depending on final stage precision.
 * One twiddles file is generated per simulation run in ./sim/.
-
-Key fixes
----------
-* Golden reference now computed from FP8-quantized inputs (same as hardware).
-* Output parsing respects final stage precision (FP8 or FP4).
-* Test vectors use broadband signals for meaningful SQNR measurement.
+* Golden reference is computed from FP8-quantised inputs (same as HW).
 """
 
 import numpy as np
@@ -32,6 +47,22 @@ import subprocess
 import os
 import glob as glob_module
 import math
+
+
+# ---------------------------------------------------------------------------
+# Human-readable labels for each test vector (must stay in sync with
+# _generate_test_vectors ordering).
+# ---------------------------------------------------------------------------
+SIGNAL_LABELS = [
+    "Impulse",
+    "Single Tone",
+    "Multi-Tone",
+    "Chirp (LFM)",
+    "Sinusoid (complex)",
+    "White Noise",
+    "Step Function",
+    "Gaussian Pulse",
+]
 
 
 class PerformanceEvaluator:
@@ -47,53 +78,116 @@ class PerformanceEvaluator:
     # ==================================================================
     def _generate_test_vectors(self):
         """
-        Generate test vectors that exercise the full FFT computation.
-        All vectors are scaled to use the FP8 dynamic range efficiently.
-        Broadband signals give more meaningful SQNR than single-bin inputs.
+        Generate a diverse suite of test vectors that stress different
+        aspects of FFT arithmetic precision.
+
+        All vectors are normalised so that max |sample| <= 0.9, keeping
+        values comfortably within the FP8 E4M3 dynamic range.
+
+        Ordering must match SIGNAL_LABELS above.
         """
         n     = self.fft_size
-        n_arr = np.arange(n)
+        n_arr = np.arange(n, dtype=float)
         vecs  = []
 
-        # 1. Impulse at index 0 — FFT = all-ones, well within FP8 range
+        # ------------------------------------------------------------------
+        # 1. Impulse at index 0 — FFT = constant 1+0j across all bins.
+        #    Classic deterministic test; very low SQNR reveals rounding in
+        #    twiddle multiplications (every output must equal 1).
+        # ------------------------------------------------------------------
         v = np.zeros(n, dtype=complex)
-        v[0] = 1.0
+        v[0] = 0.9
         vecs.append(v)
 
-        # 2. Multi-tone — energy spread across multiple bins, amplitude controlled
-        v = np.zeros(n, dtype=complex)
-        for k in [1, 3, 5, 7]:
-            v += 0.25 * np.exp(2j * np.pi * k * n_arr / n)
+        # ------------------------------------------------------------------
+        # 2. Single tone — real sinusoid at bin k.
+        #    Energy concentrated in two bins (±k); tests narrow-band fidelity.
+        # ------------------------------------------------------------------
+        k = max(1, n // 8)          # bin well away from DC
+        v = 0.9 * np.cos(2 * np.pi * k * n_arr / n).astype(complex)
         vecs.append(v)
 
-        # 3. Broadband random — exercises all bins, fixed seed for reproducibility
+        # ------------------------------------------------------------------
+        # 3. Multi-tone — sum of several real sinusoids.
+        #    Moderate bandwidth; amplitude controlled to avoid clipping.
+        # ------------------------------------------------------------------
+        tones = [1, 3, 5, 7] if n >= 8 else [1]
+        v = np.zeros(n, dtype=complex)
+        for kt in tones:
+            if kt < n // 2:
+                v += np.exp(2j * np.pi * kt * n_arr / n)
+        peak = np.max(np.abs(v))
+        v = v / peak * 0.9 if peak > 0 else v
+        vecs.append(v)
+
+        # ------------------------------------------------------------------
+        # 4. Chirp (Linear Frequency Modulation, LFM).
+        #    Phase sweeps quadratically → energy spread across all bins.
+        #    |v[n]| = 1 exactly, so no clipping.
+        # ------------------------------------------------------------------
+        v = np.exp(1j * np.pi * n_arr ** 2 / n) * 0.9
+        vecs.append(v)
+
+        # ------------------------------------------------------------------
+        # 5. Sinusoid — complex exponential at Nyquist/4 (bin = N/4).
+        #    Full-scale complex; exercises both real and imaginary paths.
+        # ------------------------------------------------------------------
+        k5 = max(1, n // 4)
+        v  = 0.9 * np.exp(2j * np.pi * k5 * n_arr / n)
+        vecs.append(v)
+
+        # ------------------------------------------------------------------
+        # 6. White noise — complex Gaussian, fixed seed for reproducibility.
+        #    Broadband; SQNR averaged over all bins = statistical behaviour.
+        # ------------------------------------------------------------------
         rng = np.random.default_rng(42)
         v   = rng.standard_normal(n) + 1j * rng.standard_normal(n)
-        v   = v / np.max(np.abs(v)) * 0.9   # scale to just below FP8 max
+        peak = np.max(np.abs(v))
+        v = v / peak * 0.9 if peak > 0 else v
         vecs.append(v)
 
-        # 4. Chirp — frequency content spread across all bins
-        v = np.exp(1j * np.pi * n_arr**2 / n)
-        v = v / np.max(np.abs(v)) * 0.9
+        # ------------------------------------------------------------------
+        # 7. Step function — first half +1, second half -1 (real).
+        #    Discontinuity excites all odd harmonics; tests Gibbs artefacts.
+        # ------------------------------------------------------------------
+        v = np.zeros(n, dtype=complex)
+        v[:n // 2] =  0.9
+        v[n // 2:] = -0.9
         vecs.append(v)
 
+        # ------------------------------------------------------------------
+        # 8. Gaussian pulse — real, centred in time domain.
+        #    Smooth bell shape; tests small out-of-band spectral values where
+        #    quantisation noise is most visible relative to signal.
+        # ------------------------------------------------------------------
+        sigma  = n / 8.0
+        centre = n / 2.0
+        v = np.exp(-0.5 * ((n_arr - centre) / sigma) ** 2).astype(complex)
+        peak = np.max(np.abs(v))
+        v = v / peak * 0.9 if peak > 0 else v
+        vecs.append(v)
+
+        assert len(vecs) == len(SIGNAL_LABELS), (
+            f"Signal count mismatch: {len(vecs)} vectors vs "
+            f"{len(SIGNAL_LABELS)} labels"
+        )
         return vecs
 
     def _compute_golden_outputs(self):
         """
-        Compute golden FFT outputs using FP8-quantized inputs.
+        Compute golden FFT outputs using FP8-quantised inputs.
 
-        The hardware receives FP8-quantized inputs, not the original float64
-        values. The golden reference must start from the same quantized values
-        so that SQNR measures only FFT arithmetic error, not input quantization
+        The hardware receives FP8-quantised inputs, not the original float64
+        values. The golden reference must start from the same quantised values
+        so that SQNR measures only FFT arithmetic error, not input quantisation
         error.
 
         Flow:
             float64 input
-                → quantize to FP8   (float_to_fp8_e4m3)
-                → dequantize to float64  (fp8_to_float)
-                → np.fft.fft()
-                → golden output
+                -> quantise to FP8   (float_to_fp8_e4m3)
+                -> dequantise to float64  (fp8_to_float)
+                -> np.fft.fft()
+                -> golden output
         """
         goldens = []
         for v in self.test_vectors:
@@ -106,7 +200,7 @@ class PerformanceEvaluator:
         return goldens
 
     # ==================================================================
-    # Float ↔ FP conversion helpers
+    # Float <-> FP conversion helpers
     # ==================================================================
     def float_to_fp8_e4m3(self, val):
         """Quantise a float to FP8 E4M3 (bias=7); returns 8-bit integer."""
@@ -134,7 +228,7 @@ class PerformanceEvaluator:
         return (sign_bit & 0x80) | ((exp_b & 0x0F) << 3) | (mant & 0x07)
 
     def fp8_to_float(self, fp8_val):
-        """FP8 E4M3 (bias=7) → float."""
+        """FP8 E4M3 (bias=7) -> float."""
         fp8_val &= 0xFF
         if fp8_val == 0:
             return 0.0
@@ -170,7 +264,7 @@ class PerformanceEvaluator:
         return (sign & 0x8) | ((exp & 0x3) << 1) | (mant & 0x1)
 
     def fp4_to_float(self, fp4_val):
-        """FP4 E2M1 (bias=1) → float."""
+        """FP4 E2M1 (bias=1) -> float."""
         fp4_val &= 0xF
         if fp4_val == 0:
             return 0.0
@@ -415,7 +509,7 @@ endmodule
         Compile with iverilog and simulate with vvp.
         verilog_file  = path to the *core* .v file
         The matching *_top.v must sit in the same directory.
-        Returns list of complex outputs, or None on failure.
+        Returns path to output file, or None on failure.
         """
         sim_dir = os.path.abspath('./sim')
         os.makedirs(sim_dir, exist_ok=True)
@@ -516,7 +610,6 @@ endmodule
                         real = self.fp8_to_float(fp8_real)
                         imag = self.fp8_to_float(fp8_imag)
                     else:
-                        # FP4 output packed as {8'h00, fp4_real[3:0], fp4_imag[3:0]}
                         fp4_real = (word >> 4) & 0xF
                         fp4_imag =  word       & 0xF
                         real = self.fp4_to_float(fp4_real)
@@ -533,28 +626,42 @@ endmodule
     # ==================================================================
     # Metrics
     # ==================================================================
-    def calculate_psnr(self, golden, approximate):
+    def calculate_sqnr(self, golden, approximate):
         """
-        Peak Signal-to-Noise Ratio (dB).
-        PSNR = 10 * log10(PEAK^2 / MSE)
-        where PEAK is the maximum absolute value in the golden output
-        and MSE is the mean squared error between golden and approximate.
+        Signal-to-Quantisation-Noise Ratio (dB).
+
+            SQNR = 10 * log10( signal_power / noise_power )
+
+        where
+            signal_power = mean( |golden|^2 )
+            noise_power  = mean( |golden - approximate|^2 )
+
+        SQNR is the standard metric for fixed/low-precision arithmetic:
+          - Normalises noise relative to signal energy, not peak value.
+          - An all-FP8 design typically yields SQNR ~30-40 dB.
+          - An all-FP4 design typically yields SQNR ~15-25 dB.
+          - Returns +inf when noise is zero (exact result).
+          - Returns 0 dB when signal power equals noise power.
+          - Can be negative (dB) when noise exceeds signal.
         """
-        mse = np.mean(np.abs(golden - approximate) ** 2)
-        if mse == 0:
+        noise_power = np.mean(np.abs(golden - approximate) ** 2)
+        if noise_power == 0:
             return float('inf')
-        peak = np.max(np.abs(golden))
-        if peak == 0:
+        signal_power = np.mean(np.abs(golden) ** 2)
+        if signal_power == 0:
             return 0.0
-        return 10 * np.log10((peak ** 2) / mse)
+        return 10.0 * np.log10(signal_power / noise_power)
 
     # ==================================================================
     # Top-level entry point
     # ==================================================================
     def evaluate_design(self, verilog_file, design_name, chromosome=None):
         """
-        Run simulation and return avg_psnr_dB (single float).
+        Run simulation and return avg_sqnr_dB (single float).
         On failure returns -100.0.
+
+        Prints a per-signal SQNR breakdown table so each signal's
+        contribution to the average is visible in the optimisation log.
 
         chromosome: the precision chromosome for this design.
                     Last gene (chromosome[-1]) determines final stage
@@ -578,24 +685,52 @@ endmodule
         if sim_outputs is None or len(sim_outputs) == 0:
             return -100.0
 
-        n          = self.fft_size
-        num_tests  = len(self.test_vectors)
-        total_psnr = 0.0
+        n         = self.fft_size
+        num_tests = len(self.test_vectors)
+
+        total_sqnr = 0.0
         valid      = 0
+
+        print(f"\n{'─'*55}")
+        print(f"  SQNR breakdown  —  {design_name}  (FFT-{n})")
+        print(f"{'─'*55}")
+        print(f"  {'Signal':<22}  {'SQNR (dB)':>10}")
+        print(f"{'─'*55}")
 
         for i in range(min(num_tests, len(sim_outputs) // n)):
             approx = sim_outputs[i * n : (i + 1) * n]
             golden = self.golden_outputs[i]
+            label  = SIGNAL_LABELS[i] if i < len(SIGNAL_LABELS) else f"Signal {i}"
 
-            psnr = self.calculate_psnr(golden, approx)
+            sqnr = self.calculate_sqnr(golden, approx)
 
-            if not (math.isinf(psnr) or math.isnan(psnr)):
-                total_psnr += psnr
-                valid      += 1
+            if math.isinf(sqnr):
+                sqnr_str = "  inf  (exact)"
+                # Treat as very high but finite for averaging
+                total_sqnr += 100.0
+                valid += 1
+            elif math.isnan(sqnr):
+                sqnr_str = "         NaN"
+                # Skip NaN from average
+            else:
+                sqnr_str = f"{sqnr:>10.2f} dB"
+                total_sqnr += sqnr
+                valid += 1
+
+            print(f"  {label:<22}  {sqnr_str}")
+
+        print(f"{'─'*55}")
 
         if valid == 0:
+            print(f"  {'Average SQNR':<22}  {'N/A':>10}")
+            print(f"{'─'*55}\n")
             return -100.0
-        return total_psnr / valid
+
+        avg_sqnr = total_sqnr / valid
+        print(f"  {'Average SQNR':<22}  {avg_sqnr:>10.2f} dB")
+        print(f"{'─'*55}\n")
+
+        return avg_sqnr
 
 
 # =============================================================================
@@ -604,11 +739,26 @@ endmodule
 def test_evaluator():
     ev = PerformanceEvaluator(fft_size=8)
     print(f"Test vectors : {len(ev.test_vectors)}")
+    print(f"Signal labels: {SIGNAL_LABELS}")
     print(f"FFT size     : {ev.fft_size}")
-    print(f"FP4 0b0101   → {ev.fp4_to_float(0b0101):.4f}  (expect 1.5)")
-    print(f"FP8 0b01000011 → {ev.fp8_to_float(0b01000011):.6f}  (expect ~1.375)")
-    print(f"FP8(1.0) encode → 0x{ev.float_to_fp8_e4m3(1.0):02x}  (expect 0x38)")
-    print(f"FP8(0.0) encode → 0x{ev.float_to_fp8_e4m3(0.0):02x}  (expect 0x00)")
+    print(f"FP4 0b0101   -> {ev.fp4_to_float(0b0101):.4f}  (expect 1.5)")
+    print(f"FP8 0b01000011 -> {ev.fp8_to_float(0b01000011):.6f}  (expect ~1.375)")
+    print(f"FP8(1.0) encode -> 0x{ev.float_to_fp8_e4m3(1.0):02x}  (expect 0x38)")
+    print(f"FP8(0.0) encode -> 0x{ev.float_to_fp8_e4m3(0.0):02x}  (expect 0x00)")
+
+    # Verify SQNR with a perfect (zero-noise) pair
+    golden = np.array([1+1j, -1+0j, 0-1j, 1+1j], dtype=complex)
+    sqnr_perfect = ev.calculate_sqnr(golden, golden)
+    print(f"\nSQNR (perfect match) -> {sqnr_perfect}  (expect inf)")
+
+    # Verify SQNR with half-amplitude approximation (~6 dB)
+    sqnr_half = ev.calculate_sqnr(golden, golden * 0.5)
+    print(f"SQNR (half amplitude) -> {sqnr_half:.2f} dB  (expect ~-6 dB for noise=0.5*signal)")
+
+    print("\nGolden FFT outputs (FP8-quantised inputs):")
+    for i, (label, g) in enumerate(zip(SIGNAL_LABELS, ev.golden_outputs)):
+        sig_power = np.mean(np.abs(g) ** 2)
+        print(f"  [{i}] {label:<22}  signal_power={sig_power:.4f}")
 
 
 if __name__ == "__main__":

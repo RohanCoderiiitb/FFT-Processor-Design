@@ -4,7 +4,7 @@ Orchestrates the complete NSGA-II optimization flow with Vivado integration.
 
 Changes vs original:
   - RTL .v files in results are zipped into rtl_fft{N}.zip and originals deleted
-  - Per-run CSV of all evaluated solutions (chromosome, power, area, PSNR)
+  - Per-run CSV of all evaluated solutions (chromosome, power, area, SQNR)
   - 2-D and 3-D Pareto front plots saved as PNG per FFT size
   - Combined CSV + comparison plot across all FFT sizes
   - main() / default mode runs the full sweep from FFT-2 to FFT-1024
@@ -51,9 +51,9 @@ def setup_verilog_sources():
         log_message("Copied wrapper file")
 
 
-def _psnr_from_perf_error(perf_error):
+def _sqnr_from_perf_error(perf_error):
     """
-    Invert  perf_error = WEIGHT_PERFORMANCE / (psnr + 1)  back to PSNR (dB).
+    Invert  perf_error = WEIGHT_PERFORMANCE / (sqnr + 1)  back to SQNR (dB).
     Returns inf when perf_error == 0.
     """
     raw_pe = perf_error / WEIGHT_PERFORMANCE
@@ -75,7 +75,7 @@ def parse_solution_txts_to_csv(fft_size, results_subdir):
     Columns:
         generation, solution_id, fft_size,
         s0_mult, s0_add, s1_mult, s1_add, ...,
-        power_W, area_LUTs, psnr_dB,
+        power_W, area_LUTs, sqnr_dB,
         fp4_mult, fp8_mult, fp4_add, fp8_add
     """
     import math, ast as _ast
@@ -111,9 +111,9 @@ def parse_solution_txts_to_csv(fft_size, results_subdir):
             solution_id = int(data['Solution ID'])
             chrom_raw   = data['Chromosome']          # e.g. "[0, 1, 0, 1, 1, 0]"
             chromosome  = _ast.literal_eval(chrom_raw)
-            power = float(data['Power'].replace(' W', '').strip())
-            area  = int(  data['Area'].replace(' LUTs', '').strip())
-            psnr  = float(data['PSNR'].replace(' dB', '').strip())
+            power       = float(data['Power'].replace(' W', '').strip())
+            area        = int(  data['Area'].replace(' LUTs', '').strip())
+            sqnr        = float(data['SQNR'].replace(' dB', '').strip())
             fp4_mult    = int(  data.get('FP4 Multipliers', '0').split()[0])
             fp8_mult    = int(  data.get('FP8 Multipliers', '0').split()[0])
             fp4_add     = int(  data.get('FP4 Adders',      '0').split()[0])
@@ -126,7 +126,7 @@ def parse_solution_txts_to_csv(fft_size, results_subdir):
                 'chromosome':  chromosome,
                 'power_W':     power,
                 'area_LUTs':   area,
-                'psnr_dB':     psnr,
+                'sqnr_dB':     sqnr,
                 'fp4_mult':    fp4_mult,
                 'fp8_mult':    fp8_mult,
                 'fp4_add':     fp4_add,
@@ -142,7 +142,7 @@ def parse_solution_txts_to_csv(fft_size, results_subdir):
         writer.writerow(
             ['generation', 'solution_id', 'fft_size'] +
             gene_headers +
-            ['power_W', 'area_LUTs', 'psnr_dB',
+            ['power_W', 'area_LUTs', 'sqnr_dB',
              'fp4_mult', 'fp8_mult', 'fp4_add', 'fp8_add']
         )
         for r in rows:
@@ -154,7 +154,7 @@ def parse_solution_txts_to_csv(fft_size, results_subdir):
                 [r['generation'], r['solution_id'], r['fft_size']] +
                 chrom +
                 [f"{r['power_W']:.6f}", r['area_LUTs'],
-                 f"{r['psnr_dB']:.4f}",
+                 f"{r['sqnr_dB']:.4f}",
                  r['fp4_mult'], r['fp8_mult'],
                  r['fp4_add'],  r['fp8_add']]
             )
@@ -278,7 +278,7 @@ def compress_solution_txts(results_subdir, fft_size):
     Also writes ``all_evaluated_solutions_fft{N}.csv`` with one row per file:
         generation, solution_id, fft_size,
         s0_mult, s0_add, ...,
-        power_W, area_LUTs, psnr_dB,
+        power_W, area_LUTs, sqnr_dB,
         fp4_mult_pct, fp8_mult_pct, fp4_add_pct, fp8_add_pct
     """
     import re
@@ -313,11 +313,11 @@ def compress_solution_txts(results_subdir, fft_size):
 
             power_m = re.search(r'Power\s*:\s*([\d.]+)\s*W',  content)
             area_m  = re.search(r'Area\s*:\s*([\d]+)\s*LUTs', content)
-            psnr_m  = re.search(r'PSNR\s*:\s*([\d.\-]+)\s*dB', content)
+            sqnr_m  = re.search(r'SQNR\s*:\s*([\d.\-]+)\s*dB', content)
 
             power = float(power_m.group(1)) if power_m else float('nan')
             area  = int(area_m.group(1))    if area_m  else -1
-            psnr  = float(psnr_m.group(1))  if psnr_m  else float('nan')
+            sqnr  = float(sqnr_m.group(1))  if sqnr_m  else float('nan')
 
             fp4_mult_m = re.search(r'FP4 Multipliers:\s*\d+\s*\(([\d.]+)%\)', content)
             fp8_mult_m = re.search(r'FP8 Multipliers:\s*\d+\s*\(([\d.]+)%\)', content)
@@ -331,7 +331,7 @@ def compress_solution_txts(results_subdir, fft_size):
                 'chromosome':   chromosome,
                 'power_W':      power,
                 'area_LUTs':    area,
-                'psnr_dB':      psnr,
+                'sqnr_dB':      sqnr,
                 'fp4_mult_pct': float(fp4_mult_m.group(1)) if fp4_mult_m else float('nan'),
                 'fp8_mult_pct': float(fp8_mult_m.group(1)) if fp8_mult_m else float('nan'),
                 'fp4_add_pct':  float(fp4_add_m.group(1))  if fp4_add_m  else float('nan'),
@@ -358,7 +358,7 @@ def compress_solution_txts(results_subdir, fft_size):
             writer.writerow(
                 ['generation', 'solution_id', 'fft_size'] +
                 gene_headers +
-                ['power_W', 'area_LUTs', 'psnr_dB',
+                ['power_W', 'area_LUTs', 'sqnr_dB',
                  'fp4_mult_pct', 'fp8_mult_pct',
                  'fp4_add_pct',  'fp8_add_pct']
             )
@@ -369,7 +369,7 @@ def compress_solution_txts(results_subdir, fft_size):
                 writer.writerow(
                     [r['generation'], r['solution_id'], r['fft_size']] +
                     chrom +
-                    [f"{r['power_W']:.6f}", r['area_LUTs'], f"{r['psnr_dB']:.4f}",
+                    [f"{r['power_W']:.6f}", r['area_LUTs'], f"{r['sqnr_dB']:.4f}",
                      f"{r['fp4_mult_pct']:.1f}", f"{r['fp8_mult_pct']:.1f}",
                      f"{r['fp4_add_pct']:.1f}",  f"{r['fp8_add_pct']:.1f}"]
                 )
@@ -420,7 +420,7 @@ def export_solutions_csv(result, fft_size, results_subdir):
     Columns:
         solution_id, fft_size,
         s0_mult, s0_add, s1_mult, s1_add, ...,
-        power_W, area_LUTs, psnr_dB, on_pareto_front
+        power_W, area_LUTs, sqnr_dB, on_pareto_front
     """
     from fft_template_generator import FFTTemplateGenerator
     num_stages = FFTTemplateGenerator(fft_size).num_stages
@@ -459,17 +459,17 @@ def export_solutions_csv(result, fft_size, results_subdir):
         writer = csv.writer(csvfile)
         writer.writerow(
             ['solution_id', 'fft_size'] + gene_headers +
-            ['power_W', 'area_LUTs', 'psnr_dB', 'on_pareto_front']
+            ['power_W', 'area_LUTs', 'sqnr_dB', 'on_pareto_front']
         )
         for idx, (x_row, f_row) in enumerate(zip(combined_X, combined_F)):
             power  = f_row[0] / WEIGHT_POWER
             area   = f_row[1] / WEIGHT_AREA
-            psnr   = _psnr_from_perf_error(f_row[2])
+            sqnr   = _sqnr_from_perf_error(f_row[2])
             on_pf  = int(tuple(int(v) for v in x_row) in pareto_set)
             writer.writerow(
                 [idx, fft_size] +
                 [int(v) for v in x_row] +
-                [f"{power:.6f}", int(area), f"{psnr:.4f}", on_pf]
+                [f"{power:.6f}", int(area), f"{sqnr:.4f}", on_pf]
             )
 
     log_message(f"Solution CSV saved → {csv_path}  ({len(combined_X)} rows)")
@@ -484,7 +484,7 @@ def plot_pareto_front(pareto_objectives, fft_size, results_subdir, feasible=True
     """
     Save two PNG files per FFT run:
       pareto_2d_fft{N}.png  — three pairwise 2-D scatter plots
-      pareto_3d_fft{N}.png  — 3-D scatter (Power vs Area vs PSNR)
+      pareto_3d_fft{N}.png  — 3-D scatter (Power vs Area vs SQNR)
     """
     if pareto_objectives is None or len(pareto_objectives) == 0:
         log_message("No objectives to plot — Pareto plots skipped.", level='WARN')
@@ -493,8 +493,8 @@ def plot_pareto_front(pareto_objectives, fft_size, results_subdir, feasible=True
     obj   = np.array(pareto_objectives)
     power = obj[:, 0] / WEIGHT_POWER
     area  = obj[:, 1] / WEIGHT_AREA
-    psnr  = np.array([_psnr_from_perf_error(pe) for pe in obj[:, 2]])
-    psnr  = np.where(np.isinf(psnr), np.nan, psnr)
+    sqnr  = np.array([_sqnr_from_perf_error(pe) for pe in obj[:, 2]])
+    sqnr  = np.where(np.isinf(sqnr), np.nan, sqnr)
 
     status_label = "Pareto Front" if feasible else "Least-Infeasible Solutions"
     color        = "#1f77b4"    if feasible else "#d62728"
@@ -507,8 +507,8 @@ def plot_pareto_front(pareto_objectives, fft_size, results_subdir, feasible=True
     )
     pairs = [
         (power, area,  "Power (W)",   "Area (LUTs)"),
-        (power, psnr,  "Power (W)",   "PSNR (dB)"),
-        (area,  psnr,  "Area (LUTs)", "PSNR (dB)"),
+        (power, sqnr,  "Power (W)",   "SQNR (dB)"),
+        (area,  sqnr,  "Area (LUTs)", "SQNR (dB)"),
     ]
     for ax, (xd, yd, xl, yl) in zip(axes, pairs):
         ax.scatter(xd, yd, c=color, alpha=0.75, edgecolors='k',
@@ -528,13 +528,13 @@ def plot_pareto_front(pareto_objectives, fft_size, results_subdir, feasible=True
     fig3d = plt.figure(figsize=(9, 7))
     ax3d  = fig3d.add_subplot(111, projection='3d')
     sc = ax3d.scatter(
-        power, area, psnr,
+        power, area, sqnr,
         c=obj[:, 2], cmap='plasma_r',
         alpha=0.85, edgecolors='k', linewidths=0.4, s=60
     )
     ax3d.set_xlabel("Power (W)",   fontsize=9)
     ax3d.set_ylabel("Area (LUTs)", fontsize=9)
-    ax3d.set_zlabel("PSNR (dB)",   fontsize=9)
+    ax3d.set_zlabel("SQNR (dB)",   fontsize=9)
     ax3d.set_title(
         f"FFT-{fft_size}  |  {status_label}\n(colour = performance error)",
         fontsize=11
@@ -615,12 +615,12 @@ def save_optimization_results(result, callback, fft_size):
             f.write("No solutions to report.\n")
         else:
             f.write(f"{'ID':<5} {'Power(W)':<12} {'Area(LUTs)':<12} "
-                    f"{'Perf Error':<14} {'PSNR(dB)':<12}\n")
+                    f"{'Perf Error':<14} {'SQNR(dB)':<12}\n")
             f.write('-' * 55 + '\n')
             for i, obj in enumerate(pareto_objectives):
-                psnr_approx = _psnr_from_perf_error(obj[2])
+                sqnr_approx = _sqnr_from_perf_error(obj[2])
                 f.write(f"{i:<5} {obj[0]:<12.6f} {obj[1]:<12.0f} "
-                        f"{obj[2]:<14.6f} {psnr_approx:<12.2f}\n")
+                        f"{obj[2]:<14.6f} {sqnr_approx:<12.2f}\n")
 
             f.write("\n\nBest Solutions by Objective:\n")
             f.write('-' * 50 + '\n')
@@ -635,8 +635,8 @@ def save_optimization_results(result, callback, fft_size):
                 f.write(f"  Power       : {pareto_objectives[idx, 0]:.6f} W\n")
                 f.write(f"  Area        : {pareto_objectives[idx, 1]:.0f} LUTs\n")
                 f.write(f"  Perf Error  : {pareto_objectives[idx, 2]:.6f}\n")
-                f.write(f"  PSNR        : "
-                        f"{_psnr_from_perf_error(pareto_objectives[idx, 2]):.2f} dB\n")
+                f.write(f"  SQNR        : "
+                        f"{_sqnr_from_perf_error(pareto_objectives[idx, 2]):.2f} dB\n")
                 f.write(f"  Chromosome  : {list(pareto_solutions[idx])}\n")
 
     # ── CSV of all evaluated solutions ───────────────────────────────────
@@ -743,7 +743,7 @@ def generate_comprehensive_summary(all_results):
     with open(combined_csv, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['fft_size', 'solution_id',
-                         'power_W', 'area_LUTs', 'psnr_dB', 'perf_error'])
+                         'power_W', 'area_LUTs', 'sqnr_dB', 'perf_error'])
         for fft_size, result in sorted(all_results.items()):
             if result is None or result.F is None:
                 continue
@@ -752,13 +752,13 @@ def generate_comprehensive_summary(all_results):
                     fft_size, i,
                     f"{obj[0]/WEIGHT_POWER:.6f}",
                     int(obj[1] / WEIGHT_AREA),
-                    f"{_psnr_from_perf_error(obj[2]):.4f}",
+                    f"{_sqnr_from_perf_error(obj[2]):.4f}",
                     f"{obj[2]:.6f}",
                 ])
     log_message(f"Combined Pareto CSV   → {combined_csv}")
 
     # ── Comparison plot: best metric per FFT size ────────────────────────
-    sizes, best_power, best_area, best_psnr = [], [], [], []
+    sizes, best_power, best_area, best_sqnr = [], [], [], []
     for fft_size, result in sorted(all_results.items()):
         if result is None or result.F is None or len(result.F) == 0:
             continue
@@ -766,9 +766,9 @@ def generate_comprehensive_summary(all_results):
         sizes.append(fft_size)
         best_power.append(pf[:, 0].min() / WEIGHT_POWER)
         best_area.append(pf[:, 1].min()  / WEIGHT_AREA)
-        psnr_vals = [_psnr_from_perf_error(pe) for pe in pf[:, 2]]
-        finite_psnr = [v for v in psnr_vals if not (np.isinf(v) or np.isnan(v))]
-        best_psnr.append(max(finite_psnr) if finite_psnr else 0.0)
+        sqnr_vals = [_sqnr_from_perf_error(pe) for pe in pf[:, 2]]
+        finite_sqnr = [v for v in sqnr_vals if not (np.isinf(v) or np.isnan(v))]
+        best_sqnr.append(max(finite_sqnr) if finite_sqnr else 0.0)
 
     if sizes:
         fig, axes = plt.subplots(1, 3, figsize=(16, 5))
@@ -776,8 +776,8 @@ def generate_comprehensive_summary(all_results):
                      fontsize=13, fontweight='bold')
         for ax, ydata, ylabel, color in zip(
             axes,
-            [best_power, best_area, best_psnr],
-            ["Min Power (W)", "Min Area (LUTs)", "Max PSNR (dB)"],
+            [best_power, best_area, best_sqnr],
+            ["Min Power (W)", "Min Area (LUTs)", "Max SQNR (dB)"],
             ["#2196F3",       "#FF9800",         "#4CAF50"],
         ):
             ax.plot(sizes, ydata, 'o-', color=color, linewidth=2,
@@ -840,7 +840,7 @@ def quick_test():
     orig_pop, orig_gen = POPULATION, GENERATIONS
     POPULATION, GENERATIONS = 6, 3
 
-    run_optimization_for_fft_size(fft_size=1024)
+    run_optimization_for_fft_size(fft_size=16)
 
     POPULATION, GENERATIONS = orig_pop, orig_gen
     log_message("Quick test complete")
@@ -855,8 +855,8 @@ def main():
     Default entry-point: full sweep across all FFT sizes (2 → 1024).
     Equivalent to  python runMixedFFTOptimization.py --mode full
     """
-    run_full_optimization_sweep()
-    # quick_test()
+    # run_full_optimization_sweep()
+    quick_test()
 
 
 if __name__ == "__main__":
