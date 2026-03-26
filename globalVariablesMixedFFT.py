@@ -33,7 +33,7 @@ GENERATIONS = 100
 SEED = 42
 MUTATION_RATE = 0.05
 CROSSOVER_RATE = 0.9
-OBJECTIVES = 4               # Power, Area, Performance, Latency  ← was 3
+OBJECTIVES = 3            # Power, Area, Performance, Latency  ← was 3
 
 CURRENT_GEN = 0
 SOLUTION_THREADS = 6
@@ -83,7 +83,7 @@ RESULTS_DIR = './results'
 WEIGHT_POWER = 1.0
 WEIGHT_AREA = 0.001
 WEIGHT_PERFORMANCE = 50.0
-WEIGHT_LATENCY = 1.0         # Normalised latency objective weight
+# WEIGHT_LATENCY = 1.0         # Normalised latency objective weight
 
 # ======================= Constraint Thresholds =======================
 MAX_POWER_W = 3.0
@@ -92,11 +92,11 @@ MIN_SQNR_DB = -10.0
 
 # Maximum acceptable latency in normalised units.
 # 2.0 means the design may be at most 2× the all-FP4 reference latency.
-MAX_LATENCY_NORM = 2.0
+# MAX_LATENCY_NORM = 2.0
 
 # Minimum clock frequency after Vivado place-and-route (MHz).
 # Designs that fail timing closure at this frequency are infeasible.
-MIN_FREQ_MHZ = 80.0
+# MIN_FREQ_MHZ = 80.0
 
 # ======================= Latency Model Parameters =======================
 # Combinational delay (ns) for each arithmetic unit type.
@@ -106,14 +106,14 @@ MIN_FREQ_MHZ = 80.0
 # In the radix-2 butterfly, the multiplier feeds the adder (serial critical
 # path), so per-stage delay = mult_delay + add_delay + overhead.
 #
-FP8_MULT_DELAY_NS = 6.5      # FP8 E4M3 complex multiplier
-FP4_MULT_DELAY_NS = 3.5      # FP4 E2M1 complex multiplier
-FP8_ADD_DELAY_NS  = 4.0      # FP8 E4M3 complex adder
-FP4_ADD_DELAY_NS  = 2.0      # FP4 E2M1 complex adder
+# FP8_MULT_DELAY_NS = 6.5      # FP8 E4M3 complex multiplier
+# FP4_MULT_DELAY_NS = 3.5      # FP4 E2M1 complex multiplier
+# FP8_ADD_DELAY_NS  = 4.0      # FP8 E4M3 complex adder
+# FP4_ADD_DELAY_NS  = 2.0      # FP4 E2M1 complex adder
 
 # Fixed overhead per stage: memory read address setup + write arbitration
 # + AGU pipeline register + routing congestion margin (ns).
-STAGE_OVERHEAD_NS = 2.0
+# STAGE_OVERHEAD_NS = 2.0
 
 # ======================= Performance Metrics =======================
 ENABLE_RESULT_CACHE = True
