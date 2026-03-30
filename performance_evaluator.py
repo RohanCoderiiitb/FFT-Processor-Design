@@ -59,9 +59,14 @@ SIGNAL_LABELS = [
     "Multi-Tone",
     "Chirp (LFM)",
     "Sinusoid (complex)",
-    "White Noise",
+    # "White Noise",
     "Step Function",
     "Gaussian Pulse",
+    # Radar-specific signals
+    "Radar Pulsed Sinusoid",
+    "Radar Clutter + Target",
+    "Radar Barker-13 Pulse",
+    "Radar Doppler Burst",
 ]
 
 
@@ -140,11 +145,11 @@ class PerformanceEvaluator:
         # 6. White noise — complex Gaussian, fixed seed for reproducibility.
         #    Broadband; SQNR averaged over all bins = statistical behaviour.
         # ------------------------------------------------------------------
-        rng = np.random.default_rng(42)
-        v   = rng.standard_normal(n) + 1j * rng.standard_normal(n)
-        peak = np.max(np.abs(v))
-        v = v / peak * 0.9 if peak > 0 else v
-        vecs.append(v)
+        # rng = np.random.default_rng(42)
+        # v   = rng.standard_normal(n) + 1j * rng.standard_normal(n)
+        # peak = np.max(np.abs(v))
+        # v = v / peak * 0.9 if peak > 0 else v
+        # vecs.append(v)
 
         # ------------------------------------------------------------------
         # 7. Step function — first half +1, second half -1 (real).
@@ -163,6 +168,75 @@ class PerformanceEvaluator:
         sigma  = n / 8.0
         centre = n / 2.0
         v = np.exp(-0.5 * ((n_arr - centre) / sigma) ** 2).astype(complex)
+        peak = np.max(np.abs(v))
+        v = v / peak * 0.9 if peak > 0 else v
+        vecs.append(v)
+
+        # ------------------------------------------------------------------
+        # 9. Radar Pulsed Sinusoid — a gated CW burst simulating a radar
+        #    return pulse.  A rectangular window of duration n/4 centred in
+        #    the block is modulated by a carrier at bin k_radar.  This
+        #    stresses the sidelobe structure of the rectangular window and
+        #    reveals Gibbs-like artefacts in the spectral domain that low-
+        #    precision arithmetic amplifies.
+        # ------------------------------------------------------------------
+        k_radar = max(1, n // 6)
+        pulse_start = n // 4
+        pulse_end   = 3 * n // 4
+        v = np.zeros(n, dtype=complex)
+        v[pulse_start:pulse_end] = np.exp(
+            2j * np.pi * k_radar * n_arr[pulse_start:pulse_end] / n
+        )
+        peak = np.max(np.abs(v))
+        v = v / peak * 0.9 if peak > 0 else v
+        vecs.append(v)
+
+        # ------------------------------------------------------------------
+        # 10. Radar Clutter + Target — strong clutter component (DC-adjacent
+        #     bins) plus a weak target tone at a different bin.  The dynamic
+        #     range challenge (strong clutter swamping the target) is the
+        #     canonical radar FFT stress test; low-precision rounding in
+        #     twiddle factors directly degrades target detectability.
+        # ------------------------------------------------------------------
+        k_clutter = max(1, n // 16)          # near-DC clutter
+        k_target  = max(k_clutter + 2, n // 5)  # target well-separated
+        clutter_amp = 0.85
+        target_amp  = 0.05                   # ~24 dB below clutter
+        v = (
+            clutter_amp * np.exp(2j * np.pi * k_clutter * n_arr / n)
+            + target_amp * np.exp(2j * np.pi * k_target  * n_arr / n)
+        )
+        peak = np.max(np.abs(v))
+        v = v / peak * 0.9 if peak > 0 else v
+        vecs.append(v)
+
+        # ------------------------------------------------------------------
+        # 11. Radar Barker-13 Pulse — a length-13 Barker-coded phase
+        #     sequence (±1) zero-padded to n.  Barker codes are the
+        #     canonical pulse-compression waveform; their nearly flat
+        #     sidelobe spectrum probes uniform spectral coverage and
+        #     rounding behaviour across all bins.
+        # ------------------------------------------------------------------
+        barker13 = np.array([1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1],
+                            dtype=float)
+        v = np.zeros(n, dtype=complex)
+        code_len = min(13, n)
+        v[:code_len] = barker13[:code_len]
+        peak = np.max(np.abs(v))
+        v = v / peak * 0.9 if peak > 0 else v
+        vecs.append(v)
+
+        # ------------------------------------------------------------------
+        # 12. Radar Doppler Burst — a multi-pulse Doppler scenario encoded
+        #     as a complex baseband burst: the phase rotates linearly across
+        #     the n samples to simulate a target moving at a fixed radial
+        #     velocity.  Unlike the pure sinusoid, this uses a Hamming
+        #     window envelope to suppress range sidelobes, exercising the
+        #     interaction between windowing and low-precision butterfly maths.
+        # ------------------------------------------------------------------
+        k_doppler = max(1, n // 7)           # Doppler frequency bin
+        hamming   = np.hamming(n)
+        v = hamming * np.exp(2j * np.pi * k_doppler * n_arr / n)
         peak = np.max(np.abs(v))
         v = v / peak * 0.9 if peak > 0 else v
         vecs.append(v)
