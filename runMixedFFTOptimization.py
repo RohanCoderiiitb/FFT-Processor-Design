@@ -1,22 +1,6 @@
 """
 Main Script for Mixed-Precision FFT Optimization
 Orchestrates the complete NSGA-II optimization flow with Vivado integration.
-
-Changes vs previous version:
-  - 4th objective (critical path delay / normalized latency) is now explicitly
-    decoded and shown in ALL outputs:
-      · summary.txt  → Crit Path Delay column + Best Latency section
-      · all_solutions_fft{N}.csv → norm_latency + crit_delay_ns columns
-      · all_generations CSV      → same two extra columns
-      · comprehensive_summary.txt → latency range + Min Latency row
-      · all_pareto_solutions.csv  → norm_latency + crit_delay_ns columns
-  - Pareto plots completely redesigned for 4 objectives:
-      · pareto_2d_fft{N}.png     → 6-panel grid (all pairwise combinations)
-      · pareto_3d_fft{N}.png     → 3-D scatter Power×Area×SQNR, colour = CritDelay
-      · pareto_latency_fft{N}.png → dedicated latency dashboard (3 panels)
-      · comparison_all_fft_sizes.png → 4-metric sweep plot (adds latency panel)
-  - RTL .v files in results are zipped into rtl_fft{N}.zip and originals deleted
-  - Per-run CSV of all evaluated solutions (chromosome, power, area, SQNR, latency)
 """
 
 import numpy as np
@@ -313,7 +297,7 @@ def parse_solution_txts_to_csv(fft_size, results_subdir):
 
 
 # ---------------------------------------------------------------------------
-# Compression helpers (unchanged logic, kept for compatibility)
+# Compression helpers
 # ---------------------------------------------------------------------------
 
 def compress_solution_txt_files(fft_size, results_subdir, txt_files):
@@ -386,7 +370,7 @@ def compress_rtl_files(results_subdir, fft_size):
 
 
 # ---------------------------------------------------------------------------
-# Pareto front visualisation  (4-objective, redesigned)
+# Pareto front visualisation 
 # ---------------------------------------------------------------------------
 
 # Consistent colour palette for the 4 objectives

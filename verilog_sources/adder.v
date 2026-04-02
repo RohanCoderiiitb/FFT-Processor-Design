@@ -143,7 +143,6 @@ module fp4_complex_add_sub(
 endmodule
 
 module fp8_add_sub(
-    // FIXED: Format switched from E5M2 to FP8 E4M3 to match the rest of the architecture
     // format: [sign][exp:4bits][mantissa:3bits]
     // bias = 7
     input [7:0] a,
