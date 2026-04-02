@@ -1,260 +1,148 @@
-# ⚡ Mixed-Precision FFT Processor
+# EvoFFT: Evolutionary Multi-Objective Design Space Exploration for Mixed-Precision FFT Architectures
 
-## 🧠 Overview
+This repository contains the complete framework for EvoFFT, an automated design pipeline that utilizes NSGA-II (Non-dominated Sorting Genetic Algorithm II) to explore the trade-offs between computational fidelity and hardware efficiency in Fast Fourier Transform (FFT) processors. By transitioning from uniform-precision architectures to mixed-precision heterogeneity, this framework generates signal-processing cores that are sufficiently accurate for power-constrained edge environments.
 
-This project explores **precision-aware hardware design for FFT
-accelerators**.\
-The goal is to study how reduced-precision floating-point arithmetic can
-improve **power and area efficiency** while maintaining acceptable
-numerical accuracy.
+---
 
-The system implements a **parameterized Decimation-in-Time (DIT) FFT
-processor** supporting transform sizes from:
+## 1. Research Overview
 
-**8 → 1024 points**
+As the demand for edge processing increases, the need for on-chip digital signal processing (DSP) rises. Traditional FFT designs rely on uniform-precision arithmetic (e.g., IEEE-754), which often results in systematic over-engineering and unsustainable area and power costs for constrained deployments.
 
-The architecture uses custom floating‑point formats:
+EvoFFT exploits the stage-dependent error sensitivity of radix-2 FFT butterfly structures. Errors introduced in earlier stages propagate more significantly than those in later stages. Specifically, an error at stage \( S \) propagates to \( 2^{\log_2 N - S} \) downstream bins. This asymmetry enables selective allocation of higher precision (FP8) in critical stages and lower precision (FP4) elsewhere.
 
--   **FP4 (E2M1)** -- ultra low precision
--   **FP8 (E4M3)** -- higher dynamic range
+---
 
-Instead of forcing one precision across the entire pipeline, the project
-investigates **mixed‑precision FFT architectures**, where **different
-stages of the FFT can use different precisions**.
+## 2. Primary Contributions
 
-------------------------------------------------------------------------
+- **Hardware-Grounded Encoding**  
+  Per-stage mixed-precision mapping ensuring each design corresponds to a synthesizable FPGA implementation.
 
-# 🔬 Research Motivation
+- **Multi-Objective Optimization**  
+  Simultaneous minimization of dynamic power, LUT area, SQNR degradation, and latency.
 
-Signal processing algorithms are typically designed assuming:
+- **Post-Implementation Validation**  
+  Integration with Xilinx Vivado for accurate power and area estimation.
 
--   infinite numerical precision\
--   ideal computation
+- **Scalable FFT Library**  
+  Optimized FFT cores from \( N = 8 \) to \( N = 1024 \), achieving up to 79\% logic reduction compared to conventional designs.
 
-Real hardware must operate under constraints such as:
+---
 
--   limited bitwidth
--   memory bandwidth
--   power consumption
--   area constraints
+## 3. System Architecture
 
-This project explores **precision as a tunable architectural
-parameter**, allowing controlled **energy--accuracy tradeoffs**.
+The framework uses a parameterized hardware template supporting per-stage precision scaling between FP4 (E2M1) and FP8 (E4M3).
 
-------------------------------------------------------------------------
+### 3.1 Hardware Core Features
 
-# ⚙️ Current Development Flow
+- **Mixed-Precision Butterfly Units**  
+  Four variants covering all FP4/FP8 combinations, selected via Verilog generate constructs.
 
-### 1️⃣ Baseline Architecture
+- **Unified 24-bit Memory Architecture**  
+  Dual-bank ping-pong BRAM storing both formats simultaneously, eliminating conversion overhead.
 
-The initial implementation is a **pure FP4 FFT processor**.
+- **Address Generation Unit (AGU)**  
+  Supports variable FFT sizes up to \( N = 1024 \) with dynamic indexing.
 
-The following RTL modules were implemented:
+- **Twiddle Factor ROM**  
+  \( 512 \times 24 \)-bit ROM with scalable addressing for different FFT sizes.
 
--   complex multiplier
--   butterfly unit
--   address generation unit (AGU)
--   FFT core
--   top-level FFT controller
+---
 
-Simulation outputs were compared against an **FP32 NumPy FFT
-reference**.
+## 4. Optimization Pipeline
 
-------------------------------------------------------------------------
+The pipeline treats stage precision as a structured, high-dimensional design variable. A Python-based template generator is combined with evolutionary search across a design space of size:
 
-### 2️⃣ Numerical Error Analysis
+\[
+4^{\log_2(N)}
+\]
 
-Large numerical deviations were initially observed.
+### 4.1 NSGA-II Strategy
 
-Two hypotheses were investigated:
+- **Chromosome Encoding**
 
--   architectural issues (memory timing)
--   quantization noise from FP4 precision
+\[
+C = [m_0, a_0, m_1, a_1, \dots, m_{S-1}, a_{S-1}]
+\]
 
-After correcting memory timing issues, remaining error was confirmed to
-be **quantization noise from reduced precision**.
+where:
+- \( m_i \): multiplier precision at stage \( i \)  
+- \( a_i \): adder precision at stage \( i \)
 
-------------------------------------------------------------------------
+- **Performance Evaluation**
 
-### 3️⃣ Precision Analysis
+Automated SQNR analysis is performed using diverse spectral inputs, including:
+- Impulse
+- Single tone
+- Multi-tone
+- Chirp (LFM)
+- Gaussian pulse
+- Radar Barker-13
+- Doppler burst
 
-A Python evaluation framework was built to analyze multiple formats:
+- **Objective Weighting**
 
--   FP4 (E2M1)
--   FP4 (E1M2)
--   FP8 (E4M3)
+\[
+Power = 1.0,\quad Area = 0.001,\quad SQNR = 50.0,\quad Latency = 8.0
+\]
 
-Evaluation metrics include:
+---
 
--   **SQNR**
--   **RMSE**
--   spectral similarity
+## 5. Performance and Results
 
-Results showed **FP8 significantly improves dynamic range and numerical
-fidelity** compared to FP4.
+Experiments on the ZedBoard (Zynq-7000 SoC) show that optimal configurations frequently retain FP8 multipliers in intermediate stages while using FP4 adders, indicating that multiplier quantization dominates noise behavior.
 
-------------------------------------------------------------------------
+### 5.1 Benchmark Summary (\( N = 1024 \))
 
-### 4️⃣ Stage‑Wise Precision Sensitivity
+| Metric    | EvoFFT (Balanced) | Heo et al. (HFP 16-bit) | Sahu et al. (11-bit Float) |
+|----------|------------------|--------------------------|----------------------------|
+| LUT Area | 2,280            | 10,891                   | 4,215                      |
+| Power    | ~0.106 W         | Variable                 | Variable                   |
+| SQNR     | 29.62 dB         | -                        | -                          |
 
-Experiments revealed that **different FFT stages tolerate precision loss
-differently**.
+A key property of the architecture is the sequential butterfly reuse strategy, which maintains an approximately constant power profile (~0.106 W) across FFT sizes.
 
-This led to the idea of a **mixed‑precision FFT pipeline**, where each
-stage can independently use:
+---
 
--   FP4
--   FP8
+## 6. Project Structure
 
-------------------------------------------------------------------------
+```
+verilog_sources/        # Core RTL modules (adders, multipliers, AGU)
+generated_designs/      # Auto-generated FFT architectures
+sim/                    # Simulation environment and testbenches
 
-# 🧬 Mixed‑Precision Architecture Idea
+fft_template_generator.py
+performance_evaluator.py
+runMixedFFTOptimization.py
+vivado_synthesis.tcl
+```
 
-Each FFT stage can independently choose precision for:
+---
 
--   multipliers
--   adders
+## 7. Results and Applications
 
-This is encoded as a chromosome for optimization:
+The generated FFT cores are suitable for:
 
-(mult_precision, add_precision)
+- Edge computing systems
+- Biomedical signal processing
+- Radar signal analysis
+- Energy-constrained embedded platforms
 
-Example encoding:
+---
 
-0 → FP4\
-1 → FP8
+## 8. Dataset and Source Code
 
-For an N‑point FFT:
+- Dataset: (https://drive.google.com/drive/folders/1016PdYBHqctMRd_y17j9aBR-78Ko58-V)
+- Repository: GitHub Link (https://github.com/RohanCoderiiitb/FFT-Processor-Design)
 
-stages = log2(N)\
-chromosome length = 2 × stages
+---
 
-Example:
+<!-- ## 9. Citation
 
-FFT‑8 → 6 genes\
-FFT‑16 → 8 genes\
-FFT‑32 → 10 genes
+If you use this work, please cite:
 
-------------------------------------------------------------------------
+```
+Shaivi Nandi, H. Rohan Kamath, and Madhav Rao,
+"EvoFFT: Evolutionary Multi-Objective Design Space Exploration for Mixed-Precision FFT Architectures."
+``` -->
 
-# 🏗 Project Structure
-
-    .
-    ├── verilog_sources
-    │   Core RTL building blocks
-    │
-    ├── generated_designs
-    │   Auto‑generated FFT cores and top modules
-    │   produced by the template generator
-    │
-    ├── vivado_projects
-    │   Synthesis runs
-    │
-    ├── reports
-    │   Power and area reports
-    │
-    ├── sim
-    │   Simulation files and test vectors
-    │
-    ├── results
-    │   Optimization outputs
-    │
-    ├── fft_template_generator.py
-    │   Generates FFT hardware for each chromosome
-    │
-    ├── objectiveEvaluationFFT.py
-    │   Evaluates candidate architectures
-    │
-    ├── performance_evaluator.py
-    │   Computes SQNR / MAE using simulation
-    │
-    ├── optimizationUtils.py
-    │   Genetic operators for optimization
-    │
-    └── twiddle_factor_gen.py
-        Generates twiddle factor tables
-
-------------------------------------------------------------------------
-
-# 🧩 RTL Modules
-
-Core RTL components located in **verilog_sources/** include:
-
--   `adder.v`
--   `multiplier.v`
--   `butterfly.v`
--   `memory.v`
--   `agu.v`
--   `bit_reversal.v`
--   `twiddle_rom.v`
--   `precision_converter.v`
--   `mixed_precision_wrappers.v`
-
-These modules form the building blocks of the FFT pipeline.
-
-------------------------------------------------------------------------
-
-# 🏭 Generated Designs
-
-The script **fft_template_generator.py** automatically produces FFT
-architectures.
-
-Each candidate design generates:
-
--   a **core module**
--   a **top-level wrapper**
-
-These are placed inside:
-
-    generated_designs/
-
-Example:
-
-    fft_8_sol0_gen1.v
-    fft_8_sol0_gen1_top.v
-
-Each file corresponds to a **specific precision configuration produced
-during optimization**.
-
-------------------------------------------------------------------------
-
-# 📊 Evaluation Pipeline
-
-Each generated architecture goes through:
-
-chromosome\
-↓\
-Verilog generation\
-↓\
-simulation\
-↓\
-Vivado synthesis\
-↓\
-power + area extraction\
-↓\
-SQNR evaluation
-
-------------------------------------------------------------------------
-
-# 🚧 Current Status
-
-Implemented:
-
--   FP4 FFT architecture
--   precision analysis framework
--   automated hardware generation
--   synthesis‑based power/area evaluation
--   simulation‑based SQNR measurement
-
-Next step:
-
-🧬 **NSGA‑II based multi‑objective optimization (in progress)**
-
-The optimization will search for **Pareto‑optimal mixed‑precision FFT
-architectures** balancing:
-
--   power
--   area
--   numerical accuracy
-
-Results can be downloaded from https://drive.google.com/drive/folders/1016PdYBHqctMRd_y17j9aBR-78Ko58-V
+---
