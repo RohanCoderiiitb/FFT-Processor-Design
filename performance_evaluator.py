@@ -1,12 +1,10 @@
 """
 Performance Evaluation Module
 ==============================
-Calculates SQNR (Signal-to-Quantisation-Noise Ratio) and MAE by running
+Calculates SQNR (Signal-to-Quantisation-Noise Ratio) by running
 iverilog/vvp simulation of generated mixed-precision FFT designs and
 comparing against an FP32 NumPy reference.
 
-SQNR is used instead of PSNR because it is the standard metric for
-quantisation-noise analysis:
 
     SQNR = 10 * log10( signal_power / noise_power )
 

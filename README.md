@@ -256,3 +256,5 @@ architectures** balancing:
 -   power
 -   area
 -   numerical accuracy
+
+Results can be downloaded from https://drive.google.com/drive/folders/1016PdYBHqctMRd_y17j9aBR-78Ko58-V

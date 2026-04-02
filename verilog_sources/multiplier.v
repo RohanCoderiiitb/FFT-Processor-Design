@@ -1,7 +1,5 @@
 // Module for complex multiplication
-
 // Main module name is fp4_cmul. Uses 2 helper modules : fp4_mul(multiplying 2 FP4 numbers) and fp4_add_sub(adding or subtracting 2 FP4 numbers)
-
 //E2M1 format is used: 1 sign bit(MSB bit = 3), 2 exponent bits(bits 2 and 1), 1 mantissa bit(LSB bit = 1)
 
 module fp4_mul(

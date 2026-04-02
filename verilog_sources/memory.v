@@ -1,12 +1,6 @@
 // =============================================================================
 // Mixed-Precision FFT Memory — BRAM-inferred version
 //
-// KEY CHANGES vs. register-based version:
-//   1. No reset loop on memory arrays  → Vivado infers Block RAM (36Kb tiles)
-//   2. Synchronous read only           → required for BRAM inference
-//   3. Output register reset kept      → safe, on a plain FF not the array
-//   4. Ping-pong interface UNCHANGED   → drop-in replacement
-//
 // BRAM inference rules (Xilinx UG901):
 //   - Array must be written on a clock edge
 //   - Array must be read on a clock edge (synchronous read)
