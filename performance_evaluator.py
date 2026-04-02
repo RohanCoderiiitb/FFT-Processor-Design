@@ -454,6 +454,10 @@ module tb_{design_name};
     wire [15:0] unload_data;
 
     integer i, ti, out_file;
+    integer cycle_count;        // Cycles for the current FFT run
+    integer total_cycles;       // Accumulated cycles across all test vectors
+    integer load_cycles;        // Cycles for the current load phase
+    integer unload_cycles_cnt;  // Cycles for the current unload phase
 
     // Test vector storage: fp8 packed {{real[7:0], imag[7:0]}}
     reg [15:0] tv [{num_tests*n - 1}:0];
@@ -493,44 +497,58 @@ module tb_{design_name};
         out_file = $fopen("{out_path}", "w");
 
         // Initialise signals
-        rst        = 0;
-        start      = 0;
-        load_en    = 0;
-        load_addr  = 0;
-        load_data  = 0;
-        unload_en  = 0;
-        unload_addr= 0;
+        rst             = 0;
+        start           = 0;
+        load_en         = 0;
+        load_addr       = 0;
+        load_data       = 0;
+        unload_en       = 0;
+        unload_addr     = 0;
+        total_cycles    = 0;
 
         // Hold reset for 8 cycles then release
         repeat(8) @(posedge clk);
         rst = 1;
         repeat(4) @(posedge clk);
 
+        $display("\\n================================================================");
+        $display("  Clock-Cycle Report  --  {design_name}  (FFT-{n})");
+        $display("================================================================");
+        $display("  %-4s  %-10s  %-12s  %-13s  %-12s",
+                 "Test", "Load cyc", "Compute cyc", "Unload cyc", "Total cyc");
+        $display("----------------------------------------------------------------");
+
         // Run each test vector
         for (ti = 0; ti < {num_tests}; ti = ti + 1) begin
 
             // --- Load phase ---
             @(posedge clk);
+            load_cycles = 0;
             load_en = 1;
             for (i = 0; i < {n}; i = i + 1) begin
                 load_addr = i[{addr_bits-1}:0];
                 load_data = tv[ti*{n} + i];
                 @(posedge clk);
+                load_cycles = load_cycles + 1;
             end
             load_en = 0;
 
             @(posedge clk);
+            load_cycles = load_cycles + 1;
 
-            // --- Run FFT ---
+            // --- Run FFT (count compute cycles: start pulse → done asserted) ---
+            cycle_count = 0;
             start = 1;
             @(posedge clk);
             start = 0;
+            cycle_count = cycle_count + 1;
 
-            // Wait for done
+            // Wait for done — count every clock edge
             wait_cnt = 0;
             while (!done && wait_cnt < {ready_timeout}) begin
                 @(posedge clk);
-                wait_cnt = wait_cnt + 1;
+                cycle_count = cycle_count + 1;
+                wait_cnt    = wait_cnt    + 1;
             end
             if (!done)
                 $display("WARN: done never asserted for test %0d, design {design_name}", ti);
@@ -540,12 +558,13 @@ module tb_{design_name};
             // --- Unload phase ---
             // Memory has 2-cycle read latency.
             // For each sample: assert address, wait 3 posedge clk, sample data.
+            unload_cycles_cnt = 0;
             unload_en = 1;
             for (i = 0; i < {n}; i = i + 1) begin
                 unload_addr = i[{addr_bits-1}:0];
-                @(posedge clk);
-                @(posedge clk);
-                @(posedge clk);
+                @(posedge clk); unload_cycles_cnt = unload_cycles_cnt + 1;
+                @(posedge clk); unload_cycles_cnt = unload_cycles_cnt + 1;
+                @(posedge clk); unload_cycles_cnt = unload_cycles_cnt + 1;
                 $fwrite(out_file, "%04h\\n", unload_data);
             end
             unload_en = 0;
@@ -553,7 +572,21 @@ module tb_{design_name};
             @(posedge clk);
             @(posedge clk);
 
+            // --- Per-test cycle report ---
+            $display("  %-4d  %-10d  %-12d  %-13d  %-12d",
+                     ti,
+                     load_cycles,
+                     cycle_count,
+                     unload_cycles_cnt,
+                     load_cycles + cycle_count + unload_cycles_cnt);
+            total_cycles = total_cycles + load_cycles + cycle_count + unload_cycles_cnt;
+
         end // for ti
+
+        $display("----------------------------------------------------------------");
+        $display("  Total cycles (all %0d tests)  : %0d", {num_tests}, total_cycles);
+        $display("  Avg   cycles per FFT compute  : %0d", total_cycles / {num_tests});
+        $display("================================================================\\n");
 
         $fclose(out_file);
         $display("Simulation complete for {design_name}. Results in {out_path}");
